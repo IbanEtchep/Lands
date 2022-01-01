@@ -1,0 +1,3 @@
+players-lands-enabled: true
+#Allow creeper grief on players that are trusted for breaking blocs.
+enable-creeper-grief: false
