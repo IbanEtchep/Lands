@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -175,7 +176,7 @@ public class LandMainMenu extends PaginatedMenu {
 
 	private Land getLandByName(String string) {
 		for (Land land : lands) {
-			if(string.equals("§2"+land.getName())) {
+			if(ChatColor.stripColor(string).equals(land.getName())) {
 				return land;
 			}
 		}
@@ -183,9 +184,7 @@ public class LandMainMenu extends PaginatedMenu {
 	}
 
 	private CompletableFuture<ItemStack> getInfoItem(){
-		return manager.future(() -> {
-			return new ItemBuilder(Head.OAK_INFO.get()).setName("§2Informations").addLore("§f§lVos tronçons : §a" + manager.getChunkCount(player).get() + "/" + manager.getMaxChunkCount(player)).build();
-		});
+		return manager.future(() -> new ItemBuilder(Head.OAK_INFO.get()).setName("§2Informations").addLore("§f§lVos tronçons : §a" + manager.getChunkCount(player).get() + "/" + manager.getMaxChunkCount(player)).build());
 	}
 
 }
