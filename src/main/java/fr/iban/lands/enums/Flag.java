@@ -7,6 +7,7 @@ public enum Flag {
 	
 	EXPLOSIONS("Active les explosions", new ItemStack(Material.TNT), false),
 	BLOCK_DAMAGES_BY_ENTITY("Active les dégats aux blocs par les entités (endermans, withers...)", new ItemStack(Material.DIRT), false),
+	PRESSURE_PLATE_BY_ENTITY("Active l'utilisation des plaques de pression par les entités", new ItemStack(Material.OAK_PRESSURE_PLATE), false),
 	FARMLAND_GRIEF("Active la destruction des terres labourées", new ItemStack(Material.FARMLAND), false),
 	INVINCIBLE("Active l'invinsibilité pour les joueurs", new ItemStack(Material.IRON_SWORD), true),
 	//MOB_DAMAGES("Active les dégats sur les entités aggressives", new ItemStack(Material.IRON_SWORD), true),

@@ -1,5 +1,6 @@
 package fr.iban.lands.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
@@ -103,11 +104,27 @@ public class InteractListener implements Listener {
 	public void onEntityInteract(EntityInteractEvent e) {
 		Block block = e.getBlock();
 		Land land = landmanager.getLandAt(block.getLocation());
-
-		if(land != null && e.getEntityType() != EntityType.VILLAGER) {
+		if (land != null && e.getEntityType() != EntityType.VILLAGER) {
+			if (land.hasFlag(Flag.PRESSURE_PLATE_BY_ENTITY)) {
+				if (e.getBlock() != null) {
+					switch (e.getBlock().getType()) {
+						case ACACIA_PRESSURE_PLATE:
+						case OAK_PRESSURE_PLATE:
+						case DARK_OAK_PRESSURE_PLATE:
+						case JUNGLE_PRESSURE_PLATE:
+						case BIRCH_PRESSURE_PLATE:
+						case CRIMSON_PRESSURE_PLATE:
+						case WARPED_PRESSURE_PLATE:
+						case STONE_PRESSURE_PLATE:
+						case SPRUCE_PRESSURE_PLATE:
+						case LIGHT_WEIGHTED_PRESSURE_PLATE:
+						case POLISHED_BLACKSTONE_PRESSURE_PLATE:
+							return;
+					}
+				}
+			}
 			e.setCancelled(true);
 		}
-
 	}
 
 
