@@ -1,10 +1,12 @@
 package fr.iban.lands.listeners;
 
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.CauldronLevelChangeEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -17,55 +19,69 @@ import fr.iban.lands.objects.Land;
 public class BlockPlaceListener implements Listener {
 
 
-	private LandManager landmanager;
+    private LandManager landmanager;
 
-	public BlockPlaceListener(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-
-
-	@EventHandler
-	public void onPlace(BlockPlaceEvent e) {
-		Block block = e.getBlock();
-		Land land = landmanager.getLandAt(block.getLocation());
-
-		if(land != null && !land.isBypassing(e.getPlayer(), Action.BLOCK_PLACE)) {
-			e.setCancelled(true);
-		}
-	}
+    public BlockPlaceListener(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
 
+    @EventHandler
+    public void onPlace(BlockPlaceEvent e) {
+        Block block = e.getBlock();
+        Land land = landmanager.getLandAt(block.getLocation());
 
-	@EventHandler
-	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
-		Block block = e.getBlock();
-		Land land = landmanager.getLandAt(block.getLocation());
+        if (land != null && !land.isBypassing(e.getPlayer(), Action.BLOCK_PLACE)) {
+            e.setCancelled(true);
+        }
+    }
 
-		if(land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_EMPTY)) {
-			e.setCancelled(true);
-		}
-	}
 
-	@EventHandler
-	public void onPlayerBucketEmpty(PlayerBucketFillEvent e) {
-		Block block = e.getBlock();
-		Land land = landmanager.getLandAt(block.getLocation());
+    @EventHandler
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
+        Block block = e.getBlock();
+        Land land = landmanager.getLandAt(block.getLocation());
 
-		if(land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_FILL)) {
-			e.setCancelled(true);
-		}
-	}
+        if (land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_EMPTY)) {
+            e.setCancelled(true);
+        }
+    }
 
-	@EventHandler
-	public void onEntityBlockForm(EntityBlockFormEvent e){
-		if(e.getEntity() instanceof Player){
-			Player player = (Player) e.getEntity();
+    @EventHandler
+    public void onPlayerBucketFill(PlayerBucketFillEvent e) {
+        Block block = e.getBlock();
+        Land land = landmanager.getLandAt(block.getLocation());
+
+        if (land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_FILL)) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onCauldronLevelChange(CauldronLevelChangeEvent e) {
+        Entity entity = e.getEntity();
+
+        if (entity instanceof Player) {
+			Player player = (Player) entity;
 			Block block = e.getBlock();
 			Land land = landmanager.getLandAt(block.getLocation());
 
-			if(!land.isBypassing(player, Action.FROST_WALK)){
+			if (land != null && !land.isBypassing(player, Action.CAULDRON_FILL_EMPTY)) {
 				e.setCancelled(true);
 			}
-		}
-	}
+        }
+    }
+
+    @EventHandler
+    public void onEntityBlockForm(EntityBlockFormEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player player = (Player) e.getEntity();
+            Block block = e.getBlock();
+            Land land = landmanager.getLandAt(block.getLocation());
+
+            if (!land.isBypassing(player, Action.FROST_WALK)) {
+                e.setCancelled(true);
+            }
+        }
+    }
 }

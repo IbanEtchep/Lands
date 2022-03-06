@@ -83,10 +83,11 @@ public class InteractListener implements Listener {
 
 			if((block.getType() == Material.ANVIL && !land.isBypassing(player, Action.USE_ANVIL))
 					|| (block.getType() == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
-					|| (block.getBlockData() instanceof Powerable && !land.isBypassing(player, Action.USE))
+					|| ((block.getBlockData() instanceof Powerable && block.getType() != Material.LECTERN) && !land.isBypassing(player, Action.USE))
 					|| (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
 					|| ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
-					|| ((block.getState() instanceof InventoryHolder || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
+					|| (((block.getState() instanceof InventoryHolder && block.getType() != Material.LECTERN) || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
+					|| (block.getType() == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
 					|| ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().contains("SPAWN_EGG")) && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
 				e.setCancelled(true);
 			}
