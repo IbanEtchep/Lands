@@ -38,7 +38,7 @@ public final class LandsPlugin extends JavaPlugin {
 		saveDefaultConfig();
 		this.bypass = new ArrayList<>();
 
-		if (getConfig().getBoolean("redis.sync-enabled")) {
+		if (getConfig().getBoolean("sync-enabled")) {
 			try {
 				redisClient = RedisAccess.getInstance().getRedissonClient();
 				landSyncTopic = redisClient.getTopic("SyncLand");
@@ -83,7 +83,8 @@ public final class LandsPlugin extends JavaPlugin {
 				new DropListener(this),
 				new LandListeners(this),
 				new HeadDatabaseListener(),
-				new PortalListeners(this)
+				new PortalListeners(this),
+				new FireListener(this)
 				);
 
 		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {

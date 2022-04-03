@@ -648,7 +648,7 @@ public class LandManager {
 
     public void syncLand(Land land) {
 		CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
-        if (plugin.getConfig().getBoolean("redis.sync-enabled")) {
+        if (plugin.getConfig().getBoolean("sync-enabled")) {
             plugin.getRedisClient().getTopic("SyncLand").publishAsync(new LandSyncMessage(land.getId(), core.getServerName()));
         }
     }
