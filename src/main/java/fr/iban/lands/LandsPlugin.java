@@ -1,25 +1,25 @@
 package fr.iban.lands;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.common.data.redis.RedisAccess;
+import fr.iban.lands.commands.LandCMD;
+import fr.iban.lands.commands.LandsCMD;
+import fr.iban.lands.commands.MaxClaimsCMD;
 import fr.iban.lands.listeners.*;
+import fr.iban.lands.storage.DbTables;
+import fr.iban.lands.storage.Storage;
+import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandSyncMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import fr.iban.lands.commands.LandCMD;
-import fr.iban.lands.commands.LandsCMD;
-import fr.iban.lands.commands.MaxClaimsCMD;
-import fr.iban.lands.storage.DbTables;
-import fr.iban.lands.storage.Storage;
-import fr.iban.lands.utils.Head;
 import org.redisson.api.RTopic;
+import org.redisson.api.RedissonClient;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public final class LandsPlugin extends JavaPlugin {
 
@@ -27,7 +27,8 @@ public final class LandsPlugin extends JavaPlugin {
 	private static LandsPlugin instance;
 	private List<UUID> bypass;
 
-	private RTopic<LandSyncMessage> landSyncTopic;
+	private RedissonClient redisClient;
+	private RTopic landSyncTopic;
 	private LandSyncListener landSyncListener;
 
 
@@ -36,6 +37,17 @@ public final class LandsPlugin extends JavaPlugin {
 		instance = this;
 		saveDefaultConfig();
 		this.bypass = new ArrayList<>();
+
+		if (getConfig().getBoolean("redis.sync-enabled")) {
+			try {
+				redisClient = RedisAccess.getInstance().getRedissonClient();
+				landSyncTopic = redisClient.getTopic("SyncLand");
+				landSyncListener = new LandSyncListener(this);
+				landSyncTopic.addListener(LandSyncMessage.class, new LandSyncListener(this));
+			}catch (Exception e) {
+				getLogger().severe("Erreur lors de l'initialisation de la connexion redis.");
+			}
+		}
 
 		DbTables tables = new DbTables();
 		tables.create();
@@ -80,15 +92,13 @@ public final class LandsPlugin extends JavaPlugin {
 		
 		Head.loadAPI();
 
-		landSyncTopic = CoreBukkitPlugin.getInstance().getRedisClient().getTopic("SyncLand");
-		landSyncListener = new LandSyncListener(this);
-		landSyncTopic.addListener(landSyncListener);
-
 	}
 
 	@Override
 	public void onDisable() {
-		landSyncTopic.removeListener(landSyncListener);
+		if(landSyncTopic != null) {
+			landSyncTopic.removeListener(landSyncListener);
+		}
 	}
 
 
@@ -118,4 +128,7 @@ public final class LandsPlugin extends JavaPlugin {
 		return getBypass().contains(player.getUniqueId());
 	}
 
+	public RedissonClient getRedisClient() {
+		return redisClient;
+	}
 }

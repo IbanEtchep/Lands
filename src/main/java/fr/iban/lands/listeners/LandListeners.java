@@ -3,7 +3,6 @@ package fr.iban.lands.listeners;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.sun.org.apache.xml.internal.utils.SuballocatedByteVector;
 import fr.iban.lands.events.LandFlagChangeEvent;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SubLand;

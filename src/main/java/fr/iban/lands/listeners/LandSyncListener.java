@@ -14,7 +14,7 @@ public class LandSyncListener implements MessageListener<LandSyncMessage> {
     }
 
     @Override
-    public void onMessage(String channel, LandSyncMessage message) {
+    public void onMessage(CharSequence channel, LandSyncMessage message) {
         CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
         if(!core.getServerName().equals(message.getSenderServer())) {
             plugin.getLandManager().loadLand(message.getId());

@@ -95,7 +95,7 @@
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
-			<version>2.9.0</version>
+			<version>3.0.6</version>
 		</dependency>
 		<!-- HeadDatabase-API -->
 		<dependency>
