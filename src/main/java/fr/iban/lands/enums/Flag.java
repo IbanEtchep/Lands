@@ -17,7 +17,7 @@ public enum Flag {
 	NO_MOB_SPAWNING("Désactive le spawn des mobs", new ItemStack(Material.ZOMBIE_SPAWN_EGG), true),
 	SILENT_MOBS("Désactive le bruit des mobs de ce territoire", new ItemStack(Material.JUKEBOX), false),
 	INVISIBLE("Rend les joueurs à l'intérieur invisibles.", new ItemStack(Material.POTION), true),
-	FIRE("Protège du feu et de sa propagation.", new ItemStack(Material.FLINT_AND_STEEL), false);
+	FIRE("Active les dégâts du feu et sa propagation.", new ItemStack(Material.FLINT_AND_STEEL), false);
 	
 	private String displayName;
 	private ItemStack item;
