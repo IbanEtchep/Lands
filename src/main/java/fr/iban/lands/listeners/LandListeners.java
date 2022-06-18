@@ -1,11 +1,16 @@
 package fr.iban.lands.listeners;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.Flag;
+import fr.iban.lands.events.LandEnterEvent;
 import fr.iban.lands.events.LandFlagChangeEvent;
+import fr.iban.lands.objects.GuildLand;
+import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SubLand;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -14,13 +19,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.events.LandEnterEvent;
-import fr.iban.lands.objects.Land;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LandListeners implements Listener {
 
@@ -48,14 +48,24 @@ public class LandListeners implements Listener {
 		Component fromName = Component.text(lfrom.getName()).color(TextColor.fromHexString("#F57C00"));
 		UUID ownerFrom = lfrom.getOwner();
 		if(ownerFrom != null) {
-			String ownerName = Bukkit.getOfflinePlayer(ownerFrom).getName();
+			String ownerName;
+			if (lfrom instanceof GuildLand) {
+				ownerName = "Guilde - " + ((GuildLand) lfrom).getGuildName();
+			} else {
+				ownerName = Bukkit.getOfflinePlayer(ownerFrom).getName();
+			}
 			fromName = fromName.append(Component.text(" ☗ "+ownerName).color(TextColor.fromHexString("#FFA726")));
 		}
 
 		Component toName = Component.text(lto.getName()).color(TextColor.fromHexString("#AFB42B"));
 		UUID ownerTo = lto.getOwner();
 		if(ownerTo != null) {
-			String ownerName = Bukkit.getOfflinePlayer(ownerTo).getName();
+			String ownerName;
+			if (lto instanceof GuildLand) {
+				ownerName = "Guilde - " + ((GuildLand) lto).getGuildName();
+			}else {
+				ownerName = Bukkit.getOfflinePlayer(ownerTo).getName();
+			}
 			toName = toName.append(Component.text(" ☗ "+ownerName).color(TextColor.fromHexString("#D4E157")));
 		}
 		

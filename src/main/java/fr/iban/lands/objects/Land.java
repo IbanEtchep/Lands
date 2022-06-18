@@ -1,18 +1,5 @@
 package fr.iban.lands.objects;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
-
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
@@ -20,12 +7,19 @@ import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Land {
 
 	protected int id;
 	protected String name;
 	protected Trust globalTrust = new Trust();
+	private final Trust guildTrust = new Trust();
 	protected LandType type;
 	protected Map<UUID, Trust> trusts = new HashMap<>();
 	protected Set<Flag> flags = new HashSet<>();
@@ -123,14 +117,29 @@ public abstract class Land {
 	public void untrust(Action action) {
 		getGlobalTrust().removePermission(action);
 	}
-	
+
+
+	public void trustGuild(Action action) {
+		getGuildTrust().addPermission(action);
+	}
+
+	public void untrustGuild(Action action) {
+		getGuildTrust().removePermission(action);
+	}
+
 	public boolean isTrusted(UUID uuid, Action action) {
 		return getTrusts().containsKey(uuid) && getTrust(uuid).hasPermission(action);
 	}
 	
 	public boolean isBypassing(Player player, Action action) {
 		UUID uuid = player.getUniqueId();
-		boolean bypass = getGlobalTrust().hasPermission(action) || isTrusted(uuid, action) || LandsPlugin.getInstance().isBypassing(player);
+		LandsPlugin plugin = LandsPlugin.getInstance();
+		boolean bypass = getGlobalTrust().hasPermission(action)
+				|| isTrusted(uuid, action)
+				|| plugin.isBypassing(player)
+				|| (plugin.getGuildDataAccess() != null && getOwner() != null
+					&& getGuildTrust().hasPermission(action)
+					&& plugin.getGuildDataAccess().areInSameGuild(getOwner(), player.getUniqueId()));
 		if((!bypass) && this instanceof PlayerLand) {
 			player.sendActionBar(Component.text("§cVous n'avez pas la permission de faire cela dans ce claim."));
 		}
@@ -218,5 +227,9 @@ public abstract class Land {
 	
 	public Map<Integer, SubLand> getSubLands() {
 		return subLands;
+	}
+
+	public Trust getGuildTrust() {
+		return guildTrust;
 	}
 }

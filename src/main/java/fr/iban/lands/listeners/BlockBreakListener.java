@@ -1,8 +1,10 @@
 package fr.iban.lands.listeners;
 
-import java.util.EnumSet;
-import java.util.Set;
-
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
+import fr.iban.lands.objects.Land;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -13,11 +15,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Action;
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.objects.Land;
+import java.util.EnumSet;
+import java.util.Set;
 
 public class BlockBreakListener implements Listener {
 

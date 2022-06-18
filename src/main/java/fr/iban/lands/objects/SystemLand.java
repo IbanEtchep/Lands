@@ -1,10 +1,9 @@
 package fr.iban.lands.objects;
 
-import java.util.UUID;
-
+import fr.iban.lands.enums.LandType;
 import org.jetbrains.annotations.Nullable;
 
-import fr.iban.lands.enums.LandType;
+import java.util.UUID;
 
 public class SystemLand extends Land {
 

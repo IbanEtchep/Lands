@@ -1,20 +1,19 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.CauldronLevelChangeEvent;
-import org.bukkit.event.block.EntityBlockFormEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.objects.Land;
+import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.type.Dispenser;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 
 public class BlockPlaceListener implements Listener {
 
@@ -83,5 +82,34 @@ public class BlockPlaceListener implements Listener {
                 e.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler
+    public void onDispense(BlockDispenseEvent e) {
+        Block block = e.getBlock();
+        Dispenser dispenser = (Dispenser) block.getBlockData();
+        Block targetBlock = e.getBlock().getRelative(dispenser.getFacing());
+
+        Land dispenserLand = landmanager.getLandAt(block.getLocation());
+        Land targetBlockLand = landmanager.getLandAt(targetBlock.getLocation());
+
+        if (targetBlockLand.isWilderness() || dispenserLand == targetBlockLand || (dispenserLand.getOwner() != null && targetBlockLand.getOwner() != null && dispenserLand.getOwner().equals(targetBlockLand.getOwner()))) {
+            return;
+        }
+
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockFromTo(BlockFromToEvent e) {
+        Land fromLand = landmanager.getLandAt(e.getBlock().getLocation());
+        Land toLand = landmanager.getLandAt(e.getToBlock().getLocation());
+
+        if (toLand.isWilderness() || fromLand == toLand
+                || (toLand.getOwner() != null && fromLand.getOwner() != null && fromLand.getOwner().equals(toLand.getOwner()))) {
+            return;
+        }
+
+        e.setCancelled(true);
     }
 }

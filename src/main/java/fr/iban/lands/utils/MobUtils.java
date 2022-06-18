@@ -1,9 +1,9 @@
 package fr.iban.lands.utils;
 
+import org.bukkit.entity.EntityType;
+
 import java.util.EnumSet;
 import java.util.Set;
-
-import org.bukkit.entity.EntityType;
 
 public class MobUtils {
 

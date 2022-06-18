@@ -1,14 +1,13 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntitySpawnEvent;
 
 public class EntitySpawnListener implements Listener {

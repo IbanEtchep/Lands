@@ -1,35 +1,51 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.block.Block;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.objects.Land;
+import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+
+import java.util.List;
 
 public class PistonListeners implements Listener {
 
-	private LandManager landmanager;
+    private LandManager landmanager;
 
-	public PistonListeners(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onPiston(BlockPistonExtendEvent e) {
-		Land pistonLand= landmanager.getLandAt(e.getBlock().getLocation());
+    public PistonListeners(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
-		for(Block block : e.getBlocks()) {
-			Land land = landmanager.getLandAt(block.getRelative(e.getDirection()).getLocation());
+    @EventHandler
+    public void onPiston(BlockPistonExtendEvent e) {
+        Land pistonLand = landmanager.getLandAt(e.getBlock().getLocation());
 
-			if(land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
-				continue;
+        for (Block block : e.getBlocks()) {
+            Land land = landmanager.getLandAt(block.getRelative(e.getDirection()).getLocation());
 
-			e.setCancelled(true);
-		}
+            if (land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
+                continue;
 
-	}
+            e.setCancelled(true);
+        }
+    }
 
+    @EventHandler
+    public void onPistonRetract(BlockPistonRetractEvent e) {
+        Land pistonLand = landmanager.getLandAt(e.getBlock().getLocation());
+
+        for (Block block : e.getBlocks()) {
+            Land land = landmanager.getLandAt(block.getRelative(e.getDirection().getOppositeFace()).getLocation());
+
+            if (land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
+                continue;
+
+            e.setCancelled(true);
+        }
+    }
 }

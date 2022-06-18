@@ -1,12 +1,11 @@
 package fr.iban.lands.events;
 
+import fr.iban.lands.objects.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-
-import fr.iban.lands.objects.Land;
 
 public class LandEnterEvent extends Event implements Cancellable{
 

@@ -1,6 +1,11 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Bukkit;
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
+import fr.iban.lands.enums.LandType;
+import fr.iban.lands.objects.Land;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
@@ -19,13 +24,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Action;
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.enums.LandType;
-import fr.iban.lands.objects.Land;
 
 public class InteractListener implements Listener {
 

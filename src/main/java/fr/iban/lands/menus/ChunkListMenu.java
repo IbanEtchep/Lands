@@ -1,22 +1,21 @@
 package fr.iban.lands.menus;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
-
 import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.SChunk;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class ChunkListMenu extends PaginatedMenu {
 

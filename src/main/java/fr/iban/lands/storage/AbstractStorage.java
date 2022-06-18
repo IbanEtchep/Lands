@@ -1,18 +1,17 @@
 package fr.iban.lands.storage;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SubLand;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public interface AbstractStorage {
 		
@@ -27,9 +26,7 @@ public interface AbstractStorage {
 	Map<Integer, Land> getLands();
 
 	Land getLand(int id);
-	
-	void addPlayerLand(PlayerLand land);
-	
+
 	void addLand(Land land);
 	
 	void deleteLand(Land land);
@@ -53,7 +50,15 @@ public interface AbstractStorage {
 	void addGlobalTrust(Land land, Action action);
 	
 	void removeGlobalTrust(Land land, Action action);
-	
+
+	void addGuildTrust(Land land, Action action);
+
+	void removeGuildTrust(Land land, Action action);
+
+	void addCustomTrust(Land land, Action action, String identifier);
+
+	void removeCustomTrust(Land land, Action action, String identifier);
+
 	Set<Flag> getFlags(Land land);
 	
 	void addFlag(Land land, Flag flag);

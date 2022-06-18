@@ -10,25 +10,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class GlobalTrustEditMenu extends PaginatedMenu{
+public class GuildTrustEditMenu extends PaginatedMenu{
 
-	private Land land;
-	private LandManager manager;
+	private final Land land;
+	private final LandManager manager;
 	private TrustsManageMenu previousMenu;
 
-	public GlobalTrustEditMenu(Player player, Land land, LandManager manager) {
+	public GuildTrustEditMenu(Player player, Land land, LandManager manager) {
 		super(player);
 		this.land = land;
 		this.manager = manager;
 	}
-	
-	public GlobalTrustEditMenu(Player player, Land land, LandManager manager, TrustsManageMenu previousMenu) {
+
+	public GuildTrustEditMenu(Player player, Land land, LandManager manager, TrustsManageMenu previousMenu) {
 		this(player, land, manager);
 		this.previousMenu = previousMenu;
 	}
 	@Override
 	public String getMenuName() {
-		return "§2Permissions globales";
+		return "§2Permissions de la guilde";
 	}
 
 	@Override
@@ -46,15 +46,17 @@ public class GlobalTrustEditMenu extends PaginatedMenu{
 		ItemStack item = e.getCurrentItem();
 		checkBottonsClick(item, player);
 
-		if(previousMenu != null && displayNameEquals(item, "§4Retour")) {
+		if (item != null && previousMenu != null && displayNameEquals(item, "§4Retour")) {
 			previousMenu.open();
 			return;
 		}
-		
-		if(item.getItemMeta().getDisplayName().startsWith("§4")) {
-			manager.addGlobalTrust(land, Action.getByDisplayName(item.getItemMeta().getDisplayName()));
-		}else {
-			manager.removeGlobalTrust(land, Action.getByDisplayName(item.getItemMeta().getDisplayName()));
+
+		if (item != null) {
+			if(item.getItemMeta().getDisplayName().startsWith("§4")) {
+				manager.addGuildTrust(land, Action.getByDisplayName(item.getItemMeta().getDisplayName()));
+			}else {
+				manager.removeGuildTrust(land, Action.getByDisplayName(item.getItemMeta().getDisplayName()));
+			}
 		}
 		super.open();
 	}
@@ -62,7 +64,6 @@ public class GlobalTrustEditMenu extends PaginatedMenu{
 	@Override
 	public void setMenuItems() {
 		addMenuBorder();
-
 
 //		for(Action action : Action.values()) {
 //			Bukkit.broadcastMessage(action.toString());
@@ -72,7 +73,7 @@ public class GlobalTrustEditMenu extends PaginatedMenu{
 			if(index >= Action.values().length) break;
 			Action action = Action.values()[index];
 			if (action != null){
-				if(land.getGlobalTrust().hasPermission(action)) {
+				if(land.getGuildTrust().hasPermission(action)) {
 					inventory.addItem(new ItemBuilder(action.getItem()).setName("§2" + action.getDisplayName()).build());
 				}else {
 					inventory.addItem(new ItemBuilder(action.getItem()).setName("§4" + action.getDisplayName()).build());

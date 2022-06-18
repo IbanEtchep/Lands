@@ -3,16 +3,17 @@ package fr.iban.lands;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.common.data.AccountProvider;
+import fr.iban.bukkitcore.manager.AccountManager;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.*;
 import fr.iban.lands.storage.AbstractStorage;
+import fr.iban.lands.storage.DbTables;
+import fr.iban.lands.storage.Storage;
 import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.LandMap;
-import fr.iban.lands.utils.LandSyncMessage;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -28,19 +29,23 @@ import java.util.stream.Collectors;
 
 public class LandManager {
 
-    private AbstractStorage storage;
+    private final AbstractStorage storage;
     private boolean loaded = false;
 
-    private Map<Integer, Land> lands = new ConcurrentHashMap<>();
-    private Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
-    private LandMap landMap;
-    private LandsPlugin plugin;
+    private final Map<Integer, Land> lands = new ConcurrentHashMap<>();
+    private final Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
+    private final LandMap landMap;
+    private final LandsPlugin plugin;
     private SystemLand wilderness = new SystemLand(-1, "Zone sauvage");
+    public final String SYNC_CHANNEL = "LandSync";
 
-    public LandManager(LandsPlugin plugin, AbstractStorage storage) {
-        this.storage = storage;
+    public LandManager(LandsPlugin plugin) {
         this.plugin = plugin;
         this.landMap = new LandMap(this);
+        DbTables tables = new DbTables();
+        tables.create();
+        storage = new Storage();
+        loadData();
     }
 
     /*
@@ -57,7 +62,9 @@ public class LandManager {
             plugin.getLogger().log(Level.INFO, "Chargement des chunks...");
             Map<SChunk, Integer> savedchunks = storage.getChunks();
             for (Entry<SChunk, Integer> entry : savedchunks.entrySet()) {
-                getChunks().put(entry.getKey(), getLands().get(entry.getValue()));
+                if (lands.containsKey(entry.getValue())) {
+                    getChunks().put(entry.getKey(), getLands().get(entry.getValue()));
+                }
             }
             plugin.getLogger().log(Level.INFO, getChunks().size() + " chunks chargées");
 
@@ -76,14 +83,14 @@ public class LandManager {
     }
 
     /*
-     * Retourne la liste de toutes les territoires.
+     * Retourne la liste de tous les territoires.
      */
     public Map<Integer, Land> getLands() {
         return lands;
     }
 
     /*
-     * Retourne la liste de toutes les territoires d'un joueur.
+     * Retourne la liste de tous les territoires d'un joueur.
      */
     public List<PlayerLand> getLands(UUID uuid) {
         return getLands().values().stream()
@@ -106,15 +113,15 @@ public class LandManager {
      * Retourne la liste de toutes les territoires d'un joueur. (ASYNC)
      */
     public CompletableFuture<List<Land>> getLandsAsync(Player player) {
-        return future(() -> getLands(player).stream().collect(Collectors.toList()));
+        return future(() -> new ArrayList<>(getLands(player)));
     }
 
     public CompletableFuture<List<Land>> getLandsAsync(UUID uuid) {
-        return future(() -> getLands(uuid).stream().collect(Collectors.toList()));
+        return future(() -> new ArrayList<>(getLands(uuid)));
     }
 
     /*
-     * Retourne la liste de toutes les territoires d'un joueur.
+     * Retourne la liste de tous les territoires systeme.
      */
     public List<SystemLand> getSystemLands() {
         return getLands().values().stream()
@@ -123,12 +130,24 @@ public class LandManager {
                 .collect(Collectors.toList());
     }
 
-    /*
-     * Retourne la liste de toutes les territoires d'un joueur. (ASYNC)
-     */
     public CompletableFuture<List<Land>> getSystemLandsAsync() {
-        return future(() -> getSystemLands().stream().collect(Collectors.toList()));
+        return future(() -> new ArrayList<>(getSystemLands()));
 
+    }
+
+    /*
+     * Retourne les territoires d'une guilde
+     */
+    public List<GuildLand> getGuildLands(UUID guildId) {
+        return getLands().values().stream()
+                .filter(GuildLand.class::isInstance)
+                .map(GuildLand.class::cast)
+                .filter(guildLand -> guildLand.getGuildId().equals(guildId))
+                .collect(Collectors.toList());
+    }
+
+    public CompletableFuture<List<Land>> getGuildLandsAsync(UUID guildId) {
+        return future(() -> new ArrayList<>(getGuildLands(guildId)));
     }
 
     //Retourne le territoire du nom donné pour le joueur donné.
@@ -147,6 +166,18 @@ public class LandManager {
     public CompletableFuture<SystemLand> getSystemLand(String name) {
         return future(() -> {
             for (SystemLand land : getSystemLands()) {
+                if (land.getName().equalsIgnoreCase(name)) {
+                    return land;
+                }
+            }
+            return null;
+        });
+    }
+
+    //Retourne le territoire du nom donné pour le la guilde donnée.
+    public CompletableFuture<GuildLand> getGuildLand(UUID guildID, String name) {
+        return future(() -> {
+            for (GuildLand land : getGuildLands(guildID)) {
                 if (land.getName().equalsIgnoreCase(name)) {
                     return land;
                 }
@@ -185,7 +216,39 @@ public class LandManager {
                 return null;
             }
             PlayerLand land = new PlayerLand(-1, player.getUniqueId(), name);
-            storage.addPlayerLand(land);
+            storage.addLand(land);
+            int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
+            land.setId(id);
+            getLands().put(id, land);
+            land.setBans(new HashSet<>());
+            land.setFlags(new HashSet<>());
+            player.sendMessage("§aLe territoire au nom de " + name + " a été créée.");
+            syncLand(land);
+            return land;
+        });
+    }
+
+    /*
+     * Permet de créer un nouveau territoire en tant que joueur.
+     */
+    public CompletableFuture<GuildLand> createGuildLand(Player player, String name) {
+        return future(() -> {
+            UUID guildId = plugin.getGuildDataAccess().getGuildId(player.getUniqueId());
+            if (getGuildLands(guildId).size() > 50) {
+                player.sendMessage("§cVous pouvez avoir 50 territoires maximum.");
+                return null;
+            }
+            if (getGuildLand(guildId, name).get() != null) {
+                player.sendMessage("§cIl y a déjà un territoire à ce nom.");
+                return null;
+            }
+            if (name.length() > 16) {
+                player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+                return null;
+            }
+
+            GuildLand land = new GuildLand(-1, guildId, name);
+            storage.addLand(land);
             int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
             land.setId(id);
             getLands().put(id, land);
@@ -238,7 +301,7 @@ public class LandManager {
     public CompletableFuture<PlayerLand> createLand(UUID uuid, String name) {
         return future(() -> {
             PlayerLand land = new PlayerLand(-1, uuid, name);
-            storage.addPlayerLand(land);
+            storage.addLand(land);
             int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
             land.setId(id);
             getLands().put(id, land);
@@ -251,12 +314,12 @@ public class LandManager {
     }
 
     /*
-     * Permet de supprimer une territoire
+     * Permet de supprimer un territoire
      */
-    public CompletableFuture<Void> deleteLand(Player player, Land land) {
+    public CompletableFuture<Void> deleteLand(Land land) {
         return future(() -> {
             if (land == null) {
-                player.sendMessage("§cLe territoire n'a pas pu être trouvé.");
+                return;
             }
             storage.deleteLand(land);
             getChunks(land).forEach(schunk -> {
@@ -266,14 +329,14 @@ public class LandManager {
 
             if (land.hasSubLand()) {
                 for (SubLand subland : land.getSubLands().values()) {
-                    deleteLand(player, subland);
+                    deleteLand(subland);
                 }
             }
             syncLand(land);
             getLands().remove(land.getId());
-            player.sendMessage("§cLe territoire au nom de " + land.getName() + " a bien été supprimée.");
         });
     }
+
 
     /*
      * Permet de renommer un territoire
@@ -310,8 +373,8 @@ public class LandManager {
         if (plugin.isBypassing(player)) {
             return 1000000;
         }
-        AccountProvider ap = new AccountProvider(player.getUniqueId());
-        return ap.getAccount().getMaxClaims();
+        AccountManager accountManager = CoreBukkitPlugin.getInstance().getAccountManager();
+        return accountManager.getAccount(player.getUniqueId()).getMaxClaims();
     }
 
     public CompletableFuture<Integer> getRemainingChunkCount(Player player) {
@@ -360,6 +423,16 @@ public class LandManager {
     public void removeGlobalTrust(Land land, Action action) {
         land.untrust(action);
         future(() -> storage.removeGlobalTrust(land, action)).thenRun(() -> syncLand(land));
+    }
+
+    public void addGuildTrust(Land land, Action action) {
+        land.trustGuild(action);
+        future(() -> storage.addGuildTrust(land, action)).thenRun(() -> syncLand(land));
+    }
+
+    public void removeGuildTrust(Land land, Action action) {
+        land.untrustGuild(action);
+        future(() -> storage.removeGuildTrust(land, action)).thenRun(() -> syncLand(land));
     }
 
 
@@ -513,16 +586,12 @@ public class LandManager {
      */
 
     public void addFlag(Land land, Flag flag) {
-        if (!land.getFlags().contains(flag)) {
-            land.getFlags().add(flag);
-        }
+        land.getFlags().add(flag);
         future(() -> storage.addFlag(land, flag)).thenRun(() -> syncLand(land));
     }
 
     public void removeFlag(Land land, Flag flag) {
-        if (land.getFlags().contains(flag)) {
-            land.getFlags().remove(flag);
-        }
+        land.getFlags().remove(flag);
         future(() -> storage.removeFlag(land, flag)).thenRun(() -> syncLand(land));
     }
 
@@ -548,7 +617,7 @@ public class LandManager {
             Land landat = getLandAt(player.getChunk());
             if (landat instanceof PlayerLand) {
                 PlayerLand pland = (PlayerLand) landat;
-                if (pland.getOwner().equals(sender.getUniqueId())) {
+                if (Objects.equals(pland.getOwner(), sender.getUniqueId())) {
                     player.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
                 }
             }
@@ -613,9 +682,8 @@ public class LandManager {
     }
 
     public CompletableFuture<Void> saveSubLandCuboid(SubLand subland) {
-        return future(() -> {
-            storage.setSubLandRegion(subland.getSuperLand(), subland);
-        }).thenRun(() -> syncLand(subland.getSuperLand()));
+        return future(() -> storage.setSubLandRegion(subland.getSuperLand(), subland))
+                .thenRun(() -> syncLand(subland.getSuperLand()));
     }
 
 
@@ -637,8 +705,8 @@ public class LandManager {
             try {
                 runnable.run();
             } catch (Exception e) {
-				throw (RuntimeException) e;
-			}
+                throw (RuntimeException) e;
+            }
         });
     }
 
@@ -647,9 +715,9 @@ public class LandManager {
     }
 
     public void syncLand(Land land) {
-		CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
+        CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
         if (plugin.getConfig().getBoolean("sync-enabled")) {
-            plugin.getRedisClient().getTopic("SyncLand").publishAsync(new LandSyncMessage(land.getId(), core.getServerName()));
+            core.getMessagingManager().sendMessageAsync(SYNC_CHANNEL, String.valueOf(land.getId()));
         }
     }
 

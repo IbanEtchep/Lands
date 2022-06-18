@@ -1,9 +1,8 @@
 package fr.iban.lands.utils;
 
+import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-
-import me.arcaniax.hdb.api.HeadDatabaseAPI;
 
 public enum Head {
 	
@@ -34,7 +33,8 @@ public enum Head {
 	NORMAL_CHEST("2970"),
 	FARMER_STEVE("30463"),
 	DIRT_PLUS("11014"),
-	DIRT_S("11057")
+	DIRT_S("11057"),
+	HOUSE_ORANGE("51046")
 	;
 	
 	private static HeadDatabaseAPI api;

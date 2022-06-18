@@ -1,9 +1,8 @@
 package fr.iban.lands.objects;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;

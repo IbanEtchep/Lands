@@ -4,6 +4,7 @@ public enum LandType {
 	
 	PLAYER,
 	SYSTEM,
-	SUBLAND
+	SUBLAND,
+	GUILD,
 
 }

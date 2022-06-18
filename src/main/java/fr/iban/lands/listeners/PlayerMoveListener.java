@@ -1,16 +1,15 @@
 package fr.iban.lands.listeners;
 
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.events.LandEnterEvent;
+import fr.iban.lands.objects.Land;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.events.LandEnterEvent;
-import fr.iban.lands.objects.Land;
 
 public class PlayerMoveListener implements Listener {
 

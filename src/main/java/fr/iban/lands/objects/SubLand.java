@@ -1,14 +1,12 @@
 package fr.iban.lands.objects;
 
-import java.util.UUID;
-
-
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
-
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.utils.Cuboid;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 public class SubLand extends Land {
 

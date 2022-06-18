@@ -1,14 +1,14 @@
 package fr.iban.lands;
 
+import com.alessiodp.parties.api.Parties;
 import fr.iban.common.data.redis.RedisAccess;
 import fr.iban.lands.commands.LandCMD;
 import fr.iban.lands.commands.LandsCMD;
 import fr.iban.lands.commands.MaxClaimsCMD;
+import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.PartiesDataAccess;
 import fr.iban.lands.listeners.*;
-import fr.iban.lands.storage.DbTables;
-import fr.iban.lands.storage.Storage;
 import fr.iban.lands.utils.Head;
-import fr.iban.lands.utils.LandSyncMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -19,117 +19,108 @@ import org.redisson.api.RedissonClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public final class LandsPlugin extends JavaPlugin {
 
-	private LandManager landManager;
-	private static LandsPlugin instance;
-	private List<UUID> bypass;
+    private LandManager landManager;
+    private static LandsPlugin instance;
+    private List<UUID> bypass;
+    private GuildDataAccess guildDataAccess;
 
-	private RedissonClient redisClient;
-	private RTopic landSyncTopic;
-	private LandSyncListener landSyncListener;
+    @Override
+    public void onEnable() {
+        instance = this;
+        saveDefaultConfig();
+        this.bypass = new ArrayList<>();
 
+        if (getConfig().getBoolean("guild-lands-enabled", false)) {
+            hookGuilds();
+        }
 
-	@Override
-	public void onEnable() {
-		instance = this;
-		saveDefaultConfig();
-		this.bypass = new ArrayList<>();
+        if (getConfig().getBoolean("sync-enabled")) {
+            getServer().getPluginManager().registerEvents(new LandSyncListener(landManager), this);
+        }
+        landManager = new LandManager(this);
 
-		if (getConfig().getBoolean("sync-enabled")) {
-			try {
-				redisClient = RedisAccess.getInstance().getRedissonClient();
-				landSyncTopic = redisClient.getTopic("SyncLand");
-				landSyncListener = new LandSyncListener(this);
-				landSyncTopic.addListener(LandSyncMessage.class, new LandSyncListener(this));
-			}catch (Exception e) {
-				getLogger().severe("Erreur lors de l'initialisation de la connexion redis.");
-			}
-		}
+        getCommand("land").setExecutor(new LandCMD(this));
+        getCommand("land").setTabCompleter(new LandCMD(this));
 
-		DbTables tables = new DbTables();
-		tables.create();
-		Storage storage = new Storage();
-		landManager = new LandManager(this, storage);
-		landManager.loadData();
+        getCommand("lands").setExecutor(new LandsCMD(this));
+        getCommand("lands").setTabCompleter(new LandsCMD(this));
 
+        getCommand("addmaxclaim").setExecutor(new MaxClaimsCMD());
+        getCommand("removemaxclaim").setExecutor(new MaxClaimsCMD());
+        getCommand("getmaxclaim").setExecutor(new MaxClaimsCMD());
 
-		getCommand("land").setExecutor(new LandCMD(this));
-		getCommand("land").setTabCompleter(new LandCMD(this));
+        registerListeners(
+                new PlayerMoveListener(this),
+                new PlayerTakeLecternBookListener(this),
+                new BlockPlaceListener(this),
+                new BlockBreakListener(this),
+                new PistonListeners(this),
+                new InteractListener(this),
+                new EntitySpawnListener(this),
+                new EntityExplodeListener(this),
+                new DamageListeners(this),
+                new EntityBlockDamageListener(this),
+                new CommandListener(this),
+                new HangingListeners(this),
+                new TeleportListener(this),
+                new DropListener(this),
+                new LandListeners(this),
+                new HeadDatabaseListener(),
+                new PortalListeners(this),
+                new FireListener(this),
+                new GuildEvents(this)
+        );
 
-		getCommand("lands").setExecutor(new LandsCMD(this));
-		getCommand("lands").setTabCompleter(new LandsCMD(this));
+        if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
+            getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
+        }
 
-		getCommand("addmaxclaim").setExecutor(new MaxClaimsCMD());
-		getCommand("removemaxclaim").setExecutor(new MaxClaimsCMD());
-		getCommand("getmaxclaim").setExecutor(new MaxClaimsCMD());
+        Head.loadAPI();
 
-		registerListeners(
-				new PlayerMoveListener(this),
-				new PlayerTakeLecternBookListener(this),
-				new BlockPlaceListener(this),
-				new BlockBreakListener(this),
-				new PistonListeners(this),
-				new InteractListener(this),
-				new EntitySpawnListener(this),
-				new EntityExplodeListener(this),
-				new DamageListeners(this),
-				new EntityBlockDamageListener(this),
-				new CommandListener(this),
-				new HangingListeners(this),
-				new TeleportListener(this),
-				new DropListener(this),
-				new LandListeners(this),
-				new HeadDatabaseListener(),
-				new PortalListeners(this),
-				new FireListener(this)
-				);
+    }
 
-		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {
-			getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
-		}
-		
-		Head.loadAPI();
+    private void hookGuilds() {
+        if (getServer().getPluginManager().getPlugin("Parties") != null) {
+            if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Parties")).isEnabled()) {
+                guildDataAccess = new PartiesDataAccess(Parties.getApi());
+                getLogger().info("Intégration avec le plugin Parties effectué.");
+            }
+        }
+    }
 
-	}
+    public LandManager getLandManager() {
+        return landManager;
+    }
 
-	@Override
-	public void onDisable() {
-		if(landSyncTopic != null) {
-			landSyncTopic.removeListener(landSyncListener);
-		}
-	}
+    public static LandsPlugin getInstance() {
+        return instance;
+    }
 
+    private void registerListeners(Listener... listeners) {
 
-	public LandManager getLandManager() {
-		return landManager;
-	}
+        PluginManager pm = Bukkit.getPluginManager();
 
-	public static LandsPlugin getInstance() {
-		return instance;
-	}
+        for (Listener listener : listeners) {
+            pm.registerEvents(listener, this);
+        }
 
-	private void registerListeners(Listener... listeners) {
+    }
 
-		PluginManager pm = Bukkit.getPluginManager();
+    public List<UUID> getBypass() {
+        return bypass;
+    }
 
-		for (Listener listener : listeners) {
-			pm.registerEvents(listener, this);
-		}
+    public boolean isBypassing(Player player) {
+        return getBypass().contains(player.getUniqueId());
+    }
 
-	}
+    public GuildDataAccess getGuildDataAccess() {
+        return guildDataAccess;
+    }
 
-	public List<UUID> getBypass() {
-		return bypass;
-	}
-
-	public boolean isBypassing(Player player) {
-		return getBypass().contains(player.getUniqueId());
-	}
-
-	public RedissonClient getRedisClient() {
-		return redisClient;
-	}
 }

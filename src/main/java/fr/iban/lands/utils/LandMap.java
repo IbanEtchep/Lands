@@ -1,35 +1,23 @@
 package fr.iban.lands.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.LandManager;
+import fr.iban.lands.objects.*;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.chat.HoverEvent.Action;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.lands.LandManager;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.PlayerLand;
-import fr.iban.lands.objects.SChunk;
-import fr.iban.lands.objects.SystemLand;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.HoverEvent.Action;
-import net.md_5.bungee.api.chat.TextComponent;
+import java.util.*;
 
 public class LandMap {
 
-	private LandManager manager;
-	private Map<UUID, Land> landMapSelection = new HashMap<>();
+	private final LandManager manager;
+	private final Map<UUID, Land> landMapSelection = new HashMap<>();
 
 
 	public LandMap(LandManager manager) {
@@ -117,7 +105,7 @@ public class LandMap {
 				}
 		}else if(land instanceof PlayerLand) {
 			PlayerLand pland = (PlayerLand)land;
-			if(pland.getOwner().equals(player.getUniqueId())) {
+			if(Objects.equals(pland.getOwner(), player.getUniqueId())) {
 				builder.color(ChatColor.DARK_GREEN);
 				hoverbase.append(new ComponentBuilder("Territoire : " + pland.getName() + "\n").color(ChatColor.DARK_GREEN).append(TextComponent.fromLegacyText("Propriétaire : Vous")).color(ChatColor.DARK_GREEN).create());
 				if(selectedLand != null) {
@@ -127,6 +115,19 @@ public class LandMap {
 			}else {
 				builder.color(HexColor.MARRON.getColor());
 				hoverbase.append(new ComponentBuilder("Territoire : " + pland.getName() + "\n").color(HexColor.MARRON.getColor()).append(TextComponent.fromLegacyText("Propriétaire : " + Bukkit.getOfflinePlayer(pland.getOwner()).getName())).color(HexColor.MARRON.getColor()).create());
+			}
+		}else if(land instanceof GuildLand) {
+			GuildLand guildLand = (GuildLand)land;
+			if(guildLand.isGuildMember(player.getUniqueId())) {
+				builder.color(ChatColor.AQUA);
+				hoverbase.append(new ComponentBuilder("Territoire de guilde : " + guildLand.getName() + "\n").color(ChatColor.DARK_GREEN).append(TextComponent.fromLegacyText("Propriétaire : Guilde " + guildLand.getGuildName())).color(HexColor.MARRON.getColor()).color(ChatColor.DARK_GREEN).create());
+				if(selectedLand != null) {
+					hoverbase.append(clicToUnclaim.create());
+					builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+				}
+			}else {
+				builder.color(HexColor.MARRON.getColor());
+				hoverbase.append(new ComponentBuilder("Territoire de guilde : " + guildLand.getName() + "\n").color(HexColor.MARRON.getColor()).append(TextComponent.fromLegacyText("Propriétaire : Guilde " + guildLand.getGuildName())).color(HexColor.MARRON.getColor()).create());
 			}
 		}
 		if(center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {

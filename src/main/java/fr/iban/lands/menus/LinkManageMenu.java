@@ -1,12 +1,5 @@
 package fr.iban.lands.menus;
 
-import java.util.stream.Collectors;
-
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
-
 import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Link;
@@ -14,6 +7,12 @@ import fr.iban.lands.objects.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import fr.iban.lands.utils.LandSelectCallback;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.stream.Collectors;
 
 public class LinkManageMenu extends Menu {
 

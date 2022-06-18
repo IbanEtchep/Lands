@@ -1,11 +1,10 @@
 package fr.iban.lands.objects;
 
-import java.util.UUID;
-
-import org.bukkit.entity.Player;
-
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
+import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 public class PlayerLand extends Land {
 

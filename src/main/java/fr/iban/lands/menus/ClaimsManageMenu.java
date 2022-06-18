@@ -1,17 +1,16 @@
 package fr.iban.lands.menus;
 
+import fr.iban.bukkitcore.menu.PaginatedMenu;
+import fr.iban.bukkitcore.utils.ItemBuilder;
+import fr.iban.lands.LandManager;
+import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.utils.AreaSelector;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-
-import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.bukkitcore.utils.ItemBuilder;
-import fr.iban.lands.LandManager;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.utils.AreaSelector;
 
 public class ClaimsManageMenu extends PaginatedMenu {
 

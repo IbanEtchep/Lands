@@ -1,13 +1,13 @@
 package fr.iban.lands.storage;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import fr.iban.common.data.sql.DbAccess;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class DbTables {
 	

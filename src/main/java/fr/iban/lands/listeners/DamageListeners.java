@@ -1,7 +1,11 @@
 package fr.iban.lands.listeners;
 
-import java.util.Set;
-
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
+import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.MobUtils;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -13,12 +17,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Action;
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.utils.MobUtils;
+import java.util.Set;
 
 public class DamageListeners implements Listener {
 

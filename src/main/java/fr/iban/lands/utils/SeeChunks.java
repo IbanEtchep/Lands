@@ -1,10 +1,8 @@
 package fr.iban.lands.utils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
-
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.objects.Land;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -12,9 +10,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
 
 public class SeeChunks {
 

@@ -1,7 +1,10 @@
 package fr.iban.lands.listeners;
 
-import java.util.Iterator;
-
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
+import fr.iban.lands.objects.Land;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Player;
@@ -9,11 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
 
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Action;
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.objects.Land;
+import java.util.Iterator;
 
 public class EntityExplodeListener implements Listener {
 

@@ -1,13 +1,13 @@
 package fr.iban.lands.commands;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.bukkitcore.manager.AccountManager;
 import fr.iban.common.data.Account;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-
-import fr.iban.common.data.AccountProvider;
 
 public class MaxClaimsCMD implements CommandExecutor {
 
@@ -22,10 +22,10 @@ public class MaxClaimsCMD implements CommandExecutor {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer op = Bukkit.getOfflinePlayer(args[0]);
 					int nombre = Integer.parseInt(args[1]);
-					AccountProvider ap = new AccountProvider(op.getUniqueId());
-					Account account = ap.getAccount();
+					AccountManager accountManager = CoreBukkitPlugin.getInstance().getAccountManager();
+					Account account = accountManager.getAccount(op.getUniqueId());
 					account.addMaxClaims((short) nombre);
-					ap.sendAccountToRedis(account);
+					accountManager.saveAccountAsync(account);
 				}
 				break;
 			case "removemaxclaim":
@@ -33,19 +33,18 @@ public class MaxClaimsCMD implements CommandExecutor {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer op = Bukkit.getOfflinePlayer(args[0]);
 					int nombre = Integer.parseInt(args[1]);
-					AccountProvider ap = new AccountProvider(op.getUniqueId());
-					Account account = ap.getAccount();
+					AccountManager accountManager = CoreBukkitPlugin.getInstance().getAccountManager();
+					Account account = accountManager.getAccount(op.getUniqueId());
 					account.removeMaxClaims((short) nombre);
-					ap.sendAccountToRedis(account);
-
+					accountManager.saveAccountAsync(account);
 				}
 				break;
 			case "getmaxclaim":
 				if(args.length == 1) {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer op = Bukkit.getOfflinePlayer(args[0]);
-					AccountProvider ap = new AccountProvider(op.getUniqueId());
-					Account account = ap.getAccount();
+					AccountManager accountManager = CoreBukkitPlugin.getInstance().getAccountManager();
+					Account account = accountManager.getAccount(op.getUniqueId());
 					sender.sendMessage("§7Nombre maximum de claims : §8" + account.getMaxClaims());
 					}
 				break;

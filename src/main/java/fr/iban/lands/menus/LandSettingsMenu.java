@@ -1,24 +1,23 @@
 package fr.iban.lands.menus;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import fr.iban.lands.events.LandFlagChangeEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
-
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
+import fr.iban.lands.events.LandFlagChangeEvent;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.utils.Head;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class LandSettingsMenu extends PaginatedMenu{
 

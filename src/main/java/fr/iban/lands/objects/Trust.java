@@ -1,9 +1,9 @@
 package fr.iban.lands.objects;
 
+import fr.iban.lands.enums.Action;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import fr.iban.lands.enums.Action;
 
 public class Trust {
 	

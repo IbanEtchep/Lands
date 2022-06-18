@@ -1,8 +1,14 @@
 package fr.iban.lands.utils;
 
-import java.util.concurrent.CompletableFuture;
-
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.SChunk;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -10,14 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.lands.LandManager;
-import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import java.util.concurrent.CompletableFuture;
 
 public class AreaSelector {
 
