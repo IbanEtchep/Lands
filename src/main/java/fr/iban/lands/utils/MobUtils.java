@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class MobUtils {
 
-	public static transient Set<EntityType> mobsList = EnumSet.of(
+	public static Set<EntityType> mobsList = EnumSet.of(
 			EntityType.ZOMBIE, EntityType.ZOGLIN, EntityType.ENDER_DRAGON,
 			EntityType.BLAZE, EntityType.CAVE_SPIDER, EntityType.SPIDER,
 			EntityType.SKELETON, EntityType.ZOMBIFIED_PIGLIN, EntityType.CREEPER,
@@ -16,5 +16,9 @@ public class MobUtils {
 			EntityType.ZOMBIE_VILLAGER, EntityType.ENDERMAN, EntityType.EVOKER,
 			EntityType.RAVAGER, EntityType.VEX, EntityType.VINDICATOR,
 			EntityType.PHANTOM, EntityType.MAGMA_CUBE, EntityType.ENDERMITE, EntityType.STRAY);
+
+	public static Set<EntityType> blockEntityList = EnumSet.of(
+			EntityType.ITEM_FRAME, EntityType.GLOW_ITEM_FRAME, EntityType.ARMOR_STAND
+	);
 	
 }

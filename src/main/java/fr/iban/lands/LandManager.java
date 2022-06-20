@@ -37,7 +37,6 @@ public class LandManager {
     private final LandMap landMap;
     private final LandsPlugin plugin;
     private SystemLand wilderness = new SystemLand(-1, "Zone sauvage");
-    public final String SYNC_CHANNEL = "LandSync";
 
     public LandManager(LandsPlugin plugin) {
         this.plugin = plugin;
@@ -717,7 +716,7 @@ public class LandManager {
     public void syncLand(Land land) {
         CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
         if (plugin.getConfig().getBoolean("sync-enabled")) {
-            core.getMessagingManager().sendMessageAsync(SYNC_CHANNEL, String.valueOf(land.getId()));
+            core.getMessagingManager().sendMessageAsync(LandsPlugin.SYNC_CHANNEL, String.valueOf(land.getId()));
         }
     }
 

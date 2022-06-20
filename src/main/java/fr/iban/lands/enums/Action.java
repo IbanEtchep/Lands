@@ -33,6 +33,7 @@ public enum Action {
     CHORUS_TELEPORT("Se téléporter en mangeant des chorus", new ItemStack(Material.CHORUS_FRUIT)),
     ENDER_PEARL_TELEPORT("Se téléporter avec des ender pearls", new ItemStack(Material.ENDER_PEARL)),
     CAULDRON_FILL_EMPTY("Remplir/vider un chaudron", new ItemStack(Material.CAULDRON)),
+    VEHICLE_PLACE_BREAK("Poser/casser des véhicules (bateaux, minecarts)", new ItemStack(Material.MINECART)),
     ;
 
 

@@ -10,10 +10,9 @@ import org.bukkit.event.Listener;
 
 public class LandSyncListener implements Listener {
 
-    private LandManager landManager;
-    private Gson gson = new Gson();
+    private final LandManager landManager;
 
-    public LandSyncListener(LandManager plugin) {
+    public LandSyncListener(LandManager landManager) {
         this.landManager = landManager;
     }
 
@@ -22,7 +21,7 @@ public class LandSyncListener implements Listener {
     public void onSyncMessage(CoreMessageEvent e) {
         Message message = e.getMessage();
 
-        if(!message.getChannel().equals(landManager.SYNC_CHANNEL)){
+        if(!message.getChannel().equals(LandsPlugin.SYNC_CHANNEL)){
             return;
         }
 

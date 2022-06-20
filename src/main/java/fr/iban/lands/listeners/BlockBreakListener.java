@@ -10,9 +10,12 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.vehicle.VehicleCreateEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.EnumSet;
@@ -67,6 +70,16 @@ public class BlockBreakListener implements Listener {
 
 		if(!land.isBypassing(e.getPlayer(), Action.BLOCK_BREAK)) {
 			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onVehicleBreak(VehicleDestroyEvent e) {
+		if (e.getAttacker() instanceof Player) {
+			Land land = landmanager.getLandAt(e.getVehicle().getLocation());
+			if(!land.isBypassing((Player) e.getAttacker(), Action.VEHICLE_PLACE_BREAK)) {
+				e.setCancelled(true);
+			}
 		}
 	}
 

@@ -14,8 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.redisson.api.RTopic;
-import org.redisson.api.RedissonClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +26,7 @@ public final class LandsPlugin extends JavaPlugin {
     private static LandsPlugin instance;
     private List<UUID> bypass;
     private GuildDataAccess guildDataAccess;
+    public static final String SYNC_CHANNEL = "LandSync";
 
     @Override
     public void onEnable() {
@@ -39,10 +38,11 @@ public final class LandsPlugin extends JavaPlugin {
             hookGuilds();
         }
 
+        landManager = new LandManager(this);
+
         if (getConfig().getBoolean("sync-enabled")) {
             getServer().getPluginManager().registerEvents(new LandSyncListener(landManager), this);
         }
-        landManager = new LandManager(this);
 
         getCommand("land").setExecutor(new LandCMD(this));
         getCommand("land").setTabCompleter(new LandCMD(this));

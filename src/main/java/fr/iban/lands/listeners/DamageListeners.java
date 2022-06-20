@@ -6,10 +6,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.utils.MobUtils;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,8 +19,7 @@ import java.util.Set;
 public class DamageListeners implements Listener {
 
 
-	private LandManager landmanager;
-	private Set<EntityType> mobs = MobUtils.mobsList;
+	private final LandManager landmanager;
 
 	public DamageListeners(LandsPlugin landsPlugin) {
 		this.landmanager = landsPlugin.getLandManager();
@@ -53,8 +49,8 @@ public class DamageListeners implements Listener {
 			EntityDamageByEntityEvent event = (EntityDamageByEntityEvent)e;
 			Player player = getPlayerDamager(event);
 			if(player != null) {
-				if((e.getEntityType() == EntityType.ITEM_FRAME && !land.isBypassing(player, Action.BLOCK_BREAK))
-						|| (!mobs.contains(e.getEntityType()) && !land.isBypassing(player, Action.PASSIVE_KILL))
+				if((MobUtils.blockEntityList.contains(e.getEntityType()) && !land.isBypassing(player, Action.BLOCK_BREAK))
+						|| (!MobUtils.mobsList.contains(e.getEntityType()) && !land.isBypassing(player, Action.PASSIVE_KILL))
 						|| (e.getEntity().getCustomName() != null && !land.isBypassing(player, Action.TAGGED_KILL))) {
 					e.setCancelled(true);
 				}

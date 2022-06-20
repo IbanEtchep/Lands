@@ -40,6 +40,16 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<relocations>
+								<relocation>
+									<pattern>com.github.ben-manes.caffeine</pattern>
+									<shadedPattern>fr.iban.lands.libs.com.github.ben-manes.caffeine</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>com.github.benmanes.caffeine</pattern>
+									<shadedPattern>fr.iban.lands.libs.com.github.benmanes.caffeine</shadedPattern>
+								</relocation>
+							</relocations>
 						</configuration>
 					</execution>
 				</executions>
@@ -101,6 +111,7 @@
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 			<version>3.0.6</version>
+			<scope>compile</scope>
 		</dependency>
 		<!-- HeadDatabase-API -->
 		<dependency>
