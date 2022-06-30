@@ -4,8 +4,8 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
@@ -13,7 +13,6 @@ import org.bukkit.block.data.Powerable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -26,13 +25,14 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InteractListener implements Listener {
 
-    private LandManager landmanager;
-    private LandsPlugin plugin;
+    private final LandManager landmanager;
+    private final LandsPlugin plugin;
+    private final List<Location> toClose = new ArrayList<>();
 
     public InteractListener(LandsPlugin landsPlugin) {
         this.plugin = landsPlugin;
@@ -66,16 +66,17 @@ public class InteractListener implements Listener {
             if (land.hasFlag(Flag.DOORS_AUTOCLOSE)) {
                 if (block.getBlockData() instanceof Openable) {
                     Openable openable = (Openable) block.getBlockData();
-                    if (!openable.isOpen() && !land.isBypassing(e.getPlayer(), Action.ALL)) {
+                    if (!land.isBypassing(e.getPlayer(), Action.ALL) && !toClose.contains(block.getLocation())) {
+                        boolean opened = openable.isOpen();
+                        toClose.add(block.getLocation());
                         new BukkitRunnable() {
                             @Override
                             public void run() {
                                 Openable o = (Openable) block.getBlockData();
-                                if (o.isOpen()) {
-                                    o.setOpen(false);
-                                    block.setBlockData(o);
-                                    block.getState().update();
-                                }
+                                o.setOpen(opened);
+                                block.setBlockData(o);
+                                block.getState().update();
+                                toClose.remove(block.getLocation());
                             }
                         }.runTaskLater(plugin, 60L);
                     }
@@ -92,8 +93,7 @@ public class InteractListener implements Listener {
                     || (block.getType() == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
                     || hasVehiculeInHand(player) && !land.isBypassing(player, Action.VEHICLE_PLACE_BREAK)
                     || hasArmorStandInHand(player) && !land.isBypassing(player, Action.BLOCK_PLACE)
-                    || ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().contains("SPAWN_EGG")) && !land.isBypassing(player, Action.OTHER_INTERACTS)))
-            {
+                    || ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().contains("SPAWN_EGG")) && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
                 e.setCancelled(true);
             }
         } else if (e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {

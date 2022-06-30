@@ -3,6 +3,7 @@ package fr.iban.lands.listeners;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -105,7 +106,7 @@ public class BlockPlaceListener implements Listener {
         Land fromLand = landmanager.getLandAt(e.getBlock().getLocation());
         Land toLand = landmanager.getLandAt(e.getToBlock().getLocation());
 
-        if (toLand.isWilderness() || fromLand == toLand
+        if (toLand.isWilderness() || toLand.hasFlag(Flag.LIQUID_SPREAD) || fromLand == toLand
                 || (toLand.getOwner() != null && fromLand.getOwner() != null && fromLand.getOwner().equals(toLand.getOwner()))) {
             return;
         }

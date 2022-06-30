@@ -716,7 +716,7 @@ public class LandManager {
     public void syncLand(Land land) {
         CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
         if (plugin.getConfig().getBoolean("sync-enabled")) {
-            core.getMessagingManager().sendMessageAsync(LandsPlugin.SYNC_CHANNEL, String.valueOf(land.getId()));
+            core.getMessagingManager().sendMessage(LandsPlugin.SYNC_CHANNEL, String.valueOf(land.getId()));
         }
     }
 
