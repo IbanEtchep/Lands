@@ -3,7 +3,7 @@ package fr.iban.lands.commands;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.menus.LandMainMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -38,7 +38,7 @@ public class LandsCMD implements CommandExecutor, TabCompleter {
                 });
             } else if (args.length == 1) {
                 if (args[0].equalsIgnoreCase("guild") && plugin.getConfig().getBoolean("players-lands-enabled") && plugin.getGuildDataAccess() != null) {
-                    GuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
+                    AbstractGuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
                     UUID guildId = guildDataAccess.getGuildId(player.getUniqueId());
                     if (guildId != null && guildDataAccess.canManageGuildLand(player.getUniqueId(), guildId)) {
                         landManager.getGuildLandsAsync(guildId).thenAccept(lands -> {

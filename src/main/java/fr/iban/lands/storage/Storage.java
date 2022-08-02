@@ -8,7 +8,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
-import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.objects.*;
 import fr.iban.lands.utils.Cuboid;
 import org.bukkit.Bukkit;
@@ -66,7 +66,7 @@ public class Storage implements AbstractStorage {
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                            AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
                             if (guildDataAccess != null && guildDataAccess.guildExists(uuid)) {
                                 land = new GuildLand(id, uuid, name);
                             } else continue;
@@ -109,7 +109,7 @@ public class Storage implements AbstractStorage {
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                            AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
                             if (guildDataAccess != null && guildDataAccess.guildExists(uuid)) {
                                 land = new GuildLand(id, uuid, name);
                             } else continue;

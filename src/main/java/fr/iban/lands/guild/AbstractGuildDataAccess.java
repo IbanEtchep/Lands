@@ -2,7 +2,7 @@ package fr.iban.lands.guild;
 
 import java.util.UUID;
 
-public interface GuildDataAccess {
+public interface AbstractGuildDataAccess {
 
     boolean guildExists(UUID guildId);
 

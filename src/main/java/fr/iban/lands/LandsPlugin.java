@@ -1,11 +1,11 @@
 package fr.iban.lands;
 
 import com.alessiodp.parties.api.Parties;
-import fr.iban.common.data.redis.RedisAccess;
 import fr.iban.lands.commands.LandCMD;
 import fr.iban.lands.commands.LandsCMD;
 import fr.iban.lands.commands.MaxClaimsCMD;
-import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
+import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.guild.PartiesDataAccess;
 import fr.iban.lands.listeners.*;
 import fr.iban.lands.utils.Head;
@@ -25,7 +25,7 @@ public final class LandsPlugin extends JavaPlugin {
     private LandManager landManager;
     private static LandsPlugin instance;
     private List<UUID> bypass;
-    private GuildDataAccess guildDataAccess;
+    private AbstractGuildDataAccess guildDataAccess;
     public static final String SYNC_CHANNEL = "LandSync";
 
     @Override
@@ -34,9 +34,7 @@ public final class LandsPlugin extends JavaPlugin {
         saveDefaultConfig();
         this.bypass = new ArrayList<>();
 
-        if (getConfig().getBoolean("guild-lands-enabled", false)) {
-            hookGuilds();
-        }
+        hookGuilds();
 
         landManager = new LandManager(this);
 
@@ -72,8 +70,7 @@ public final class LandsPlugin extends JavaPlugin {
                 new LandListeners(this),
                 new HeadDatabaseListener(),
                 new PortalListeners(this),
-                new FireListener(this),
-                new GuildEvents(this)
+                new FireListener(this)
         );
 
         if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
@@ -85,10 +82,20 @@ public final class LandsPlugin extends JavaPlugin {
     }
 
     private void hookGuilds() {
-        if (getServer().getPluginManager().getPlugin("Parties") != null) {
-            if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Parties")).isEnabled()) {
-                guildDataAccess = new PartiesDataAccess(Parties.getApi());
-                getLogger().info("Intégration avec le plugin Parties effectué.");
+        if (getConfig().getBoolean("guild-lands-enabled", false)) {
+            if (getServer().getPluginManager().getPlugin("Parties") != null) {
+                if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Parties")).isEnabled()) {
+                    guildDataAccess = new PartiesDataAccess(Parties.getApi(), this);
+                    getLogger().info("Intégration avec le plugin Parties effectué.");
+                    getServer().getPluginManager().registerEvents((PartiesDataAccess) guildDataAccess, this);
+                }
+            }
+            if (getServer().getPluginManager().getPlugin("Guilds") != null) {
+                if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds")).isEnabled()) {
+                    //guildDataAccess = new GuildsDataAccess(GuildsPl, this);
+                    getLogger().info("Intégration avec le plugin Parties effectué.");
+                    getServer().getPluginManager().registerEvents((PartiesDataAccess) guildDataAccess, this);
+                }
             }
         }
     }
@@ -119,7 +126,7 @@ public final class LandsPlugin extends JavaPlugin {
         return getBypass().contains(player.getUniqueId());
     }
 
-    public GuildDataAccess getGuildDataAccess() {
+    public AbstractGuildDataAccess getGuildDataAccess() {
         return guildDataAccess;
     }
 

@@ -4,7 +4,7 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.Trust;
 import fr.iban.lands.utils.Head;
@@ -127,7 +127,7 @@ public class TrustsManageMenu extends PaginatedMenu {
         }
         inventory.setItem(27, new ItemBuilder(Head.GLOBE.get()).setName("§2Permissions globales").addLore("§aPermet de définir des permissions").addLore("§aqui seront appliquées à tout le monde.").build());
 
-        GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         if(guildDataAccess != null && land.getOwner() != null && guildDataAccess.hasGuild(player.getUniqueId())) {
             inventory.setItem(28, new ItemBuilder(Head.HOUSE_ORANGE.get()).setName("§2Permissions de guilde").addLore("§aPermet de définir les permissions").addLore("§ades membres de votre guilde.").build());
 		}

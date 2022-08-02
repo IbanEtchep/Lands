@@ -3,7 +3,7 @@ package fr.iban.lands.objects;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.guild.GuildDataAccess;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ public class GuildLand extends Land {
     @Override
     public boolean isBypassing(Player player, Action action) {
         UUID uuid = player.getUniqueId();
-        GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         if (guildDataAccess.isGuildLeader(uuid, guildId)
                 || (guildDataAccess.isGuildMember(uuid, guildId) && getGuildTrust().hasPermission(action))) {
             return true;
@@ -40,12 +40,12 @@ public class GuildLand extends Land {
     }
 
     public String getGuildName() {
-        GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.getGuildName(guildId);
     }
 
     public boolean isGuildMember(UUID uuid) {
-        GuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.isGuildMember(uuid, guildId);
     }
 }
