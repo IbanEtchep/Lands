@@ -131,7 +131,6 @@ public class LandManager {
 
     public CompletableFuture<List<Land>> getSystemLandsAsync() {
         return future(() -> new ArrayList<>(getSystemLands()));
-
     }
 
     /*
@@ -183,6 +182,51 @@ public class LandManager {
             }
             return null;
         });
+    }
+
+    /*
+    Utilisé pour les commandes, pour auto completer les noms des territoires (joueur, guild, system) que le joueur a
+    la permission de gérer.
+     */
+    public List<String> getManageableLandsNames(Player player) {
+        List<String> landNames = new ArrayList<>();
+        for (PlayerLand land : getLands(player)) {
+            landNames.add(land.getName());
+        }
+
+        if (plugin.getGuildDataAccess() != null) {
+            UUID guildID = plugin.getGuildDataAccess().getGuildId(player.getUniqueId());
+            if (guildID != null) {
+                for (GuildLand land : getGuildLands(plugin.getGuildDataAccess().getGuildId(player.getUniqueId()))) {
+                    landNames.add("guild:" + land.getName());
+                }
+            }
+        }
+
+        if (plugin.isBypassing(player)) {
+            for (SystemLand land : getSystemLands()) {
+                landNames.add("system:" + land.getName());
+            }
+        }
+        return landNames;
+    }
+
+    /*
+    Utilisé pour les commandes, pour vérifier que l'entrée correspond bien à un territoire que le joueur peut gérer.
+     */
+    public Land getManageableLandFromName(Player player, String name) {
+        if (name.startsWith("system:") && player.hasPermission("lands.bypass")) {
+            return getSystemLands().stream().filter(land -> land.getName().equals(name.split(":")[1]))
+                    .findFirst().orElse(null);
+        }
+        if (name.startsWith("guild:") && plugin.getGuildDataAccess() != null && plugin.getGuildDataAccess().canManageGuildLand(player.getUniqueId())) {
+            return getGuildLands(plugin.getGuildDataAccess().getGuildId(player.getUniqueId())).stream()
+                    .filter(land -> land.getName().equals(name.split(":")[1]))
+                    .findFirst().orElse(null);
+        }
+        return getLands(player).stream()
+                .filter(land -> land.getName().equals(name))
+                .findFirst().orElse(null);
     }
 
     //Retourne le territoire du nom donné pour le joueur donné.

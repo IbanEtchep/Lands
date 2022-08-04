@@ -1,19 +1,26 @@
 package fr.iban.lands;
 
 import com.alessiodp.parties.api.Parties;
-import fr.iban.lands.commands.LandCMD;
-import fr.iban.lands.commands.LandsCMD;
-import fr.iban.lands.commands.MaxClaimsCMD;
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.guilds.GuildsPlugin;
+import fr.iban.lands.commands.LandCommand;
+import fr.iban.lands.commands.LandsCommand;
+import fr.iban.lands.commands.MaxClaimsCommand;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.guild.PartiesDataAccess;
 import fr.iban.lands.listeners.*;
+import fr.iban.lands.objects.Land;
 import fr.iban.lands.utils.Head;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import revxrsal.commands.bukkit.BukkitCommandActor;
+import revxrsal.commands.bukkit.BukkitCommandHandler;
+import revxrsal.commands.command.CommandActor;
+import revxrsal.commands.exception.CommandErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,15 +49,7 @@ public final class LandsPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new LandSyncListener(landManager), this);
         }
 
-        getCommand("land").setExecutor(new LandCMD(this));
-        getCommand("land").setTabCompleter(new LandCMD(this));
-
-        getCommand("lands").setExecutor(new LandsCMD(this));
-        getCommand("lands").setTabCompleter(new LandsCMD(this));
-
-        getCommand("addmaxclaim").setExecutor(new MaxClaimsCMD());
-        getCommand("removemaxclaim").setExecutor(new MaxClaimsCMD());
-        getCommand("getmaxclaim").setExecutor(new MaxClaimsCMD());
+        registerCommands();
 
         registerListeners(
                 new PlayerMoveListener(this),
@@ -81,6 +80,33 @@ public final class LandsPlugin extends JavaPlugin {
 
     }
 
+    private void registerCommands() {
+        BukkitCommandHandler commandHandler = BukkitCommandHandler.create(this);
+        commandHandler.accept(CoreBukkitPlugin.getInstance().getCommandHandlerVisitor());
+
+        //Land resolver
+        commandHandler.getAutoCompleter().registerParameterSuggestions(Land.class, (args, sender, command) -> {
+            Player player = ((BukkitCommandActor)sender).getAsPlayer();
+            return landManager.getManageableLandsNames(player);
+        });
+
+        commandHandler.registerValueResolver(Land.class, context -> {
+            String value = context.arguments().pop();
+            CommandActor actor = context.actor();
+            Player sender = ((BukkitCommandActor)actor).getAsPlayer();
+            Land land = getLandManager().getManageableLandFromName(sender, value);
+            if (land == null) {
+                throw new CommandErrorException("Le territoire " + value + " n'existe pas.");
+            }
+            return land;
+        });
+
+        commandHandler.register(new LandCommand(this));
+        commandHandler.register(new LandsCommand(this));
+        commandHandler.register(new MaxClaimsCommand());
+        //commandHandler.registerBrigadier();
+    }
+
     private void hookGuilds() {
         if (getConfig().getBoolean("guild-lands-enabled", false)) {
             if (getServer().getPluginManager().getPlugin("Parties") != null) {
@@ -92,9 +118,9 @@ public final class LandsPlugin extends JavaPlugin {
             }
             if (getServer().getPluginManager().getPlugin("Guilds") != null) {
                 if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds")).isEnabled()) {
-                    //guildDataAccess = new GuildsDataAccess(GuildsPl, this);
-                    getLogger().info("Intégration avec le plugin Parties effectué.");
-                    getServer().getPluginManager().registerEvents((PartiesDataAccess) guildDataAccess, this);
+                    guildDataAccess = new GuildsDataAccess(GuildsPlugin.getInstance(), this);
+                    getLogger().info("Intégration avec le plugin Guilds effectué.");
+                    getServer().getPluginManager().registerEvents((GuildsDataAccess) guildDataAccess, this);
                 }
             }
         }

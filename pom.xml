@@ -105,6 +105,18 @@
 			<version>v1.0.0</version>
 			<scope>provided</scope>
 		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.github.IbanEtchep</groupId>-->
+<!--			<artifactId>Guilds</artifactId>-->
+<!--			<version>v1.0.0</version>-->
+<!--			<scope>provided</scope>-->
+<!--		</dependency>-->
+		<dependency>
+			<groupId>fr.iban.guilds</groupId>
+			<artifactId>Guilds</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.maxgamer</groupId>
 			<artifactId>QuickShop</artifactId>

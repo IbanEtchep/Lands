@@ -10,7 +10,7 @@ public interface AbstractGuildDataAccess {
 
     UUID getGuildId(UUID uuid);
 
-    boolean canManageGuildLand(UUID uuid, UUID guildId);
+    boolean canManageGuildLand(UUID uuid);
 
     boolean areInSameGuild(UUID uuid1, UUID uuid2);
 

@@ -6,10 +6,3 @@ authors: [ Iban ]
 description: Plugin de protections
 depend: [ Core ]
 softdepend: [ QuickShop , HeadDatabase, Parties, Guilds ]
-
-commands:
-  land:
-  lands:
-  addmaxclaim:
-  removemaxclaim:
-  getmaxclaim:

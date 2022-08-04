@@ -42,9 +42,9 @@ public class PartiesDataAccess implements AbstractGuildDataAccess, Listener {
     }
 
     @Override
-    public boolean canManageGuildLand(UUID uuid, UUID guildId) {
+    public boolean canManageGuildLand(UUID uuid) {
         PartyPlayer partyPlayer = partiesAPI.getPartyPlayer(uuid);
-        return partyPlayer != null && partyPlayer.getPartyId().equals(guildId) && partyPlayer.getRank() >= 10;
+        return partyPlayer != null && partyPlayer.getRank() >= 10;
     }
 
     @Override
