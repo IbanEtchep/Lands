@@ -76,7 +76,9 @@ public interface AbstractStorage {
 	void addLink(Land land, Link link, Land with);
 	
 	void removeLink(Land land, Link link);
-			
+
+	void updateLandLastPaymentDate(Land land);
+
 	Map<Integer, SubLand> getSubLands(Land land);
 
 	void setSubLandRegion(Land land, SubLand subland);

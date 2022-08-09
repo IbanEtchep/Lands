@@ -1,21 +1,20 @@
 package fr.iban.lands;
 
-import com.alessiodp.parties.api.Parties;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.guilds.GuildsPlugin;
 import fr.iban.lands.commands.LandCommand;
 import fr.iban.lands.commands.LandsCommand;
 import fr.iban.lands.commands.MaxClaimsCommand;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
-import fr.iban.lands.guild.PartiesDataAccess;
 import fr.iban.lands.listeners.*;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.utils.Head;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.bukkit.BukkitCommandActor;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
@@ -34,6 +33,7 @@ public final class LandsPlugin extends JavaPlugin {
     private List<UUID> bypass;
     private AbstractGuildDataAccess guildDataAccess;
     public static final String SYNC_CHANNEL = "LandSync";
+    private Economy econ = null;
 
     @Override
     public void onEnable() {
@@ -41,9 +41,10 @@ public final class LandsPlugin extends JavaPlugin {
         saveDefaultConfig();
         this.bypass = new ArrayList<>();
 
-        hookGuilds();
-
         landManager = new LandManager(this);
+
+        setupEconomy();
+        hookGuilds();
 
         if (getConfig().getBoolean("sync-enabled")) {
             getServer().getPluginManager().registerEvents(new LandSyncListener(landManager), this);
@@ -69,11 +70,13 @@ public final class LandsPlugin extends JavaPlugin {
                 new LandListeners(this),
                 new HeadDatabaseListener(),
                 new PortalListeners(this),
-                new FireListener(this)
+                new FireListener(this),
+                new ServiceListeners(this)
         );
 
         if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
-            getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
+            getServer().getPluginManager().registerEvents(new ShopListeners(this), this);
+            getLogger().info("Intégration QuickShop effectuée.");
         }
 
         Head.loadAPI();
@@ -86,14 +89,14 @@ public final class LandsPlugin extends JavaPlugin {
 
         //Land resolver
         commandHandler.getAutoCompleter().registerParameterSuggestions(Land.class, (args, sender, command) -> {
-            Player player = ((BukkitCommandActor)sender).getAsPlayer();
+            Player player = ((BukkitCommandActor) sender).getAsPlayer();
             return landManager.getManageableLandsNames(player);
         });
 
         commandHandler.registerValueResolver(Land.class, context -> {
             String value = context.arguments().pop();
             CommandActor actor = context.actor();
-            Player sender = ((BukkitCommandActor)actor).getAsPlayer();
+            Player sender = ((BukkitCommandActor) actor).getAsPlayer();
             Land land = getLandManager().getManageableLandFromName(sender, value);
             if (land == null) {
                 throw new CommandErrorException("Le territoire " + value + " n'existe pas.");
@@ -107,23 +110,37 @@ public final class LandsPlugin extends JavaPlugin {
         //commandHandler.registerBrigadier();
     }
 
+    public void setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return;
+        }
+        econ = rsp.getProvider();
+    }
+
+    public Economy getEconomy() {
+        return econ;
+    }
+
     private void hookGuilds() {
         if (getConfig().getBoolean("guild-lands-enabled", false)) {
-            if (getServer().getPluginManager().getPlugin("Parties") != null) {
-                if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Parties")).isEnabled()) {
-                    guildDataAccess = new PartiesDataAccess(Parties.getApi(), this);
-                    getLogger().info("Intégration avec le plugin Parties effectué.");
-                    getServer().getPluginManager().registerEvents((PartiesDataAccess) guildDataAccess, this);
-                }
-            }
             if (getServer().getPluginManager().getPlugin("Guilds") != null) {
                 if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds")).isEnabled()) {
-                    guildDataAccess = new GuildsDataAccess(GuildsPlugin.getInstance(), this);
-                    getLogger().info("Intégration avec le plugin Guilds effectué.");
-                    getServer().getPluginManager().registerEvents((GuildsDataAccess) guildDataAccess, this);
+                    GuildsDataAccess guildsDataAccess = new GuildsDataAccess(this);
+                    guildsDataAccess.load();
+                    if(guildsDataAccess.isEnabled()) {
+                        this.guildDataAccess = guildsDataAccess;
+                    }
                 }
             }
         }
+    }
+
+    public boolean isGuildsHookEnabled() {
+        return guildDataAccess != null && guildDataAccess.isEnabled();
     }
 
     public LandManager getLandManager() {

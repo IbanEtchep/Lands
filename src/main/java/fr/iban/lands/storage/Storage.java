@@ -11,11 +11,13 @@ import fr.iban.lands.enums.Link;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.objects.*;
 import fr.iban.lands.utils.Cuboid;
+import fr.iban.lands.utils.DateUtils;
 import org.bukkit.Bukkit;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 public class Storage implements AbstractStorage {
 
@@ -52,7 +54,7 @@ public class Storage implements AbstractStorage {
         Map<Integer, Land> lands = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid " +
+                    "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment " +
                             "FROM sc_lands L"
                             + " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND';")) {
                 try (ResultSet rs = ps.executeQuery()) {
@@ -61,21 +63,25 @@ public class Storage implements AbstractStorage {
                         int id = rs.getInt("idL");
                         LandType type = LandType.valueOf(rs.getString("libelleTL"));
                         String name = rs.getString("libelleL");
+                        Date lastPayment = rs.getTimestamp("lastPayment");
                         if (type == LandType.PLAYER) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
-                            if (guildDataAccess != null && guildDataAccess.guildExists(uuid)) {
-                                land = new GuildLand(id, uuid, name);
-                            } else continue;
+                            if(LandsPlugin.getInstance().isGuildsHookEnabled()) {
+                                AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                                if (guildDataAccess.guildExists(uuid)) {
+                                    land = new GuildLand(id, uuid, name);
+                                } else continue;
+                            }
                         } else {
                             land = new SystemLand(id, name);
                         }
                         if (land != null) {
                             land.setId(id);
                             land.setName(name);
+                            land.setLastPayment(lastPayment);
                             loadTrusts(land);
                             land.setFlags(getFlags(land));
                             land.setBans(getBans(land));
@@ -104,21 +110,25 @@ public class Storage implements AbstractStorage {
                     while (rs.next()) {
                         LandType type = LandType.valueOf(rs.getString("libelleTL"));
                         String name = rs.getString("libelleL");
+                        Date lastPayment = rs.getTimestamp("lastPayment");
                         if (type == LandType.PLAYER) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
-                            if (guildDataAccess != null && guildDataAccess.guildExists(uuid)) {
-                                land = new GuildLand(id, uuid, name);
-                            } else continue;
+                            if(LandsPlugin.getInstance().isGuildsHookEnabled()) {
+                                AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                                if (guildDataAccess.guildExists(uuid)) {
+                                    land = new GuildLand(id, uuid, name);
+                                } else continue;
+                            }
                         } else {
                             land = new SystemLand(id, name);
                         }
                         if (land != null) {
                             land.setId(id);
                             land.setName(name);
+                            land.setLastPayment(lastPayment);
                             loadTrusts(land);
                             land.setFlags(getFlags(land));
                             land.setBans(getBans(land));
@@ -661,6 +671,20 @@ public class Storage implements AbstractStorage {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, name);
+                ps.setInt(2, land.getId());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void updateLandLastPaymentDate(Land land) {
+        String sql = "UPDATE sc_lands SET lastPayment=? WHERE idL=?;";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setTimestamp(1, Timestamp.valueOf(DateUtils.convertToLocalDateTime(land.getLastPayment())));
                 ps.setInt(2, land.getId());
                 ps.executeUpdate();
             }

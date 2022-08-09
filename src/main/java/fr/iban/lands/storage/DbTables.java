@@ -76,6 +76,7 @@ public class DbTables {
 				"    libelleL VARCHAR(255),\n" + 
 				"    idTL INT NOT NULL,\n" +
 				"    uuid VARCHAR(36) DEFAULT NULL, " +
+				"    lastPayment DATETIME DEFAULT NOW()," +
 				"    CONSTRAINT PK_lands PRIMARY KEY (idL),\n" + 
 				"    CONSTRAINT FK_land_type FOREIGN KEY (idTL) REFERENCES sc_land_types(idTL)" + 
 				");");

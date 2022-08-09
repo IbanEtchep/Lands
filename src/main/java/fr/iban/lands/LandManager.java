@@ -8,11 +8,13 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
+import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.objects.*;
 import fr.iban.lands.storage.AbstractStorage;
 import fr.iban.lands.storage.DbTables;
 import fr.iban.lands.storage.Storage;
 import fr.iban.lands.utils.Cuboid;
+import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -21,6 +23,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -54,7 +57,6 @@ public class LandManager {
         final long start = System.currentTimeMillis();
         plugin.getLogger().log(Level.INFO, "Chargement des données :.");
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-
             plugin.getLogger().log(Level.INFO, "Chargement des lands...");
             getLands().putAll(storage.getLands());
 
@@ -78,6 +80,7 @@ public class LandManager {
             });
             loaded = true;
             plugin.getLogger().info("Chargement des données terminé en " + (System.currentTimeMillis() - start) + " ms.");
+            startPaymentCheckTask();
         });
     }
 
@@ -194,7 +197,7 @@ public class LandManager {
             landNames.add(land.getName());
         }
 
-        if (plugin.getGuildDataAccess() != null) {
+        if (plugin.isGuildsHookEnabled()) {
             UUID guildID = plugin.getGuildDataAccess().getGuildId(player.getUniqueId());
             if (guildID != null) {
                 for (GuildLand land : getGuildLands(plugin.getGuildDataAccess().getGuildId(player.getUniqueId()))) {
@@ -483,7 +486,7 @@ public class LandManager {
      * CLAIM / UNCLAIM
      */
 
-    private Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
+    private final Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
             .expireAfterAccess(10, TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
@@ -529,14 +532,31 @@ public class LandManager {
 
     public CompletableFuture<Void> claim(Player player, SChunk chunk, Land land, boolean verbose) {
         return future(() -> {
-            try {
-                if (getRemainingChunkCount(player).get() < 1) {
-                    player.sendMessage("§cVous n'avez pas de tronçon disponible.");
+            if(land instanceof PlayerLand) {
+                try {
+                    if (getRemainingChunkCount(player).get() < 1) {
+                        player.sendMessage("§cVous n'avez pas de tronçon disponible.");
+                        return;
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
                     return;
                 }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-                return;
+            }
+
+            if (land.getChunkWeeklyPrice() != 0) {
+                if (land instanceof GuildLand guildLand && plugin.isGuildsHookEnabled()) {
+                    AbstractGuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
+                    boolean success = guildDataAccess.withdraw(guildLand.getGuildId(), 100);
+                    if (!success) {
+                        player.sendMessage("§cIl vous faut " + plugin.getEconomy().format(100) + "§c dans la banque de votre guilde pour claim un tronçon.");
+                        return;
+                    }
+                }
+                if(land.getLastPayment() == null) {
+                    land.setLastPayment(new Date());
+                    future(() -> storage.updateLandLastPaymentDate(land));
+                }
             }
 
             if (getLandAt(chunk).equals(wilderness)) {
@@ -772,5 +792,36 @@ public class LandManager {
                 getLands().put(land.getId(), land);
             }
         });
+    }
+
+    public void startPaymentCheckTask() {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::handleAllPayments, 10L, 72000L);
+    }
+
+    public void handleAllPayments() {
+        lands.values().forEach(this::handlePayment);
+    }
+
+    public boolean handlePayment(Land land) {
+        if (plugin.isGuildsHookEnabled()) {
+            AbstractGuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
+            if (land instanceof GuildLand guildLand) {
+                if (guildLand.getNextPaiement() != null
+                        && LocalDateTime.now().isAfter(DateUtils.convertToLocalDateTime(land.getLastPayment()).plusWeeks(1))) {
+                    boolean success = guildDataAccess.withdraw(guildLand.getGuildId(), guildLand.getTotalWeeklyPrice(), "payer les frais de vos territoires");
+                    if (success) {
+                        guildLand.setLastPayment(new Date());
+                        guildLand.setPaymentDue(false);
+//                        plugin.getLogger().info("Paiement de " + land.getName());
+                        storage.updateLandLastPaymentDate(land);
+                        return true;
+                    } else {
+                        guildLand.setPaymentDue(true);
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 }

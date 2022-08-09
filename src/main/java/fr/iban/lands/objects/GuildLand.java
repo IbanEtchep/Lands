@@ -48,4 +48,9 @@ public class GuildLand extends Land {
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.isGuildMember(uuid, guildId);
     }
+
+    @Override
+    public double getChunkWeeklyPrice() {
+        return 100;
+    }
 }

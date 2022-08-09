@@ -223,6 +223,25 @@ public class LandCommand {
         player.performCommand("lands");
     }
 
+    @Subcommand("pay")
+    public void pay(Player player, Land land) {
+        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+            player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
+            return;
+        }
+
+        if(!land.isPaymentDue()) {
+            player.sendMessage("§cCe territoire n'a pas de paiement en attente.");
+            return;
+        }
+
+        if(landManager.handlePayment(land)) {
+            player.sendMessage("§aLa transaction s'est déroulée avec succès. Le territoire est débloqué.");
+        }else{
+            player.sendMessage("§cLe paiement n'a pas pu être effectué. Vérifiez que les fonds nécessaires sont disponibles.");
+        }
+    }
+
     @Subcommand("help")
     public void help(Player player) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {

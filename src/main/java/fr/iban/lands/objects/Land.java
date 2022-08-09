@@ -6,6 +6,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
+import fr.iban.lands.utils.DateUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -26,7 +27,10 @@ public abstract class Land {
 	protected Set<UUID> bans = new HashSet<>();
 	protected Map<Link, Land> links;
 	protected Map<Integer, SubLand> subLands = new ConcurrentHashMap<>();
-	
+	protected Date lastPayment;
+	protected boolean paymentDue = false;
+
+
 	public Land(int id, String name) {
 		this.id = id;
 		this.name = name;
@@ -137,10 +141,15 @@ public abstract class Land {
 		boolean bypass = getGlobalTrust().hasPermission(action)
 				|| isTrusted(uuid, action)
 				|| plugin.isBypassing(player)
-				|| (plugin.getGuildDataAccess() != null && getOwner() != null
+				|| (plugin.isGuildsHookEnabled() && getOwner() != null
 					&& getGuildTrust().hasPermission(action)
 					&& plugin.getGuildDataAccess().areInSameGuild(getOwner(), player.getUniqueId()));
-		if((!bypass) && this instanceof PlayerLand) {
+
+		if(isPaymentDue() && (action.equals(Action.BLOCK_BREAK) || action.equals(Action.BLOCK_PLACE))) {
+			player.sendMessage("§cCe claim est en défaut de paiement, les actions y sont donc limitées.");
+		}
+
+		if((!bypass) && !(this instanceof SystemLand)) {
 			player.sendActionBar(Component.text("§cVous n'avez pas la permission de faire cela dans ce claim."));
 		}
 		//Bukkit.broadcastMessage(action.toString() + " :" + bypass);
@@ -231,5 +240,36 @@ public abstract class Land {
 
 	public Trust getGuildTrust() {
 		return guildTrust;
+	}
+
+	public Date getLastPayment() {
+		return lastPayment;
+	}
+
+	public Date getNextPaiement() {
+		if(getLastPayment() == null) {
+			return null;
+		}
+		return DateUtils.convertToDate(DateUtils.convertToLocalDateTime(getLastPayment()).plusWeeks(1));
+	}
+
+	public void setLastPayment(Date lastPayment) {
+		this.lastPayment = lastPayment;
+	}
+
+	public boolean isPaymentDue() {
+		return paymentDue;
+	}
+
+	public void setPaymentDue(boolean paymentDue) {
+		this.paymentDue = paymentDue;
+	}
+
+	public double getTotalWeeklyPrice() {
+		return LandsPlugin.getInstance().getLandManager().getChunks(this).size() * getChunkWeeklyPrice();
+	}
+
+	public double getChunkWeeklyPrice() {
+		return 0;
 	}
 }

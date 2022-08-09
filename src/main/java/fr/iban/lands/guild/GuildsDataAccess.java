@@ -1,27 +1,46 @@
 package fr.iban.lands.guild;
 
-import com.alessiodp.parties.api.events.bukkit.party.BukkitPartiesPartyPostDeleteEvent;
 import fr.iban.guilds.Guild;
 import fr.iban.guilds.GuildPlayer;
 import fr.iban.guilds.GuildsManager;
-import fr.iban.guilds.GuildsPlugin;
 import fr.iban.guilds.enums.Rank;
 import fr.iban.guilds.event.GuildDisbandEvent;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServiceRegisterEvent;
+import org.bukkit.event.server.ServiceUnregisterEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.UUID;
 
 public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     private GuildsManager guildsManager;
-    private LandManager landManager;
+    private final LandsPlugin landsPlugin;
 
-    public GuildsDataAccess(GuildsPlugin guildsPlugin, LandsPlugin landsPlugin) {
-        this.guildsManager = guildsPlugin.getGuildsManager();
-        this.landManager = landsPlugin.getLandManager();
+    public GuildsDataAccess(LandsPlugin landsPlugin) {
+        this.landsPlugin = landsPlugin;
+    }
+
+    @Override
+    public void load() {
+        RegisteredServiceProvider<GuildsManager> rsp = landsPlugin.getServer().getServicesManager().getRegistration(GuildsManager.class);
+        if (rsp != null) {
+            guildsManager = rsp.getProvider();
+            landsPlugin.getServer().getPluginManager().registerEvents(this, landsPlugin);
+            landsPlugin.getLogger().info("Intégration avec le plugin Guilds effectué.");
+        }
+    }
+
+    @Override
+    public void unload() {
+
+    }
+
+    public boolean isEnabled() {
+        return guildsManager != null;
     }
 
     @Override
@@ -71,10 +90,45 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         return guildPlayer != null && guildPlayer.getGuildId().equals(guildId);
     }
 
+    @Override
+    public boolean withdraw(UUID guildId, double amount, String reason) {
+        Guild guild = guildsManager.getGuildById(guildId);
+        if(guild == null) {
+            return false;
+        }
+        return guildsManager.guildWithdraw(guild, amount, reason);
+    }
+
+    @Override
+    public boolean withdraw(UUID guildId, double amount) {
+        Guild guild = guildsManager.getGuildById(guildId);
+        if(guild == null) {
+            return false;
+        }
+        return guildsManager.guildWithdraw(guild, amount);
+    }
+
     @EventHandler
     public void onDisband(GuildDisbandEvent e) {
+        LandManager landManager = landsPlugin.getLandManager();
         landManager.getGuildLandsAsync(e.getGuild().getId()).thenAccept(lands -> {
-            lands.forEach(land -> landManager.deleteLand(land));
+            lands.forEach(landManager::deleteLand);
         });
+    }
+
+    @EventHandler
+    public void onServiceRegister(ServiceRegisterEvent event) {
+        if (event.getProvider().getService().getName().equals("fr.iban.guilds.GuildsManager")) {
+            load();
+        }
+    }
+
+    @EventHandler
+    public void onServiceUnregister(ServiceUnregisterEvent event) {
+        if (event.getProvider().getService().getName().equals("fr.iban.guilds.GuildsManager")) {
+            this.guildsManager = null;
+            landsPlugin.getLogger().info("Intégration avec le plugin Guilds désactivée.");
+            load();
+        }
     }
 }

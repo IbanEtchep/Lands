@@ -8,6 +8,7 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -139,7 +140,6 @@ public class LandMainMenu extends PaginatedMenu {
             }
 
         }
-
     }
 
     @Override
@@ -174,15 +174,25 @@ public class LandMainMenu extends PaginatedMenu {
     }
 
     private ItemStack getLandItem(Land land) {
-        return new ItemBuilder(Head.GRASS.get())
-                .setDisplayName("§2" + land.getName())
-                .addLore("§aClic gauche pour gérer ce territoire.")
-                .addLore("§cClic droit pour supprimer ce territoire.")
-                .addLore("")
-                .addLore("§fTronçons : " + manager.getChunks(land).size())
-                .addLore("§fJoueurs trust : " + land.getTrusts().size())
-                .addLore("§fBannissements : " + land.getBans().size())
-                .build();
+        ItemBuilder itemBuilder = new ItemBuilder(Head.GRASS.get())
+                    .setDisplayName("§2" + land.getName())
+                    .addLore("§aClic gauche pour gérer ce territoire.")
+                    .addLore("§cClic droit pour supprimer ce territoire.")
+                    .addLore("")
+                    .addLore("§fTronçons : " + manager.getChunks(land).size())
+                    .addLore("§fJoueurs trust : " + land.getTrusts().size())
+                    .addLore("§fBannissements : " + land.getBans().size());
+        if(land.getTotalWeeklyPrice() > 0) {
+            itemBuilder.addLore("§fCoût hebdomadaire : " + plugin.getEconomy().format(land.getTotalWeeklyPrice()))
+                    .addLore(land.getNextPaiement() != null ? "§fProchain paiement : " + DateUtils.format(land.getNextPaiement()) : "");
+        }
+        if(land.isPaymentDue()) {
+            itemBuilder.addLore("")
+                    .addLore("§4§L⚠ Défaut de paiement.")
+                    .addLore("§fVous devez payer " + plugin.getEconomy().format(land.getTotalWeeklyPrice()) + ". ")
+                    .addLore("§fUtilisez la commande §b/land pay " + land.getName()+".");
+        }
+        return itemBuilder.build();
     }
 
     private Land getLandByName(String string) {

@@ -15,14 +15,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class LandManageMenu extends Menu {
 
-	private Land land;
-	private LandManager manager;
+	private final LandsPlugin plugin;
+	private final LandManager manager;
+	private final Land land;
 	private Menu previousMenu;
-	private LandsPlugin plugin;
 
 	public LandManageMenu(Player player, LandsPlugin plugin, LandManager manager, Land land) {
 		super(player);
@@ -63,7 +64,7 @@ public class LandManageMenu extends Menu {
 		}else if(displayNameEquals(current, "§2Bannissements")) {
 			new BansManageMenu(player, manager, land, this).open();
 		}else if(displayNameEquals(current, "§2Sous-territoires")) {
-			new SubLandMainMenu(player, plugin, land.getSubLands().values().stream().collect(Collectors.toList()), land, previousMenu).open();;
+			new SubLandMainMenu(player, plugin, new ArrayList<>(land.getSubLands().values()), land, previousMenu).open();;
 		}else if(displayNameEquals(current, "§2Zone protégée :")) {
 			player.sendMessage("§2§lDébut de la sélection de la zone.");
 			CuboidSelector selector = new CuboidSelector(player, (SubLand)land, manager, () -> {

@@ -4,6 +4,12 @@ import java.util.UUID;
 
 public interface AbstractGuildDataAccess {
 
+    void load();
+
+    void unload();
+
+    boolean isEnabled();
+
     boolean guildExists(UUID guildId);
 
     String getGuildName(UUID guildId);
@@ -19,5 +25,9 @@ public interface AbstractGuildDataAccess {
     boolean isGuildLeader(UUID uuid, UUID guildId);
 
     boolean isGuildMember(UUID uuid, UUID guildId);
+
+    boolean withdraw(UUID guildId, double amount, String reason);
+
+    boolean withdraw(UUID guildId, double amount);
 
 }

@@ -58,7 +58,7 @@ public class LandsCommand {
 
     @Subcommand("guild")
     public void landsGuild(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") || plugin.getGuildDataAccess() == null) {
+        if (!plugin.getConfig().getBoolean("players-lands-enabled") || !plugin.isGuildsHookEnabled()) {
             player.sendMessage("§cLes territoires de guilde ne sont pas activés sur ce serveur.");
             return;
         }

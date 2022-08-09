@@ -5,4 +5,4 @@ api-version: 1.16
 authors: [ Iban ]
 description: Plugin de protections
 depend: [ Core ]
-softdepend: [ QuickShop , HeadDatabase, Parties, Guilds ]
+softdepend: [ QuickShop , HeadDatabase, Guilds, Vault ]
