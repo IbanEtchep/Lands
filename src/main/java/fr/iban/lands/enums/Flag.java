@@ -24,7 +24,7 @@ public enum Flag {
 	private ItemStack item;
 	private boolean system;
 	
-	private Flag(String displayName, ItemStack item, boolean system) {
+	Flag(String displayName, ItemStack item, boolean system) {
 		this.displayName = displayName;
 		this.item = item;
 		this.system = system;

@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -81,6 +82,22 @@ public class BlockBreakListener implements Listener {
 				e.setCancelled(true);
 			}
 		}
+	}
+
+	@EventHandler
+	public void onProjectileHit(ProjectileHitEvent e) {
+		if(e.getHitBlock() == null) {
+			return;
+		}
+
+		if(e.getEntity().getShooter() instanceof Player player) {
+			Land land = landmanager.getLandAt(e.getHitBlock().getLocation());
+
+			if(!land.isBypassing(player, Action.BLOCK_BREAK)) {
+				e.setCancelled(true);
+			}
+		}
+
 	}
 
 }
