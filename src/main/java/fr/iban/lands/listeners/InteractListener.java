@@ -5,6 +5,8 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
+import io.papermc.paper.event.player.PlayerChangeBeaconEffectEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -127,6 +129,9 @@ public class InteractListener implements Listener {
                         return;
                 }
             }
+            if(land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && block.getType() == Material.TRIPWIRE) {
+                return;
+            }
             e.setCancelled(true);
         }
     }
@@ -179,6 +184,17 @@ public class InteractListener implements Listener {
         if (land == null) return;
 
         if (!land.isBypassing(player, Action.LEASH)) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBeaconChange(PlayerChangeBeaconEffectEvent e) {
+        if(e.getBeacon() == null) return;
+        Player player = e.getPlayer();
+        Land land = landmanager.getLandAt(e.getBeacon().getLocation());
+
+        if (!land.isBypassing(player, Action.CHANGE_BEACON_EFFECT)) {
             e.setCancelled(true);
         }
     }

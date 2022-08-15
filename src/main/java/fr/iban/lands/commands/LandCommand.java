@@ -24,6 +24,7 @@ import revxrsal.commands.bukkit.annotation.CommandPermission;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Command("land")
@@ -94,7 +95,7 @@ public class LandCommand {
             if (land instanceof PlayerLand pland) {
                 if (pland.getOwner() != null) {
                     if (pland.getOwner().equals(player.getUniqueId())) {
-                        target.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
+                        target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
                         target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
                         player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
                     } else {
@@ -138,6 +139,7 @@ public class LandCommand {
     }
 
     @Subcommand("claimat")
+    @SecretCommand
     public void claimat(Player player, World world, int X, int Z) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
@@ -156,6 +158,7 @@ public class LandCommand {
     }
 
     @Subcommand("unclaimat")
+    @SecretCommand
     public void unclaimat(Player player, World world, int X, int Z) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
@@ -230,16 +233,24 @@ public class LandCommand {
             return;
         }
 
-        if(!land.isPaymentDue()) {
+        if (!land.isPaymentDue()) {
             player.sendMessage("§cCe territoire n'a pas de paiement en attente.");
             return;
         }
 
-        if(landManager.handlePayment(land)) {
+        if (landManager.handlePayment(land)) {
             player.sendMessage("§aLa transaction s'est déroulée avec succès. Le territoire est débloqué.");
-        }else{
+        } else {
             player.sendMessage("§cLe paiement n'a pas pu être effectué. Vérifiez que les fonds nécessaires sont disponibles.");
         }
+    }
+
+    @Subcommand("admin setspawn")
+    @CommandPermission("lands.admin")
+    public void setSpawnLocation(Player player) {
+        plugin.getConfig().set("spawn-location", player.getLocation());
+        plugin.saveConfig();
+        player.sendMessage("§aPosition du spawn redéfini.");
     }
 
     @Subcommand("help")

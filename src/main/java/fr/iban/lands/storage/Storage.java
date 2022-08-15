@@ -210,6 +210,15 @@ public class Storage implements AbstractStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        String linksWithSql = "DELETE FROM sc_lands_links WHERE idLW=?";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(linksWithSql)) {
+                ps.setInt(1, land.getId());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         String sql = "DELETE FROM sc_lands WHERE idL=?";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
