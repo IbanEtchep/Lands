@@ -1,6 +1,7 @@
 package fr.iban.lands.objects;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.LandsPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ public class SChunk {
 	}
 	
 	public SChunk(Chunk chunk) {
-		this(CoreBukkitPlugin.getInstance().getServerName(), chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
+		this(LandsPlugin.getInstance().getServerName(), chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
 	}
 
 	public String getServer() {
@@ -58,7 +59,7 @@ public class SChunk {
 	}
 
 	public boolean equalsChunk(Chunk chunk) {
-		return chunk.getWorld().getName().equals(world) && chunk.getX() == x && chunk.getZ() == z && CoreBukkitPlugin.getInstance().getServerName().equals(server);
+		return chunk.getWorld().getName().equals(world) && chunk.getX() == x && chunk.getZ() == z && LandsPlugin.getInstance().getServerName().equals(server);
 	}
 
 	public Chunk getChunk() {

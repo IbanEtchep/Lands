@@ -28,9 +28,8 @@ public class Storage implements AbstractStorage {
         Map<SChunk, Integer> chunks = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * " +
-                            "FROM sc_chunks WHERE server=?;")) {
-                ps.setString(1, CoreBukkitPlugin.getInstance().getServerName());
+                    "SELECT * FROM sc_chunks WHERE server=?;")) {
+                ps.setString(1, LandsPlugin.getInstance().getServerName());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         int id = rs.getInt("idL");

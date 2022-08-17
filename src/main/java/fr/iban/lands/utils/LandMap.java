@@ -2,6 +2,7 @@ package fr.iban.lands.utils;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.objects.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
@@ -34,7 +35,7 @@ public class LandMap {
 
 	public List<BaseComponent[]> get(Player player, int rangeX, int rangeZ, Land land) {
 		List<ComponentBuilder> components = new ArrayList<>();
-		String servername = CoreBukkitPlugin.getInstance().getServerName();
+		String servername = LandsPlugin.getInstance().getServerName();
 		final Chunk center = player.getChunk();
 		final World world = center.getWorld();
 

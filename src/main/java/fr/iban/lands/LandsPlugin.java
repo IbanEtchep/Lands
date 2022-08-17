@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 import revxrsal.commands.bukkit.BukkitCommandActor;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 import revxrsal.commands.command.CommandActor;
@@ -32,7 +33,8 @@ public final class LandsPlugin extends JavaPlugin {
     private static LandsPlugin instance;
     private List<UUID> bypass;
     private AbstractGuildDataAccess guildDataAccess;
-    public static final String SYNC_CHANNEL = "LandSync";
+    public static final String LAND_SYNC_CHANNEL = "LandSync";
+    public static final String CHUNK_SYNC_CHANNEL = "LandChunkSync";
     private Economy econ = null;
 
     @Override
@@ -47,7 +49,7 @@ public final class LandsPlugin extends JavaPlugin {
         hookGuilds();
 
         if (getConfig().getBoolean("sync-enabled")) {
-            getServer().getPluginManager().registerEvents(new LandSyncListener(landManager), this);
+            getServer().getPluginManager().registerEvents(new LandSyncListener(this), this);
         }
 
         registerCommands();
@@ -107,7 +109,7 @@ public final class LandsPlugin extends JavaPlugin {
         commandHandler.register(new LandCommand(this));
         commandHandler.register(new LandsCommand(this));
         commandHandler.register(new MaxClaimsCommand());
-        commandHandler.registerBrigadier();
+        //commandHandler.registerBrigadier();
     }
 
     public void setupEconomy() {
@@ -131,7 +133,7 @@ public final class LandsPlugin extends JavaPlugin {
                 if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds")).isEnabled()) {
                     GuildsDataAccess guildsDataAccess = new GuildsDataAccess(this);
                     guildsDataAccess.load();
-                    if(guildsDataAccess.isEnabled()) {
+                    if (guildsDataAccess.isEnabled()) {
                         this.guildDataAccess = guildsDataAccess;
                     }
                 }
@@ -171,6 +173,19 @@ public final class LandsPlugin extends JavaPlugin {
 
     public AbstractGuildDataAccess getGuildDataAccess() {
         return guildDataAccess;
+    }
+
+    public boolean isMultipaperSupportEnabled() {
+        return getConfig().getBoolean("multipaper-support.enabled", false);
+    }
+
+    public @Nullable String getMultipaperServerName() {
+        return isMultipaperSupportEnabled() ? getConfig().getString("multipaper-support.server-name") : null;
+    }
+
+    public String getServerName() {
+        String multipaperServer = getMultipaperServerName();
+        return multipaperServer != null ? multipaperServer : CoreBukkitPlugin.getInstance().getServerName();
     }
 
 }

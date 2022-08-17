@@ -222,7 +222,7 @@ public abstract class Land {
 	public SubLand getSubLandAt(Location loc) {
 		if(hasSubLand()) {
 			for(SubLand subland : subLands.values()) {
-				if(subland.getCuboid() != null && subland.getServer() != null && subland.getServer().equals(CoreBukkitPlugin.getInstance().getServerName()) && subland.getCuboid().contains(loc)) {
+				if(subland.getCuboid() != null && subland.getServer() != null && subland.getServer().equals(LandsPlugin.getInstance().getServerName()) && subland.getCuboid().contains(loc)) {
 					return subland;
 				}
 			}

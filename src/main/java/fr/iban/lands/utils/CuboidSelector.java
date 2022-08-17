@@ -64,8 +64,8 @@ public class CuboidSelector {
 			}else if(texte.equalsIgnoreCase("sauvegarder")){
 				Cuboid cuboid = getCuboid();
 				verif(cuboid).thenAcceptAsync(valid -> {
-					if(valid.booleanValue()) {
-						land.setCuboid(cuboid, CoreBukkitPlugin.getInstance().getServerName());
+					if(valid) {
+						land.setCuboid(cuboid, LandsPlugin.getInstance().getServerName());
 						manager.saveSubLandCuboid(land);
 						player.sendMessage("§a§lLa selection a été sauvegardée avec succès.");
 						callback.quit();

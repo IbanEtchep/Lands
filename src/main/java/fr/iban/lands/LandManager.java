@@ -13,6 +13,7 @@ import fr.iban.lands.objects.*;
 import fr.iban.lands.storage.AbstractStorage;
 import fr.iban.lands.storage.DbTables;
 import fr.iban.lands.storage.Storage;
+import fr.iban.lands.utils.ChunkClaimSyncMessage;
 import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
@@ -22,6 +23,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -82,6 +84,10 @@ public class LandManager {
             plugin.getLogger().info("Chargement des données terminé en " + (System.currentTimeMillis() - start) + " ms.");
             startPaymentCheckTask();
         });
+    }
+
+    public @Nullable Land getLandByID(int id) {
+        return lands.get(id);
     }
 
     /*
@@ -524,10 +530,17 @@ public class LandManager {
     /*
      * Ajouter un chunk à un territoire :
      */
-    public void claim(SChunk chunk, Land land) {
+    public void claim(SChunk chunk, Land land, boolean persist) {
         getChunks().put(chunk, land);
         chunksCache.invalidate(chunk);
-        future(() -> storage.setChunk(land, chunk));
+        if (persist) {
+            syncChunk(land, chunk, false);
+            future(() -> storage.setChunk(land, chunk));
+        }
+    }
+
+    public void claim(SChunk chunk, Land land) {
+        claim(chunk, land, true);
     }
 
     public CompletableFuture<Void> claim(Player player, SChunk chunk, Land land, boolean verbose) {
@@ -582,7 +595,7 @@ public class LandManager {
                     if (chunks.size() % 50 == 0) {
                         int loadedChunks = TTChunks - chunks.size();
                         player.sendMessage("§aProtection des chunks... (" + loadedChunks + "/" + TTChunks + ") ["
-                                + Math.round(loadedChunks * 100.0F / (TTChunks / 1.0F) * 10.0F) / 10.0F + "%]");
+                                + Math.round(loadedChunks * 100.0F / (TTChunks) * 10.0F) / 10.0F + "%]");
                     }
                 } else {
                     player.sendMessage("§a§lLa selection a été protégée avec succès.");
@@ -592,11 +605,10 @@ public class LandManager {
         }.runTaskTimerAsynchronously(plugin, 0L, 1L);
     }
 
-    public CompletableFuture<Void> unclaim(Player player, SChunk chunk, boolean verbose) {
-        return future(() -> {
+    public void unclaim(Player player, SChunk chunk, boolean verbose) {
+        future(() -> {
             Land land = getLandAt(chunk);
-            if (land instanceof PlayerLand) {
-                PlayerLand pland = (PlayerLand) land;
+            if (land instanceof PlayerLand pland) {
                 if (pland.getOwner().equals(player.getUniqueId()) || plugin.isBypassing(player)) {
                     unclaim(chunk);
                     if (verbose) {
@@ -628,12 +640,16 @@ public class LandManager {
         });
     }
 
-    public CompletableFuture<Void> unclaim(Chunk chunk) {
-        return unclaim(new SChunk(chunk));
+    public void unclaim(Chunk chunk) {
+        unclaim(new SChunk(chunk), true);
     }
 
-    public CompletableFuture<Void> unclaim(SChunk schunk) {
-        return future(() -> {
+    public void unclaim(SChunk schunk) {
+        unclaim(schunk, true);
+    }
+
+    public void unclaim(SChunk schunk, boolean persist) {
+        future(() -> {
             Land land = getLandAt(schunk);
             if (land == null) {
                 return;
@@ -641,6 +657,10 @@ public class LandManager {
             chunks.remove(schunk);
             chunksCache.invalidate(schunk);
             storage.removeChunk(schunk);
+            if (persist) {
+                syncChunk(land, schunk, true);
+                storage.removeChunk(schunk);
+            }
         });
     }
 
@@ -678,10 +698,9 @@ public class LandManager {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             Land landat = getLandAt(player.getChunk());
-            if (landat instanceof PlayerLand) {
-                PlayerLand pland = (PlayerLand) landat;
+            if (landat instanceof PlayerLand pland) {
                 if (Objects.equals(pland.getOwner(), sender.getUniqueId())) {
-                    player.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
+                    player.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
                 }
             }
             player.sendMessage("§aVous avez été banni du territoire " + land.getName() + " par " + sender.getName() + ".");
@@ -744,8 +763,8 @@ public class LandManager {
         }).thenRun(() -> syncLand(superLand));
     }
 
-    public CompletableFuture<Void> saveSubLandCuboid(SubLand subland) {
-        return future(() -> storage.setSubLandRegion(subland.getSuperLand(), subland))
+    public void saveSubLandCuboid(SubLand subland) {
+        future(() -> storage.setSubLandRegion(subland.getSuperLand(), subland))
                 .thenRun(() -> syncLand(subland.getSuperLand()));
     }
 
@@ -780,7 +799,15 @@ public class LandManager {
     public void syncLand(Land land) {
         CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
         if (plugin.getConfig().getBoolean("sync-enabled")) {
-            core.getMessagingManager().sendMessage(LandsPlugin.SYNC_CHANNEL, String.valueOf(land.getId()));
+            core.getMessagingManager().sendMessage(LandsPlugin.LAND_SYNC_CHANNEL, String.valueOf(land.getId()));
+        }
+    }
+
+    public void syncChunk(Land land, SChunk chunk, boolean unclaim) {
+        if(plugin.isMultipaperSupportEnabled()) {
+            CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
+            ChunkClaimSyncMessage message = new ChunkClaimSyncMessage(land.getId(), chunk, unclaim);
+            core.getMessagingManager().sendMessage(LandsPlugin.CHUNK_SYNC_CHANNEL, message);
         }
     }
 
@@ -789,7 +816,9 @@ public class LandManager {
             if (land == null && getLands().containsKey(id)) {
                 getLands().remove(id);
             } else {
-                getLands().put(land.getId(), land);
+                if (land != null) {
+                    getLands().put(land.getId(), land);
+                }
             }
         });
     }
@@ -812,7 +841,6 @@ public class LandManager {
                     if (success) {
                         guildLand.setLastPayment(new Date());
                         guildLand.setPaymentDue(false);
-//                        plugin.getLogger().info("Paiement de " + land.getName());
                         storage.updateLandLastPaymentDate(land);
                         return true;
                     } else {

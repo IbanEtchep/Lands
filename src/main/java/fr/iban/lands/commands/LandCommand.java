@@ -150,7 +150,7 @@ public class LandCommand {
         if (!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(player.getUniqueId())) {
             Land land = map.getLandMapSelection().get(player.getUniqueId());
             if (land != null) {
-                landManager.claim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+                landManager.claim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
                     map.display(player, land);
                 }));
             }
@@ -170,12 +170,12 @@ public class LandCommand {
             Land land = map.getLandMapSelection().get(player.getUniqueId());
             if (land != null) {
                 if (land instanceof PlayerLand) {
-                    landManager.unclaim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true);
+                    landManager.unclaim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true);
                 } else if (land instanceof SystemLand && player.hasPermission("lands.admin")) {
                     landManager.unclaim(world.getChunkAt(X, Z));
                 }
                 player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
-                landManager.unclaim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+                landManager.unclaim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
                     map.display(player, land);
                 }));
             }

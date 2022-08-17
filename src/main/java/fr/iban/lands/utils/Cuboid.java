@@ -1,6 +1,7 @@
 package fr.iban.lands.utils;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.objects.SChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -583,7 +584,7 @@ public class Cuboid implements Iterable<Block>, Cloneable, ConfigurationSerializ
 		int z2 = this.getUpperZ() & ~0xf;
 		for (int x = x1; x <= x2; x += 16) {
 			for (int z = z1; z <= z2; z += 16) {
-				res.add(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), w.getName(), x >> 4, z >> 4));
+				res.add(new SChunk(LandsPlugin.getInstance().getServerName(), w.getName(), x >> 4, z >> 4));
 			}
 		}
 		return res;
