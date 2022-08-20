@@ -101,7 +101,7 @@ public final class LandsPlugin extends JavaPlugin {
             Player sender = ((BukkitCommandActor) actor).getAsPlayer();
             Land land = getLandManager().getManageableLandFromName(sender, value);
             if (land == null) {
-                throw new CommandErrorException("Le territoire " + value + " n'existe pas.");
+                throw new CommandErrorException("Le territoire " + value + " n''existe pas.");
             }
             return land;
         });
