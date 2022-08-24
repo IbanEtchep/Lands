@@ -22,11 +22,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class TrustsManageMenu extends PaginatedMenu {
 
-    private Land land;
-    private Map<UUID, Trust> trusts;
-    private LandManager manager;
+    private final Land land;
+    private final Map<UUID, Trust> trusts;
+    private final LandManager manager;
+    private final Map<Integer, UUID> uuidAtSlot = new HashMap<>();
     private LandManageMenu previousMenu;
-    private Map<Integer, UUID> uuidAtSlot = new HashMap<>();
 
 
     public TrustsManageMenu(Player player, LandManager manager, Land land) {
@@ -66,7 +66,7 @@ public class TrustsManageMenu extends PaginatedMenu {
             previousMenu.open();
         }
 
-        if (item.getType() == Material.PLAYER_HEAD) {
+        if (item != null && item.getType() == Material.PLAYER_HEAD) {
             if (displayNameEquals(item, "§2Ajouter")) {
                 player.closeInventory();
                 player.sendMessage("§2§lVeuillez entrer le nom du joueur à qui vous voulez modifier les permissions. :");

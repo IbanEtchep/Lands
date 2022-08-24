@@ -1,6 +1,5 @@
 package fr.iban.lands.objects;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;

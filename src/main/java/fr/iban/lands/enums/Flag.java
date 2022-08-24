@@ -3,33 +3,44 @@ package fr.iban.lands.enums;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-public enum Flag {
-	
-	EXPLOSIONS("Active les explosions", new ItemStack(Material.TNT), false),
-	BLOCK_DAMAGES_BY_ENTITY("Active les dégâts aux blocs par les entités (endermans, withers...)", new ItemStack(Material.DIRT), false),
-	PRESSURE_PLATE_BY_ENTITY("Active l'utilisation des plaques de pression par les entités", new ItemStack(Material.OAK_PRESSURE_PLATE), false),
-	TRIPWIRE_BY_ENTITY("Active l'utilisation des crochets par les entités", new ItemStack(Material.TRIPWIRE_HOOK), false),
-	FARMLAND_GRIEF("Active la destruction des terres labourées", new ItemStack(Material.FARMLAND), false),
-	INVINCIBLE("Active l'invincibilité pour les joueurs", new ItemStack(Material.IRON_SWORD), true),
-	//MOB_DAMAGES("Active les dégats sur les entités aggressives", new ItemStack(Material.IRON_SWORD), true),
-	PVP("Active le pvp", new ItemStack(Material.DIAMOND_SWORD), true),
-	AUTO_REPLANT("Active l'auto replantation", new ItemStack(Material.GOLDEN_SHOVEL), true),
-	DOORS_AUTOCLOSE("Active la fermeture automatique des portes", new ItemStack(Material.OAK_DOOR), true),
-	NO_MOB_SPAWNING("Désactive le spawn des mobs", new ItemStack(Material.ZOMBIE_SPAWN_EGG), true),
-	SILENT_MOBS("Désactive le bruit des mobs de ce territoire", new ItemStack(Material.JUKEBOX), false),
-	INVISIBLE("Rend les joueurs à l'intérieur invisibles.", new ItemStack(Material.POTION), true),
-	FIRE("Active les dégâts du feu et sa propagation.", new ItemStack(Material.FLINT_AND_STEEL), false),
-	LIQUID_SPREAD("Autorise les liquides extérieurs au claim à se propager.", new ItemStack(Material.LAVA_BUCKET), false);
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-	private String displayName;
-	private ItemStack item;
-	private boolean system;
-	
-	Flag(String displayName, ItemStack item, boolean system) {
+public enum Flag {
+	INVINCIBLE("Active l'invincibilité pour les joueurs", new ItemStack(Material.IRON_SWORD), LandType.SYSTEM),
+	PVP("Active le pvp", new ItemStack(Material.DIAMOND_SWORD), LandType.SYSTEM),
+	AUTO_REPLANT("Active l'auto replantation", new ItemStack(Material.GOLDEN_SHOVEL), LandType.SYSTEM),
+	DOORS_AUTOCLOSE("Active la fermeture automatique des portes", new ItemStack(Material.OAK_DOOR), LandType.SYSTEM),
+	NO_MOB_SPAWNING("Désactive le spawn des mobs", new ItemStack(Material.ZOMBIE_SPAWN_EGG), LandType.SYSTEM),
+	INVISIBLE("Rend les joueurs à l'intérieur invisibles.", new ItemStack(Material.POTION), LandType.SYSTEM),
+	EXPLOSIONS("Active les explosions", new ItemStack(Material.TNT)),
+	BLOCK_DAMAGES_BY_ENTITY("Active les dégâts aux blocs par les entités (endermans, withers...)", new ItemStack(Material.DIRT)),
+	PRESSURE_PLATE_BY_ENTITY("Active l'utilisation des plaques de pression par les entités", new ItemStack(Material.OAK_PRESSURE_PLATE)),
+	TRIPWIRE_BY_ENTITY("Active l'utilisation des crochets par les entités", new ItemStack(Material.TRIPWIRE_HOOK)),
+	FARMLAND_GRIEF("Active la destruction des terres labourées", new ItemStack(Material.FARMLAND)),
+	FIRE("Active les dégâts du feu et sa propagation.", new ItemStack(Material.FLINT_AND_STEEL)),
+	SILENT_MOBS("Désactive le bruit des mobs de ce territoire", new ItemStack(Material.JUKEBOX)),
+	LIQUID_SPREAD("Autorise les liquides extérieurs au claim à se propager.", new ItemStack(Material.LAVA_BUCKET)),
+	SHOP_MONEY_TO_GUILD_BANK("Rediriger l'argent des shops à la banque de la guilde.", new ItemStack(Material.GOLD_INGOT), LandType.GUILD)
+	;
+
+	private final String displayName;
+	private final ItemStack item;
+	private final LandType[] enabledLandTypes;
+
+	Flag(String displayName, ItemStack item, LandType... enabledTypes) {
 		this.displayName = displayName;
 		this.item = item;
-		this.system = system;
+		this.enabledLandTypes = enabledTypes;
 	}
+
+	Flag(String displayName, ItemStack item) {
+		this.displayName = displayName;
+		this.item = item;
+		this.enabledLandTypes = LandType.values();
+	}
+
 
 
 	public String getDisplayName() {
@@ -49,7 +60,12 @@ public enum Flag {
 	}
 
 
-	public boolean isSystem() {
-		return system;
+	public boolean isEnabled(LandType landType) {
+		for (LandType value : LandType.values()) {
+			if(value == landType) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

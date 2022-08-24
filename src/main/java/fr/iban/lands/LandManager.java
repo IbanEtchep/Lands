@@ -340,8 +340,8 @@ public class LandManager {
         });
     }
 
-    public CompletableFuture<Void> saveWilderness(SystemLand land) {
-        return future(() -> {
+    public void saveWilderness(SystemLand land) {
+        future(() -> {
             getLands().put(-1, land);
             storage.addLand(land);
         });
@@ -511,20 +511,7 @@ public class LandManager {
     public Land getLandAt(Location loc) {
         Land land = getLandAt(loc.getChunk());
         SubLand subLand = land.getSubLandAt(loc);
-        if (subLand != null) {
-            return subLand;
-        } else {
-            return land;
-        }
-    }
-
-
-    public CompletableFuture<Land> getLandAtAsync(Chunk chunk) {
-        return future(() -> getLandAt(chunk));
-    }
-
-    public CompletableFuture<Land> getLandAtAsync(Location loc) {
-        return future(() -> getLandAt(loc));
+        return Objects.requireNonNullElse(subLand, land);
     }
 
     /*
@@ -767,7 +754,6 @@ public class LandManager {
         future(() -> storage.setSubLandRegion(subland.getSuperLand(), subland))
                 .thenRun(() -> syncLand(subland.getSuperLand()));
     }
-
 
     public <T> CompletableFuture<T> future(Callable<T> supplier) {
         return CompletableFuture.supplyAsync(() -> {

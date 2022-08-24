@@ -39,11 +39,11 @@ public enum Action {
     ;
 
 
+    private final String displayName;
+    private final ItemStack item;
 
-    private String displayName;
-    private ItemStack item;
 
-    private Action(String displayName, ItemStack item) {
+    Action(String displayName, ItemStack item) {
         this.displayName = displayName;
         this.item = item;
     }

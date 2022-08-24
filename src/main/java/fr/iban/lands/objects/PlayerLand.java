@@ -3,19 +3,21 @@ package fr.iban.lands.objects;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public class PlayerLand extends Land {
 
-	private UUID owner;
+	private final UUID owner;
 
 	public PlayerLand(int id, UUID owner, String name) {
 		super(id, name);
 		this.owner = owner;
 		setType(LandType.PLAYER);
 	}
-	
+
+	@NotNull
 	@Override
 	public UUID getOwner() {
 		return owner;
