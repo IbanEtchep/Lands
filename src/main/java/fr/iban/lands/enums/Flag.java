@@ -61,7 +61,7 @@ public enum Flag {
 
 
 	public boolean isEnabled(LandType landType) {
-		for (LandType value : LandType.values()) {
+		for (LandType value : enabledLandTypes) {
 			if(value == landType) {
 				return true;
 			}

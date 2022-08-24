@@ -30,4 +30,6 @@ public interface AbstractGuildDataAccess {
 
     boolean withdraw(UUID guildId, double amount);
 
+    boolean deposit(UUID guildId, double amount);
+
 }

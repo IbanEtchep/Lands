@@ -108,6 +108,15 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         return guildsManager.guildWithdraw(guild, amount);
     }
 
+    @Override
+    public boolean deposit(UUID guildId, double amount) {
+        Guild guild = guildsManager.getGuildById(guildId);
+        if(guild == null) {
+            return false;
+        }
+        return guildsManager.guildDeposit(guild, amount);
+    }
+
     @EventHandler
     public void onDisband(GuildDisbandEvent e) {
         LandManager landManager = landsPlugin.getLandManager();

@@ -1,6 +1,5 @@
 package fr.iban.lands.commands;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.utils.HexColor;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
@@ -27,7 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-@Command("land")
+@Command({"land", "l"})
 public class LandCommand {
 
     private final LandManager landManager;
