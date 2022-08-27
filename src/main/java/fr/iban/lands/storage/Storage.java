@@ -629,9 +629,9 @@ public class Storage implements AbstractStorage {
                         Land landwith = manager.getLands().get(idLW);
                         Link link = Link.valueOf(rs.getString("LinkType"));
 
-                        if (landwith != null) {
+                        if (landwith != null && land != null) {
                             land.addLink(link, landwith);
-                        } else {
+                        } else if(land != null) {
                             removeLink(land, link);
                         }
                     }
