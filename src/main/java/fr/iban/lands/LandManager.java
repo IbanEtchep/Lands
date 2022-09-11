@@ -238,6 +238,21 @@ public class LandManager {
                 .findFirst().orElse(null);
     }
 
+    public boolean canManageLand(Player player, Land land) {
+        if (land instanceof GuildLand guildLand) {
+            if (plugin.getGuildDataAccess() != null
+                    && plugin.getGuildDataAccess().canManageGuildLand(player.getUniqueId())
+                    && getGuildLands(plugin.getGuildDataAccess().getGuildId(player.getUniqueId())).contains(guildLand)) {
+                return true;
+            }
+        } else if (land instanceof PlayerLand playerLand) {
+            return playerLand.getOwner().equals(player.getUniqueId());
+        } else if (land instanceof SystemLand systemLand) {
+            return player.hasPermission("lands.bypass");
+        }
+        return false;
+    }
+
     //Retourne le territoire du nom donné pour le joueur donné.
     public CompletableFuture<PlayerLand> getPlayerFirstLand(Player player) {
         return future(() -> {
@@ -532,7 +547,7 @@ public class LandManager {
 
     public CompletableFuture<Void> claim(Player player, SChunk chunk, Land land, boolean verbose) {
         return future(() -> {
-            if(land instanceof PlayerLand) {
+            if (land instanceof PlayerLand) {
                 try {
                     if (getRemainingChunkCount(player).get() < 1) {
                         player.sendMessage("§cVous n'avez pas de tronçon disponible.");
@@ -553,7 +568,7 @@ public class LandManager {
                         return;
                     }
                 }
-                if(land.getLastPayment() == null) {
+                if (land.getLastPayment() == null) {
                     land.setLastPayment(new Date());
                     future(() -> storage.updateLandLastPaymentDate(land));
                 }
@@ -595,17 +610,13 @@ public class LandManager {
     public void unclaim(Player player, SChunk chunk, boolean verbose) {
         future(() -> {
             Land land = getLandAt(chunk);
-            if (land instanceof PlayerLand pland) {
-                if (pland.getOwner().equals(player.getUniqueId()) || plugin.isBypassing(player)) {
-                    unclaim(chunk);
-                    if (verbose) {
-                        player.sendActionBar(Component.text("§a§lLe tronçon a bien été unclaim."));
-                    }
-                } else if (verbose) {
-                    player.sendActionBar(Component.text("§c§lCe tronçon ne vous appartient pas !"));
+            if (canManageLand(player, land) || plugin.isBypassing(player)) {
+                unclaim(chunk);
+                if (verbose) {
+                    player.sendActionBar(Component.text("§a§lLe tronçon a bien été unclaim."));
                 }
             } else if (verbose) {
-                player.sendActionBar(Component.text("§c§lImpossible d'unclaim ce tronçon."));
+                player.sendActionBar(Component.text("§c§lCe tronçon ne vous appartient pas !"));
             }
         });
     }
@@ -790,7 +801,7 @@ public class LandManager {
     }
 
     public void syncChunk(Land land, SChunk chunk, boolean unclaim) {
-        if(plugin.isMultipaperSupportEnabled()) {
+        if (plugin.isMultipaperSupportEnabled()) {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             ChunkClaimSyncMessage message = new ChunkClaimSyncMessage(land.getId(), chunk, unclaim);
             core.getMessagingManager().sendMessage(LandsPlugin.CHUNK_SYNC_CHANNEL, message);
