@@ -810,12 +810,18 @@ public class LandManager {
 
     public void loadLand(int id) {
         future(() -> storage.getLand(id)).thenAccept(land -> {
-            if (land == null && getLands().containsKey(id)) {
+            //Clear old land cache
+            Land cachedLand = getLandByID(id);
+            if(cachedLand != null) {
+                getChunks(cachedLand).forEach(schunk -> {
+                    getChunks().remove(schunk);
+                    chunksCache.invalidate(schunk);
+                });
                 getLands().remove(id);
-            } else {
-                if (land != null) {
-                    getLands().put(land.getId(), land);
-                }
+            }
+
+            if(land != null) {
+                getLands().put(land.getId(), land);
             }
         });
     }
