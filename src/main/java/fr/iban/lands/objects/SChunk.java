@@ -4,6 +4,7 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -21,9 +22,17 @@ public class SChunk {
 		this.x = x;
 		this.z = z;
 	}
+
+	public SChunk(String world, int x, int z) {
+		this(LandsPlugin.getInstance().getServerName(), world, x, z);
+	}
 	
 	public SChunk(Chunk chunk) {
 		this(LandsPlugin.getInstance().getServerName(), chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
+	}
+
+	public SChunk(Location loc) {
+		this(LandsPlugin.getInstance().getServerName(), loc.getWorld().getName(), (int) loc.getX() >> 4, (int) loc.getZ() >> 4);
 	}
 
 	public String getServer() {

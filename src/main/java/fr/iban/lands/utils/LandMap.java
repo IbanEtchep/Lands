@@ -1,6 +1,5 @@
 package fr.iban.lands.utils;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.objects.*;

@@ -32,8 +32,6 @@ public class LandCommand {
     private final LandManager landManager;
     private final LandsPlugin plugin;
 
-    private final Map<UUID, SeeChunks> seeChunks = new HashMap<>();
-
     public LandCommand(LandsPlugin plugin) {
         this.plugin = plugin;
         this.landManager = plugin.getLandManager();
@@ -202,15 +200,15 @@ public class LandCommand {
             return;
         }
         UUID uuid = player.getUniqueId();
-        if (!seeChunks.containsKey(uuid)) {
+        if (!landManager.getSeeChunks().containsKey(uuid)) {
             SeeChunks sc = new SeeChunks(player, landManager);
-            seeChunks.put(player.getUniqueId(), sc);
+            landManager.getSeeChunks().put(player.getUniqueId(), sc);
             sc.showParticles();
             player.sendMessage("§aMode vision de claims activé.");
         } else {
-            SeeChunks sc = seeChunks.get(uuid);
+            SeeChunks sc = landManager.getSeeChunks().get(uuid);
             sc.stop();
-            seeChunks.remove(uuid);
+            landManager.getSeeChunks().remove(uuid);
             player.sendMessage("§cMode vision de claims désactivé.");
         }
     }

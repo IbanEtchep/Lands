@@ -13,10 +13,7 @@ import fr.iban.lands.objects.*;
 import fr.iban.lands.storage.AbstractStorage;
 import fr.iban.lands.storage.DbTables;
 import fr.iban.lands.storage.Storage;
-import fr.iban.lands.utils.ChunkClaimSyncMessage;
-import fr.iban.lands.utils.Cuboid;
-import fr.iban.lands.utils.DateUtils;
-import fr.iban.lands.utils.LandMap;
+import fr.iban.lands.utils.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -39,6 +36,7 @@ public class LandManager {
 
     private final Map<Integer, Land> lands = new ConcurrentHashMap<>();
     private final Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
+    private final Map<UUID, SeeChunks> seeChunks = new HashMap<>();
     private final LandMap landMap;
     private final LandsPlugin plugin;
     private SystemLand wilderness = new SystemLand(-1, "Zone sauvage");
@@ -524,7 +522,7 @@ public class LandManager {
     }
 
     public Land getLandAt(Location loc) {
-        Land land = getLandAt(loc.getChunk());
+        Land land = getLandAt(new SChunk(loc));
         SubLand subLand = land.getSubLandAt(loc);
         return Objects.requireNonNullElse(subLand, land);
     }
@@ -791,6 +789,10 @@ public class LandManager {
 
     public LandMap getLandMap() {
         return landMap;
+    }
+
+    public Map<UUID, SeeChunks> getSeeChunks() {
+        return seeChunks;
     }
 
     public void syncLand(Land land) {
