@@ -16,8 +16,10 @@ import org.bukkit.potion.PotionEffectType;
 public class JoinQuitListeners implements Listener {
 
     private final LandManager landManager;
+    private final LandsPlugin plugin;
 
     public JoinQuitListeners(LandsPlugin plugin) {
+        this.plugin = plugin;
         this.landManager = plugin.getLandManager();
     }
 
@@ -33,6 +35,12 @@ public class JoinQuitListeners implements Listener {
             seeChunks.stop();
             landManager.getSeeChunks().remove(player.getUniqueId());
         }
+        if(plugin.isInDebugMode(player)) {
+            plugin.setDebugging(player.getUniqueId(), false);
+        }
+        if(plugin.isBypassing(player)) {
+            plugin.setBypassing(player.getUniqueId(), false);
+        }
     }
 
     @EventHandler
@@ -42,6 +50,8 @@ public class JoinQuitListeners implements Listener {
         if(land.hasFlag(Flag.INVISIBLE)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1));
         }
+        plugin.getBypass().remove(player.getUniqueId());
+        plugin.getDebugPlayers().remove(player.getUniqueId());
     }
 
 }

@@ -19,10 +19,10 @@ import java.util.concurrent.CompletableFuture;
 
 public class ChunkListMenu extends PaginatedMenu {
 
-	private Land land;
-	private List<SChunk> chunks = new ArrayList<>();
+	private final Land land;
+	private final List<SChunk> chunks = new ArrayList<>();
 	private Map<Integer, SChunk> chunkAtSlot;
-	private LandManager manager;
+	private final LandManager manager;
 	private Menu previousMenu;
 
 
@@ -30,9 +30,7 @@ public class ChunkListMenu extends PaginatedMenu {
 		super(player);
 		this.manager = manager;
 		this.land = land;
-		for(SChunk schunk : manager.getChunks(land)) {
-			chunks.add(schunk);
-		}
+		chunks.addAll(manager.getChunks(land));
 	}
 
 	public ChunkListMenu(Player player, LandManager manager, Land land, Menu previousMenu) {

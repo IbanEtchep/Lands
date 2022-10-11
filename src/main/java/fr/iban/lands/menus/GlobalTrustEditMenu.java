@@ -12,8 +12,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class GlobalTrustEditMenu extends PaginatedMenu{
 
-	private Land land;
-	private LandManager manager;
+	private final Land land;
+	private final LandManager manager;
 	private TrustsManageMenu previousMenu;
 
 	public GlobalTrustEditMenu(Player player, Land land, LandManager manager) {

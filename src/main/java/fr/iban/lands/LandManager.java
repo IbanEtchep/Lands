@@ -450,13 +450,10 @@ public class LandManager {
      * Retourne la liste des chunks d'un territoire.
      */
     public Collection<SChunk> getChunks(Land land) {
-        Set<SChunk> chunksSet = new HashSet<>();
-        for (Entry<SChunk, Land> entry : getChunks().entrySet()) {
-            if (land.equals(entry.getValue())) {
-                chunksSet.add(entry.getKey());
-            }
-        }
-        return chunksSet;
+        return getChunks().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(land))
+                .map(Entry::getKey)
+                .toList();
     }
 
     /*
@@ -652,7 +649,6 @@ public class LandManager {
             }
             chunks.remove(schunk);
             chunksCache.invalidate(schunk);
-            storage.removeChunk(schunk);
             if (persist) {
                 syncChunk(land, schunk, true);
                 storage.removeChunk(schunk);
@@ -814,15 +810,21 @@ public class LandManager {
         future(() -> storage.getLand(id)).thenAccept(land -> {
             //Clear old land cache
             Land cachedLand = getLandByID(id);
-            if(cachedLand != null) {
-                getChunks(cachedLand).forEach(schunk -> {
-                    getChunks().remove(schunk);
-                    chunksCache.invalidate(schunk);
-                });
-                getLands().remove(id);
+            if (cachedLand != null) {
+                getChunks(cachedLand).forEach(chunksCache::invalidate);
+                if (land == null) {
+                    getChunks(cachedLand).forEach(schunk -> {
+                        getChunks().remove(schunk);
+                    });
+                    getLands().remove(id);
+                } else {
+                    getChunks(cachedLand).forEach(schunk -> {
+                        getChunks().put(schunk, land);
+                    });
+                }
             }
 
-            if(land != null) {
+            if (land != null) {
                 getLands().put(land.getId(), land);
             }
         });

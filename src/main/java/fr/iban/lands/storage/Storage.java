@@ -333,27 +333,6 @@ public class Storage implements AbstractStorage {
         }
     }
 
-    //	@Override
-    //	public Trust loadGlobalTrust(Land land) {
-    //		String sql = "SELECT LP.libelleLP FROM sc_trusts T JOIN sc_land_permissions LP ON T.idLP=LP.idLP " +
-    //				"WHERE T.idL=? AND T.uuid LIKE 'GLOBAL' LIMIT 1;";
-    //		Trust trust = new Trust();
-    //		try(Connection connection = ds.getConnection()){
-    //			try(PreparedStatement ps = connection.prepareStatement(sql)){
-    //				ps.setInt(1, land.getId());
-    //				try(ResultSet rs = ps.executeQuery()){
-    //					if(rs.next()) {
-    //						Action action = Action.valueOf(rs.getString("libelleLP"));
-    //						trust.addPermission(action);
-    //					}
-    //				}
-    //			}
-    //		}catch (SQLException e) {
-    //			e.printStackTrace();
-    //		}
-    //		return trust;
-    //	}
-
     @Override
     public void addTrust(Land land, UUID uuid, Action action) {
         try (Connection connection = ds.getConnection()) {

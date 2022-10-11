@@ -151,7 +151,15 @@ public abstract class Land {
 		if((!bypass) && !(this instanceof SystemLand)) {
 			player.sendActionBar(Component.text("§cVous n'avez pas la permission de faire cela dans ce claim."));
 		}
-		//Bukkit.broadcastMessage(action.toString() + " :" + bypass);
+		if(plugin.isInDebugMode(player)) {
+			player.sendMessage(action.toString() + " : \n" +
+					" globalTrust: " + getGlobalTrust().hasPermission(action) + "\n" +
+					" selfTrust: " + isTrusted(uuid, action) + "\n" +
+					" guildTrust: " + (plugin.isGuildsHookEnabled() && getOwner() != null
+					&& getGuildTrust().hasPermission(action)
+					&& plugin.getGuildDataAccess().areInSameGuild(getOwner(), player.getUniqueId())) + "\n" +
+					" bypass: " + plugin.isBypassing(player) + "\n");
+		}
 		return bypass;
 	}
 

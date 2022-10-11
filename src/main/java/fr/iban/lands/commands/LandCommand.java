@@ -1,5 +1,6 @@
 package fr.iban.lands.commands;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.utils.HexColor;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
@@ -113,11 +114,7 @@ public class LandCommand {
             return;
         }
 
-        if (plugin.getBypass().contains(player.getUniqueId())) {
-            plugin.getBypass().remove(player.getUniqueId());
-        } else {
-            plugin.getBypass().add(player.getUniqueId());
-        }
+        plugin.setBypassing(player.getUniqueId(), !plugin.getBypass().contains(player.getUniqueId()));
         player.sendMessage("§8§lBypass : " + (plugin.isBypassing(player) ? "§aActivé" : "§cDésactivé"));
     }
 
@@ -249,6 +246,14 @@ public class LandCommand {
         plugin.saveConfig();
         player.sendMessage("§aPosition du spawn redéfini.");
     }
+
+    @Subcommand("admin debug")
+    @CommandPermission("lands.admin")
+    public void debugMode(Player player) {
+        plugin.setDebugging(player.getUniqueId(), !plugin.isInDebugMode(player.getUniqueId()));
+        player.sendMessage("§fMode debug : " + (plugin.isInDebugMode(player) ? "§aActivé" : "§cDésactivé"));
+    }
+
 
     @Subcommand("help")
     public void help(Player player) {

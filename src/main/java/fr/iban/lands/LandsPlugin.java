@@ -32,9 +32,12 @@ public final class LandsPlugin extends JavaPlugin {
     private LandManager landManager;
     private static LandsPlugin instance;
     private List<UUID> bypass;
+    private List<UUID> debugPlayers;
     private AbstractGuildDataAccess guildDataAccess;
     public static final String LAND_SYNC_CHANNEL = "LandSync";
     public static final String CHUNK_SYNC_CHANNEL = "LandChunkSync";
+    public static final String BYPASS_SYNC_CHANNEL = "ToggleLandBypassSync";
+    public static final String DEBUG_SYNC_CHANNEL = "ToggleLandDebugSync";
     private Economy econ = null;
 
     @Override
@@ -42,6 +45,7 @@ public final class LandsPlugin extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
         this.bypass = new ArrayList<>();
+        this.debugPlayers = new ArrayList<>();
 
         landManager = new LandManager(this);
 
@@ -169,7 +173,45 @@ public final class LandsPlugin extends JavaPlugin {
     }
 
     public boolean isBypassing(Player player) {
-        return getBypass().contains(player.getUniqueId());
+        return isBypassing(player.getUniqueId());
+    }
+
+    public boolean isBypassing(UUID uuid) {
+        return getBypass().contains(uuid);
+    }
+
+    public void setBypassing(UUID uuid, boolean value) {
+        if(value) {
+            bypass.add(uuid);
+        }else {
+            bypass.remove(uuid);
+        }
+        if(isMultipaperSupportEnabled()) {
+            CoreBukkitPlugin.getInstance().getMessagingManager().sendMessage(LandsPlugin.BYPASS_SYNC_CHANNEL, uuid.toString());
+        }
+    }
+
+    public List<UUID> getDebugPlayers() {
+        return debugPlayers;
+    }
+
+    public boolean isInDebugMode(Player player) {
+        return isInDebugMode(player.getUniqueId());
+    }
+
+    public boolean isInDebugMode(UUID uuid) {
+        return getDebugPlayers().contains(uuid);
+    }
+
+    public void setDebugging(UUID uuid, boolean value) {
+        if (value) {
+            debugPlayers.add(uuid);
+        } else {
+            debugPlayers.remove(uuid);
+        }
+        if(isMultipaperSupportEnabled()) {
+            CoreBukkitPlugin.getInstance().getMessagingManager().sendMessage(LandsPlugin.DEBUG_SYNC_CHANNEL, uuid.toString());
+        }
     }
 
     public AbstractGuildDataAccess getGuildDataAccess() {
