@@ -201,7 +201,7 @@ public class LandManager {
             landNames.add(land.getName());
         }
 
-        if (plugin.isGuildsHookEnabled()) {
+        if (plugin.isGuildsHookEnabled() && plugin.getGuildDataAccess().canManageGuildLand(player.getUniqueId())) {
             UUID guildID = plugin.getGuildDataAccess().getGuildId(player.getUniqueId());
             if (guildID != null) {
                 for (GuildLand land : getGuildLands(plugin.getGuildDataAccess().getGuildId(player.getUniqueId()))) {

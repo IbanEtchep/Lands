@@ -90,17 +90,13 @@ public class LandCommand {
 
         if (!target.getUniqueId().equals(player.getUniqueId())) {
             Land land = landManager.getLandAt(target.getLocation());
-            if (land instanceof PlayerLand pland) {
-                if (pland.getOwner() != null) {
-                    if (pland.getOwner().equals(player.getUniqueId())) {
-                        target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
-                        target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
-                        player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
-                    } else {
-                        player.sendMessage("§cLe joueur n'est pas dans votre territoire !");
-                    }
+                if (landManager.canManageLand(player, land)) {
+                    target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
+                    target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
+                    player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
+                } else {
+                    player.sendMessage("§cVous n'avez pas la permission d'exclure ce joueur du territoire où il se trouve.");
                 }
-            }
         } else {
             player.sendMessage("§cImpossible de faire cela sur vous même...");
         }
