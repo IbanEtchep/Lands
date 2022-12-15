@@ -93,11 +93,15 @@ public class LandListeners implements Listener {
 				e.setCancelled(true);
 				return;
 			}
+
 			AtomicInteger count = new AtomicInteger();
 			player.sendMessage("§aChangement d'état des mobs...");
 			for (SChunk schunk : plugin.getLandManager().getChunks(e.getLand())) {
 				schunk.getChunkAsync().thenAccept(chunk -> {
 					for (Entity entity : chunk.getEntities()) {
+						if(entity instanceof Player) {
+							continue;
+						}
 						entity.setSilent(e.getNewState());
 						count.getAndIncrement();
 					}

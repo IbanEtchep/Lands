@@ -39,6 +39,12 @@ public class GuildLand extends Land {
         return guildId;
     }
 
+    public UUID getGuildOwner() {
+        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+        return guildDataAccess.getGuildLeader(guildId);
+    }
+
+
     public String getGuildName() {
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.getGuildName(guildId);

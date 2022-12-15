@@ -24,6 +24,8 @@ public interface AbstractGuildDataAccess {
 
     boolean isGuildLeader(UUID uuid, UUID guildId);
 
+    UUID getGuildLeader(UUID guildId);
+
     boolean isGuildMember(UUID uuid, UUID guildId);
 
     boolean withdraw(UUID guildId, double amount, String reason);

@@ -85,6 +85,12 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     }
 
     @Override
+    public UUID getGuildLeader(UUID guildId) {
+        Guild guild = guildsManager.getGuildById(guildId);
+        return guild != null ? guild.getOwner().getUuid() : null;
+    }
+
+    @Override
     public boolean isGuildMember(UUID uuid, UUID guildId) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
         return guildPlayer != null && guildPlayer.getGuildId().equals(guildId);

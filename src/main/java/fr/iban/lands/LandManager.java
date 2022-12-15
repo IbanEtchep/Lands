@@ -258,7 +258,7 @@ public class LandManager {
             if (!plands.isEmpty()) {
                 return plands.get(0);
             }
-            player.sendMessage("§cVous n'avez pas de territoire.");
+            player.sendMessage("§cVous n'avez pas de territoire, créez-en un depuis le menu /lands.");
             return null;
         });
     }
