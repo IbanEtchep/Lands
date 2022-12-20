@@ -1,6 +1,5 @@
 package fr.iban.lands.commands;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.utils.HexColor;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
@@ -9,6 +8,7 @@ import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.utils.ChatUtils;
+import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
 import net.kyori.adventure.text.Component;
@@ -17,12 +17,12 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -90,13 +90,13 @@ public class LandCommand {
 
         if (!target.getUniqueId().equals(player.getUniqueId())) {
             Land land = landManager.getLandAt(target.getLocation());
-                if (landManager.canManageLand(player, land)) {
-                    target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
-                    target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
-                    player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
-                } else {
-                    player.sendMessage("§cVous n'avez pas la permission d'exclure ce joueur du territoire où il se trouve.");
-                }
+            if (landManager.canManageLand(player, land)) {
+                target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
+                target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
+                player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
+            } else {
+                player.sendMessage("§cVous n'avez pas la permission d'exclure ce joueur du territoire où il se trouve.");
+            }
         } else {
             player.sendMessage("§cImpossible de faire cela sur vous même...");
         }
@@ -248,6 +248,24 @@ public class LandCommand {
     public void debugMode(Player player) {
         plugin.setDebugging(player.getUniqueId(), !plugin.isInDebugMode(player.getUniqueId()));
         player.sendMessage("§fMode debug : " + (plugin.isInDebugMode(player) ? "§aActivé" : "§cDésactivé"));
+    }
+
+    @Subcommand("admin chunkinfo")
+    @CommandPermission("lands.admin")
+    public void chunkInfo(Player player) {
+        Chunk chunk = player.getChunk();
+        SChunk sChunk = new SChunk(chunk);
+        Map.Entry<SChunk, Land> entry = landManager.getChunks().entrySet().stream()
+                .filter(e -> e.getKey().equals(sChunk)).findFirst().orElse(null);
+        if (entry != null) {
+            SChunk schunk = entry.getKey();
+            Land land = entry.getValue();
+            player.sendMessage("§6§lChunk X:" + schunk.getX() + " Z:" + schunk.getZ());
+            player.sendMessage("§8Type : §f" + land.getType().toString());
+            player.sendMessage("§8Claim le : §f" + DateUtils.format(schunk.getCreatedAt()));
+        } else {
+            player.sendMessage("§cCe chunk n'est pas claim.");
+        }
     }
 
 

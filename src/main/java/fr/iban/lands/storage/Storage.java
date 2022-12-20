@@ -1,6 +1,5 @@
 package fr.iban.lands.storage;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.sql.DbAccess;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
@@ -16,12 +15,12 @@ import org.bukkit.Bukkit;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 
 public class Storage implements AbstractStorage {
 
-    private DataSource ds = DbAccess.getDataSource();
+    private final DataSource ds = DbAccess.getDataSource();
 
     @Override
     public Map<SChunk, Integer> getChunks() {
@@ -35,9 +34,10 @@ public class Storage implements AbstractStorage {
                         int id = rs.getInt("idL");
                         String server = rs.getString("server");
                         String world = rs.getString("world");
+                        Date createdAt = rs.getTimestamp("createdAt");
                         int x = rs.getInt("x");
                         int z = rs.getInt("z");
-                        chunks.put(new SChunk(server, world, x, z), id);
+                        chunks.put(new SChunk(server, world, x, z, createdAt), id);
                     }
                 }
             }
@@ -53,7 +53,7 @@ public class Storage implements AbstractStorage {
         Map<Integer, Land> lands = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment " +
+                    "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt " +
                             "FROM sc_lands L"
                             + " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND';")) {
                 try (ResultSet rs = ps.executeQuery()) {
@@ -63,6 +63,7 @@ public class Storage implements AbstractStorage {
                         LandType type = LandType.valueOf(rs.getString("libelleTL"));
                         String name = rs.getString("libelleL");
                         Date lastPayment = rs.getTimestamp("lastPayment");
+                        Date createdAt = rs.getTimestamp("createdAt");
                         if (type == LandType.PLAYER) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
                             land = new PlayerLand(id, uuid, name);
@@ -81,6 +82,7 @@ public class Storage implements AbstractStorage {
                             land.setId(id);
                             land.setName(name);
                             land.setLastPayment(lastPayment);
+                            land.setCreatedAt(createdAt);
                             loadTrusts(land);
                             land.setFlags(getFlags(land));
                             land.setBans(getBans(land));
@@ -110,6 +112,7 @@ public class Storage implements AbstractStorage {
                         LandType type = LandType.valueOf(rs.getString("libelleTL"));
                         String name = rs.getString("libelleL");
                         Date lastPayment = rs.getTimestamp("lastPayment");
+                        Date createdAt = rs.getTimestamp("createdAt");
                         if (type == LandType.PLAYER) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
                             land = new PlayerLand(id, uuid, name);
@@ -128,6 +131,7 @@ public class Storage implements AbstractStorage {
                             land.setId(id);
                             land.setName(name);
                             land.setLastPayment(lastPayment);
+                            land.setCreatedAt(createdAt);
                             loadTrusts(land);
                             land.setFlags(getFlags(land));
                             land.setBans(getBans(land));
@@ -435,9 +439,10 @@ public class Storage implements AbstractStorage {
                         int id = rs.getInt("idL");
                         String server = rs.getString("server");
                         String world = rs.getString("world");
+                        Date createdAt = rs.getTimestamp("createdAt");
                         int x = rs.getInt("x");
                         int z = rs.getInt("z");
-                        chunks.put(new SChunk(server, world, x, z), id);
+                        chunks.put(new SChunk(server, world, x, z, createdAt), id);
                     }
                 }
             }
@@ -705,7 +710,7 @@ public class Storage implements AbstractStorage {
 
                         SubLand subland = new SubLand(land, idSL, name);
                         if (Bukkit.getWorld(world) != null) {
-                            subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
+                            subland.setCuboid(new Cuboid(Objects.requireNonNull(Bukkit.getWorld(world)), x1, y1, z1, x2, y2, z2), server);
                         }
                         loadTrusts(subland);
                         subland.setFlags(getFlags(subland));

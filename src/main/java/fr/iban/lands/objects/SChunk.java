@@ -7,6 +7,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 public class SChunk {
@@ -15,12 +16,18 @@ public class SChunk {
 	private String world;
 	private int x;
 	private int z;
+	private Date createdAt;
 
-	public SChunk(String server, String world, int x, int z) {
+	public SChunk(String server, String world, int x, int z, Date createdAt) {
 		this.server = server;
 		this.world = world;
 		this.x = x;
 		this.z = z;
+		this.createdAt = createdAt;
+	}
+
+	public SChunk(String server, String world, int x, int z) {
+		this(server, world, x, z, null);
 	}
 
 	public SChunk(String world, int x, int z) {
@@ -65,6 +72,14 @@ public class SChunk {
 
 	public void setZ(int z) {
 		this.z = z;
+	}
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
 	}
 
 	public boolean equalsChunk(Chunk chunk) {

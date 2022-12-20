@@ -77,6 +77,7 @@ public class DbTables {
 				"    idTL INT NOT NULL,\n" +
 				"    uuid VARCHAR(36) DEFAULT NULL, " +
 				"    lastPayment DATETIME DEFAULT NOW()," +
+				"    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP," +
 				"    CONSTRAINT PK_lands PRIMARY KEY (idL),\n" + 
 				"    CONSTRAINT FK_land_type FOREIGN KEY (idTL) REFERENCES sc_land_types(idTL)" + 
 				");");
@@ -113,9 +114,10 @@ public class DbTables {
 				"    `server` VARCHAR(255) NOT NULL,\n" + 
 				"    `world` VARCHAR(255) NOT NULL,\n" + 
 				"    x INT NOT NULL,\n" + 
-				"    z INT NOT NULL,\n" + 
-				"    idL INT NOT NULL,\n" + 
-				"    CONSTRAINT PK_chunks PRIMARY KEY (`server`, world, x, z),\n" + 
+				"    z INT NOT NULL,\n" +
+				"    idL INT NOT NULL,\n" +
+				"    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP," +
+				"    CONSTRAINT PK_chunks PRIMARY KEY (`server`, world, x, z),\n" +
 				"    CONSTRAINT FK_chunks_lands FOREIGN KEY (idL) REFERENCES sc_lands(idL)\n" + 
 				");");
 		createTable("CREATE TABLE IF NOT EXISTS sc_sublands(\n" + 

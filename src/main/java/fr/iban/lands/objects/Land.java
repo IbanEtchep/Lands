@@ -28,6 +28,7 @@ public abstract class Land {
 	protected Map<Integer, SubLand> subLands = new ConcurrentHashMap<>();
 	protected Date lastPayment;
 	protected boolean paymentDue = false;
+	protected Date createdAt;
 
 
 	public Land(int id, String name) {
@@ -258,6 +259,14 @@ public abstract class Land {
 			return null;
 		}
 		return DateUtils.convertToDate(DateUtils.convertToLocalDateTime(getLastPayment()).plusWeeks(1));
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 
 	public void setLastPayment(Date lastPayment) {

@@ -40,6 +40,10 @@ public class LandManager {
     private final LandMap landMap;
     private final LandsPlugin plugin;
     private SystemLand wilderness = new SystemLand(-1, "Zone sauvage");
+    private final Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .maximumSize(1000)
+            .build();
 
     public LandManager(LandsPlugin plugin) {
         this.plugin = plugin;
@@ -285,6 +289,7 @@ public class LandManager {
             int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
             land.setId(id);
             getLands().put(id, land);
+            land.setCreatedAt(new Date());
             land.setBans(new HashSet<>());
             land.setFlags(new HashSet<>());
             player.sendMessage("§aLe territoire au nom de " + name + " a été créée.");
@@ -317,6 +322,7 @@ public class LandManager {
             int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
             land.setId(id);
             getLands().put(id, land);
+            land.setCreatedAt(new Date());
             land.setBans(new HashSet<>());
             land.setFlags(new HashSet<>());
             player.sendMessage("§aLe territoire au nom de " + name + " a été créée.");
@@ -345,6 +351,7 @@ public class LandManager {
             int id = storage.getSystemLandID(name);
             land.setId(id);
             getLands().put(id, land);
+            land.setCreatedAt(new Date());
             land.setBans(new HashSet<>());
             land.setFlags(new HashSet<>());
             player.sendMessage("§aLe territoire au nom de " + name + " a été créée.");
@@ -360,23 +367,23 @@ public class LandManager {
         });
     }
 
-    /*
-     * Permet de créer un nouveau territoire.
-     */
-    public CompletableFuture<PlayerLand> createLand(UUID uuid, String name) {
-        return future(() -> {
-            PlayerLand land = new PlayerLand(-1, uuid, name);
-            storage.addLand(land);
-            int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
-            land.setId(id);
-            getLands().put(id, land);
-            land.setBans(new HashSet<>());
-            land.setFlags(new HashSet<>());
-            Bukkit.broadcast(Component.text("§aLe territoire au nom de " + name + " pour " + Bukkit.getOfflinePlayer(uuid).getName() + " a été créée."));
-            syncLand(land);
-            return land;
-        });
-    }
+//    /*
+//     * Permet de créer un nouveau territoire.
+//     */
+//    public CompletableFuture<PlayerLand> createLand(UUID uuid, String name) {
+//        return future(() -> {
+//            PlayerLand land = new PlayerLand(-1, uuid, name);
+//            storage.addLand(land);
+//            int id = storage.getLandID(land.getType(), land.getOwner(), land.getName());
+//            land.setId(id);
+//            getLands().put(id, land);
+//            land.setBans(new HashSet<>());
+//            land.setFlags(new HashSet<>());
+//            Bukkit.broadcast(Component.text("§aLe territoire au nom de " + name + " pour " + Bukkit.getOfflinePlayer(uuid).getName() + " a été créée."));
+//            syncLand(land);
+//            return land;
+//        });
+//    }
 
     /*
      * Permet de supprimer un territoire
@@ -502,11 +509,6 @@ public class LandManager {
      * CLAIM / UNCLAIM
      */
 
-    private final Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .maximumSize(1000)
-            .build();
-
     public Land getLandAt(Chunk chunk) {
         return getLandAt(new SChunk(chunk));
     }
@@ -528,6 +530,7 @@ public class LandManager {
      * Ajouter un chunk à un territoire :
      */
     public void claim(SChunk chunk, Land land, boolean persist) {
+        chunk.setCreatedAt(new Date());
         getChunks().put(chunk, land);
         chunksCache.invalidate(chunk);
         if (persist) {
@@ -760,29 +763,6 @@ public class LandManager {
                 .thenRun(() -> syncLand(subland.getSuperLand()));
     }
 
-    public <T> CompletableFuture<T> future(Callable<T> supplier) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return supplier.call();
-            } catch (Exception e) {
-                if (e instanceof RuntimeException) {
-                    throw (RuntimeException) e;
-                }
-                throw new CompletionException(e);
-            }
-        });
-    }
-
-    public CompletableFuture<Void> future(Runnable runnable) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                throw (RuntimeException) e;
-            }
-        });
-    }
-
     public LandMap getLandMap() {
         return landMap;
     }
@@ -858,5 +838,28 @@ public class LandManager {
             }
         }
         return true;
+    }
+
+    public <T> CompletableFuture<T> future(Callable<T> supplier) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return supplier.call();
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                }
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    public CompletableFuture<Void> future(Runnable runnable) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                throw (RuntimeException) e;
+            }
+        });
     }
 }

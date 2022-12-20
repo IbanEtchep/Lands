@@ -179,6 +179,7 @@ public class LandMainMenu extends PaginatedMenu {
                     .addLore("§aClic gauche pour gérer ce territoire.")
                     .addLore("§cClic droit pour supprimer ce territoire.")
                     .addLore("")
+                    //.addLore("§fCréé le : " + (land.getCreatedAt() != null ? DateUtils.format(land.getCreatedAt()) : "inconnu"))
                     .addLore("§fTronçons : " + manager.getChunks(land).size())
                     .addLore("§fJoueurs trust : " + land.getTrusts().size())
                     .addLore("§fBannissements : " + land.getBans().size());
