@@ -101,7 +101,7 @@ public class Storage implements AbstractStorage {
     @Override
     public Land getLand(int id) {
         Land land = null;
-        String sql = "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment " +
+        String sql = "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt " +
                 "FROM sc_lands L" +
                 " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND' AND L.idL=?;";
         try (Connection connection = ds.getConnection()) {
