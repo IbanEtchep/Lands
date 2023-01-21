@@ -30,7 +30,7 @@ public class LandSettingsMenu extends PaginatedMenu {
         super(player);
         this.land = land;
         this.manager = manager;
-        flags = Arrays.stream(Flag.values()).filter(flag -> flag.isEnabled(land.getType())).collect(Collectors.toList());
+        flags = Arrays.stream(Flag.values()).filter(flag -> flag.isEnabled(land)).collect(Collectors.toList());
     }
 
     public LandSettingsMenu(Player player, Land land, LandManager manager, LandManageMenu previousMenu) {

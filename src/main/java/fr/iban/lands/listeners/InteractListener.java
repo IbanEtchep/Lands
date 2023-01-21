@@ -65,9 +65,9 @@ public class InteractListener implements Listener {
 
         if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
 
+
             if (land.hasFlag(Flag.DOORS_AUTOCLOSE)) {
-                if (block.getBlockData() instanceof Openable) {
-                    Openable openable = (Openable) block.getBlockData();
+                if (block.getBlockData() instanceof Openable openable) {
                     if (!land.isBypassing(e.getPlayer(), Action.ALL) && !toClose.contains(block.getLocation())) {
                         boolean opened = openable.isOpen();
                         toClose.add(block.getLocation());
@@ -91,7 +91,7 @@ public class InteractListener implements Listener {
                     || ((block.getBlockData() instanceof Powerable && block.getType() != Material.LECTERN) && !land.isBypassing(player, Action.USE))
                     || (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
                     || ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
-                    || (((block.getState() instanceof InventoryHolder && block.getType() != Material.LECTERN) || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
+                    || (((block.getState() instanceof InventoryHolder && block.getType() != Material.LECTERN && block.getType() != Material.BREWING_STAND) || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
                     || (block.getType() == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
                     || hasVehiculeInHand(player) && !land.isBypassing(player, Action.VEHICLE_PLACE_BREAK)
                     || hasArmorStandInHand(player) && !land.isBypassing(player, Action.BLOCK_PLACE)

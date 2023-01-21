@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class SubLand extends Land {
 
-	private Land superLand;
+	private final Land superLand;
 	private Cuboid cuboid;
 	private String server;
 

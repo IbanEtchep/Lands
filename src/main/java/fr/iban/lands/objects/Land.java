@@ -147,6 +147,7 @@ public abstract class Land {
 
 		if(isPaymentDue() && (action.equals(Action.BLOCK_BREAK) || action.equals(Action.BLOCK_PLACE))) {
 			player.sendMessage("§cCe claim est en défaut de paiement, les actions y sont donc limitées.");
+			return false;
 		}
 
 		if((!bypass) && !(this instanceof SystemLand)) {

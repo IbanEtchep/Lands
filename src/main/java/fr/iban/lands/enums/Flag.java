@@ -1,5 +1,7 @@
 package fr.iban.lands.enums;
 
+import fr.iban.lands.objects.Land;
+import fr.iban.lands.objects.SubLand;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -60,9 +62,12 @@ public enum Flag {
 	}
 
 
-	public boolean isEnabled(LandType landType) {
+	public boolean isEnabled(Land land) {
+		if(land instanceof SubLand subLand) {
+			return isEnabled(subLand.getSuperLand());
+		}
 		for (LandType value : enabledLandTypes) {
-			if(value == landType) {
+			if(value == land.getType()) {
 				return true;
 			}
 		}
