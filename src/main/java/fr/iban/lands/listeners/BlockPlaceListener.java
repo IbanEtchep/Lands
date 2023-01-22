@@ -6,6 +6,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Dispenser;
 import org.bukkit.entity.Entity;
@@ -15,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class BlockPlaceListener implements Listener {
 
@@ -28,11 +30,20 @@ public class BlockPlaceListener implements Listener {
 
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
+        Player player = e.getPlayer();
         Block block = e.getBlock();
         Land land = landmanager.getLandAt(block.getLocation());
+        Material placedItem = e.getItemInHand().getType();
 
-        if (land != null && !land.isBypassing(e.getPlayer(), Action.BLOCK_PLACE)) {
-            e.setCancelled(true);
+        if (land != null) {
+            if (e.getBlockAgainst().getType() == Material.LECTERN
+                    && (placedItem == Material.WRITABLE_BOOK || placedItem == Material.WRITTEN_BOOK)
+                    && land.isBypassing(player, Action.LECTERN_TAKE)) {
+                return;
+            }
+            if (!land.isBypassing(player, Action.BLOCK_PLACE)) {
+                e.setCancelled(true);
+            }
         }
     }
 
@@ -62,13 +73,13 @@ public class BlockPlaceListener implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-			Player player = (Player) entity;
-			Block block = e.getBlock();
-			Land land = landmanager.getLandAt(block.getLocation());
+            Player player = (Player) entity;
+            Block block = e.getBlock();
+            Land land = landmanager.getLandAt(block.getLocation());
 
-			if (land != null && !land.isBypassing(player, Action.CAULDRON_FILL_EMPTY)) {
-				e.setCancelled(true);
-			}
+            if (land != null && !land.isBypassing(player, Action.CAULDRON_FILL_EMPTY)) {
+                e.setCancelled(true);
+            }
         }
     }
 
