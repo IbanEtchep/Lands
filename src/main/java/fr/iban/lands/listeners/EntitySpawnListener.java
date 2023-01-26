@@ -4,6 +4,7 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -34,6 +35,7 @@ public class EntitySpawnListener implements Listener {
 	@EventHandler
 	public void onEntitySpawn(EntitySpawnEvent e){
 		Land land = landmanager.getLandAt(e.getLocation());
+		if(e.getEntity() instanceof Player) return;
 		e.getEntity().setSilent(land.hasFlag(Flag.SILENT_MOBS));
 	}
 

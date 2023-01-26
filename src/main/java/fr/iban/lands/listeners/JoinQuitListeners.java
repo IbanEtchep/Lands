@@ -35,6 +35,9 @@ public class JoinQuitListeners implements Listener {
             seeChunks.stop();
             landManager.getSeeChunks().remove(player.getUniqueId());
         }
+        if(player.isSilent()) {
+            player.setSilent(false);
+        }
         if(plugin.isInDebugMode(player)) {
             plugin.setDebugging(player.getUniqueId(), false);
         }

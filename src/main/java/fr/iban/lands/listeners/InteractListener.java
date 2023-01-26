@@ -102,8 +102,13 @@ public class InteractListener implements Listener {
             if (block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS)) {
                 e.setCancelled(true);
             }
-        } else if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL && !land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
-            e.setCancelled(true);
+        } else if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+            if(block.getType() == Material.BIG_DRIPLEAF) {
+                return;
+            }
+            if(!land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
+                e.setCancelled(true);
+            }
         }
 
     }
@@ -111,10 +116,12 @@ public class InteractListener implements Listener {
     @EventHandler
     public void onEntityInteract(EntityInteractEvent e) {
         Block block = e.getBlock();
+        Material material = block.getType();
         Land land = landmanager.getLandAt(block.getLocation());
+
         if (land != null && e.getEntityType() != EntityType.VILLAGER) {
             if (land.hasFlag(Flag.PRESSURE_PLATE_BY_ENTITY)) {
-                switch (block.getType()) {
+                switch (material) {
                     case ACACIA_PRESSURE_PLATE:
                     case OAK_PRESSURE_PLATE:
                     case DARK_OAK_PRESSURE_PLATE:
@@ -129,9 +136,10 @@ public class InteractListener implements Listener {
                         return;
                 }
             }
-            if(land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && block.getType() == Material.TRIPWIRE) {
+            if(land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && material == Material.TRIPWIRE) {
                 return;
             }
+
             e.setCancelled(true);
         }
     }
