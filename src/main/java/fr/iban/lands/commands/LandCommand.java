@@ -1,5 +1,6 @@
 package fr.iban.lands.commands;
 
+import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.utils.HexColor;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
@@ -125,6 +126,24 @@ public class LandCommand {
             player.sendMessage("/land create <NomDeLaRegion>");
         } else {
             landManager.createLand(player, name);
+        }
+    }
+
+    @Subcommand("delete")
+    public void create(Player player, Land land) {
+        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+            player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
+            return;
+        }
+
+        if (land == null) {
+            player.sendMessage("§cCe territoire n'existe pas.");
+        } else {
+            new ConfirmMenu(player, "Supprimer le territoire " + land.getName() +" ?", confirmed -> {
+                if(confirmed) {
+                    landManager.deleteLand(land);
+                }
+            }).open();
         }
     }
 
