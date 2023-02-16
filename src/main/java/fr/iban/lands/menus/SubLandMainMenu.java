@@ -17,6 +17,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,11 +77,11 @@ public class SubLandMainMenu extends PaginatedMenu {
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
             core.getTextInputs().put(player.getUniqueId(), texte -> {
-                manager.createSublandAsync(player, superLand, texte).thenRun(() -> {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
-                        new SubLandMainMenu(player, plugin, superLand.getSubLands().values().stream().collect(Collectors.toList()), superLand, previousMenu).open();
-                    });
-                });
+                manager.createSublandAsync(player, superLand, texte)
+                        .thenRun(() -> Bukkit.getScheduler()
+                                .runTask(plugin, () ->
+                                        new SubLandMainMenu(player, plugin, new ArrayList<>(superLand.getSubLands().values()), superLand, previousMenu)
+                                                .open()));
                 core.getTextInputs().remove(player.getUniqueId());
             });
         }

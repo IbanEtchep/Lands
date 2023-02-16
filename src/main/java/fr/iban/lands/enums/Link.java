@@ -1,7 +1,7 @@
 package fr.iban.lands.enums;
 
 public enum Link {
-	TRUSTS, 
+	TRUSTS,
 	GLOBALTRUST,
 	BANS
 }

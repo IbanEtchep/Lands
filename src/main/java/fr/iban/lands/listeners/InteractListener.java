@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.block.data.type.Bed;
+import org.bukkit.block.data.type.RespawnAnchor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -47,7 +48,6 @@ public class InteractListener implements Listener {
         Block block = e.getClickedBlock();
         if (block == null)
             return;
-
         Land land = landmanager.getLandAt(block.getLocation());
 
         if (land == null)
@@ -90,7 +90,9 @@ public class InteractListener implements Listener {
                     || (block.getType() == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
                     || ((block.getBlockData() instanceof Powerable && block.getType() != Material.LECTERN) && !land.isBypassing(player, Action.USE))
                     || (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
-                    || ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
+                    || (block.getBlockData() instanceof RespawnAnchor && !land.isBypassing(player, Action.USE_RESPAWN_ANCHOR))
+                    || ((block.getType() == Material.FLOWER_POT || block.getType().name().startsWith("POTTED_")) && !land.isBypassing(player, Action.FLOWER_POT_INTERACT))
+                    || (block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS))
                     || (((block.getState() instanceof InventoryHolder && block.getType() != Material.LECTERN && block.getType() != Material.BREWING_STAND) || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
                     || (block.getType() == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
                     || hasVehiculeInHand(player) && !land.isBypassing(player, Action.VEHICLE_PLACE_BREAK)
@@ -98,6 +100,7 @@ public class InteractListener implements Listener {
                     || ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().contains("SPAWN_EGG")) && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
                 e.setCancelled(true);
             }
+
         } else if (e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
             if (block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS)) {
                 e.setCancelled(true);

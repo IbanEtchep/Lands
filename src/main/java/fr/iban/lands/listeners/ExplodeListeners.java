@@ -14,12 +14,12 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 
 import java.util.Iterator;
 
-public class EntityExplodeListener implements Listener {
+public class ExplodeListeners implements Listener {
 
 	private final LandsPlugin plugin;
 	private LandManager landmanager;
 
-	public EntityExplodeListener(LandsPlugin landsPlugin) {
+	public ExplodeListeners(LandsPlugin landsPlugin) {
 		this.landmanager = landsPlugin.getLandManager();
 		this.plugin = landsPlugin;
 	}
@@ -46,7 +46,7 @@ public class EntityExplodeListener implements Listener {
 			
 		}
 	}
-	
+
 	private Player getTargetPlayer(EntityExplodeEvent e) {
 		if(e.getEntity() instanceof Creeper) {
 			Creeper creeper = (Creeper) e.getEntity();

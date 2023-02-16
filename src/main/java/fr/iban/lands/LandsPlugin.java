@@ -66,7 +66,7 @@ public final class LandsPlugin extends JavaPlugin {
                 new PistonListeners(this),
                 new InteractListener(this),
                 new EntitySpawnListener(this),
-                new EntityExplodeListener(this),
+                new ExplodeListeners(this),
                 new DamageListeners(this),
                 new EntityBlockDamageListener(this),
                 new CommandListener(this),
