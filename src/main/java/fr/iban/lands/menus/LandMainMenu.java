@@ -7,7 +7,7 @@ import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;

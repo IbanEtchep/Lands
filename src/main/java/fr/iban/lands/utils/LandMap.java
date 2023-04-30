@@ -2,7 +2,7 @@ package fr.iban.lands.utils;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.*;
+import fr.iban.lands.land.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.HoverEvent.Action;

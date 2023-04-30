@@ -1,4 +1,4 @@
-package fr.iban.lands.objects;
+package fr.iban.lands.land;
 
 import fr.iban.lands.enums.LandType;
 import org.jetbrains.annotations.Nullable;

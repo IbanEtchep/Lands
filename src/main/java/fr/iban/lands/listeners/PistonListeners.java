@@ -2,16 +2,12 @@ package fr.iban.lands.listeners;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
-import org.bukkit.Bukkit;
+import fr.iban.lands.land.Land;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
-
-import java.util.List;
 
 public class PistonListeners implements Listener {
 

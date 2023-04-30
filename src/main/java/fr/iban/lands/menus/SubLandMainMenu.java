@@ -6,8 +6,8 @@ import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SubLand;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.land.SubLand;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -19,7 +19,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SubLandMainMenu extends PaginatedMenu {
 

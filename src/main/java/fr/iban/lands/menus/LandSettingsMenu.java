@@ -7,7 +7,7 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.events.LandFlagChangeEvent;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

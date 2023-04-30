@@ -7,7 +7,7 @@ import fr.iban.lands.commands.MaxClaimsCommand;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.listeners.*;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;

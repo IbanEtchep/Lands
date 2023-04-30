@@ -1,4 +1,4 @@
-package fr.iban.lands.objects;
+package fr.iban.lands.permissions;
 
 import fr.iban.lands.enums.Action;
 

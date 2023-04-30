@@ -1,13 +1,9 @@
 package fr.iban.lands.enums;
 
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SubLand;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.land.SubLand;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public enum Flag {
 	INVINCIBLE("Active l'invincibilité pour les joueurs", new ItemStack(Material.IRON_SWORD), LandType.SYSTEM),

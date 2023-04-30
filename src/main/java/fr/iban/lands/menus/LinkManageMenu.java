@@ -3,7 +3,7 @@ package fr.iban.lands.menus;
 import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Link;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import fr.iban.lands.utils.LandSelectCallback;

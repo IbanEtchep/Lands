@@ -5,8 +5,8 @@ import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SubLand;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.land.SubLand;
 import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.CuboidSelector;
 import fr.iban.lands.utils.Head;
@@ -16,7 +16,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class LandManageMenu extends Menu {
 

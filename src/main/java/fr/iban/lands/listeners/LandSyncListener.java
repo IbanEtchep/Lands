@@ -5,10 +5,9 @@ import fr.iban.bukkitcore.event.CoreMessageEvent;
 import fr.iban.common.messaging.Message;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.land.SChunk;
 import fr.iban.lands.utils.ChunkClaimSyncMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 

@@ -1,10 +1,11 @@
-package fr.iban.lands.objects;
+package fr.iban.lands.land;
 
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
+import fr.iban.lands.permissions.Trust;
 import fr.iban.lands.utils.DateUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;

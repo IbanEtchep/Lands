@@ -2,7 +2,7 @@ package fr.iban.lands.utils;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;

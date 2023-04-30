@@ -3,7 +3,7 @@ package fr.iban.lands.utils;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.SubLand;
+import fr.iban.lands.land.SubLand;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;

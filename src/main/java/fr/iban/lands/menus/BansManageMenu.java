@@ -5,7 +5,7 @@ import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

@@ -3,7 +3,7 @@ package fr.iban.lands.listeners;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;

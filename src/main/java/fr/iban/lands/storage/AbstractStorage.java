@@ -5,9 +5,9 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SChunk;
-import fr.iban.lands.objects.SubLand;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.land.SChunk;
+import fr.iban.lands.land.SubLand;
 
 import java.util.Map;
 import java.util.Set;

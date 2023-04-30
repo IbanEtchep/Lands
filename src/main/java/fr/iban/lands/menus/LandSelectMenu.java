@@ -2,7 +2,7 @@ package fr.iban.lands.menus;
 
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandSelectCallback;
 import org.bukkit.Material;

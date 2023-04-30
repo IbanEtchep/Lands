@@ -8,7 +8,7 @@ import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
-import fr.iban.lands.objects.*;
+import fr.iban.lands.land.*;
 import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.DateUtils;
 import org.bukkit.Bukkit;

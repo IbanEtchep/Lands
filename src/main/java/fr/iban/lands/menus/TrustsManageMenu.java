@@ -5,8 +5,8 @@ import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
-import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.Trust;
+import fr.iban.lands.land.Land;
+import fr.iban.lands.permissions.Trust;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -77,7 +77,7 @@ public class TrustsManageMenu extends PaginatedMenu {
                         player.sendMessage("§cCe joueur n'est pas en ligne.");
                         open();
                     } else {
-                        new TrustEditMenu(player, target.getUniqueId(), land, manager, this).open();
+                        new PlayerTrustEditMenu(player, target.getUniqueId(), land, manager, this, null).open();
                     }
                     core.getTextInputs().remove(player.getUniqueId());
                 });
@@ -85,7 +85,7 @@ public class TrustsManageMenu extends PaginatedMenu {
             }
 
             if (displayNameEquals(item, "§2Permissions globales")) {
-                new GlobalTrustEditMenu(player, land, manager, this).open();
+                new GlobalTrustEditMenu(player, land, manager, this, null).open();
                 return;
             }
 
@@ -99,7 +99,7 @@ public class TrustsManageMenu extends PaginatedMenu {
                 return;
             }
 
-            new TrustEditMenu(player, uuid, land, manager, this).open();
+            new PlayerTrustEditMenu(player, uuid, land, manager, this, null).open();
         }
 
     }

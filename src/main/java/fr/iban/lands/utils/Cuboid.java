@@ -1,8 +1,7 @@
 package fr.iban.lands.utils;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.land.SChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;

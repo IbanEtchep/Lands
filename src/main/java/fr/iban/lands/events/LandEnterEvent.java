@@ -1,6 +1,6 @@
 package fr.iban.lands.events;
 
-import fr.iban.lands.objects.Land;
+import fr.iban.lands.land.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
