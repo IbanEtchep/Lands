@@ -18,6 +18,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +37,7 @@ public class LandManager {
 
     private final Map<Integer, Land> lands = new ConcurrentHashMap<>();
     private final Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
+    private final Map<String, Land> worldsDefaultLands = new ConcurrentHashMap<>();
     private final Map<UUID, SeeChunks> seeChunks = new HashMap<>();
     private final LandMap landMap;
     private final LandsPlugin plugin;
@@ -80,6 +82,12 @@ public class LandManager {
                     saveWilderness(wilderness);
                 } else {
                     wilderness = wild;
+                }
+            });
+            storage.getWorldsDefaultLands().forEach((world, landId) -> {
+                Land land = getLandByID(landId);
+                if(land != null) {
+                    worldsDefaultLands.put(world, getLandByID(landId));
                 }
             });
             loaded = true;
@@ -404,6 +412,11 @@ public class LandManager {
                     deleteLand(subland);
                 }
             }
+            worldsDefaultLands.forEach((world, defaultLand) -> {
+                if(defaultLand.equals(land)) {
+                    worldsDefaultLands.remove(world);
+                }
+            });
             syncLand(land);
             getLands().remove(land.getId());
         });
@@ -517,7 +530,8 @@ public class LandManager {
         if (!loaded) {
             return wilderness;
         }
-        return chunksCache.get(schunk, land -> getChunks().getOrDefault(schunk, wilderness));
+        Land defaultLand = worldsDefaultLands.getOrDefault(schunk.getWorld(), wilderness);
+        return chunksCache.get(schunk, land -> getChunks().getOrDefault(schunk, defaultLand));
     }
 
     public Land getLandAt(Location loc) {
@@ -657,6 +671,11 @@ public class LandManager {
                 storage.removeChunk(schunk);
             }
         });
+    }
+
+    public void setDefaultWorldLand(World world, Land land) {
+        worldsDefaultLands.put(world.getName(), land);
+        storage.setWorldDefaultLand(world.getName(), land);
     }
 
     /*

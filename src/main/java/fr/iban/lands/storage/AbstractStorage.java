@@ -24,6 +24,8 @@ public interface AbstractStorage {
 	int getChunkCount(UUID uuid);
 	
 	Map<Integer, Land> getLands();
+	Map<String, Integer> getWorldsDefaultLands();
+	void setWorldDefaultLand(String world, Land land);
 
 	Land getLand(int id);
 

@@ -4,16 +4,21 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.land.SubLand;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Axis;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class CuboidSelector {
@@ -37,6 +42,7 @@ public class CuboidSelector {
 	}
 
 	public void startSelecting() {
+		player.sendMessage("§c§lAttention, le sous-territoire doit se trouver dans votre territoire pour fonctionner.");
 		player.sendMessage(getHelpText());
 		CoreBukkitPlugin plugin = CoreBukkitPlugin.getInstance();
 		plugin.getTextInputs().put(player.getUniqueId(), texte -> {
@@ -91,20 +97,29 @@ public class CuboidSelector {
 	}
 
 
-	private BaseComponent[] getHelpText() {
-		BaseComponent[] pos1 = new ComponentBuilder("§6§lpos1").event(ChatUtils.getShowTextHoverEvent("§aCliquez pour définir la position 1")).event(ChatUtils.getCommandClickEvent("pos1")).create();
-		BaseComponent[] pos2 = new ComponentBuilder("§6§lpos2").event(ChatUtils.getShowTextHoverEvent("§aCliquez pour définir la position 2")).event(ChatUtils.getCommandClickEvent("pos2")).create();
-		BaseComponent[] claim = new ComponentBuilder("§a§lsauvegarder").event(ChatUtils.getShowTextHoverEvent("§aCliquez pour claim la sélection")).event(ChatUtils.getCommandClickEvent("sauvegarder")).create();
-		BaseComponent[] quit = new ComponentBuilder("§c§lquitter").event(ChatUtils.getShowTextHoverEvent("§aCliquez pour quitter le mode sélection")).event(ChatUtils.getCommandClickEvent("quit")).create();
-		
-		ComponentBuilder builder = new ComponentBuilder("§e§lLes mots clés pour la création d'une sélection sont (hover-clic possible) : ")
-				.append(pos1).append(TextComponent.fromLegacyText(" §e§l, ")).event((HoverEvent)null)
-				.append(pos2).append(TextComponent.fromLegacyText(" §e§l, ")).event((HoverEvent)null)
-				.append(claim).append(TextComponent.fromLegacyText(" §e§l, ")).event((HoverEvent)null);
+	private Component getHelpText() {
+		Component pos1 = Component.text("§6§lpos1")
+				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 1")))
+				.clickEvent(ClickEvent.suggestCommand("pos1"));
+		Component pos2 = Component.text("§6§lpos2")
+				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 2")))
+				.clickEvent(ClickEvent.suggestCommand("pos2"));
+		Component claim = Component.text("§a§lsauvegarder")
+				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour claim la sélection")))
+				.clickEvent(ClickEvent.suggestCommand("sauvegarder"));
+		Component quit = Component.text("§c§lquitter")
+				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour quitter le mode sélection")))
+				.clickEvent(ClickEvent.suggestCommand("quit"));
 
-		builder.append(quit).append(TextComponent.fromLegacyText(".")).event((HoverEvent)null);
-		
-		return builder.create();
+		return Component.text("§e§lLes mots clés pour la création d'une sélection sont (hover-clic possible) : ")
+				.append(pos1)
+				.append(Component.text(" §e§l, ", NamedTextColor.YELLOW, TextDecoration.BOLD))
+				.append(pos2)
+				.append(Component.text(" §e§l, ", NamedTextColor.YELLOW, TextDecoration.BOLD))
+				.append(claim)
+				.append(Component.text(" §e§l, ", NamedTextColor.YELLOW, TextDecoration.BOLD))
+				.append(quit)
+				.append(Component.text(".", NamedTextColor.RED, TextDecoration.BOLD));
 	}
 
 	private boolean arePosSet() {
@@ -140,27 +155,44 @@ public class CuboidSelector {
 	}
 
 	private void showParticules(Cuboid cuboid) {
-		Location loc1 = cuboid.getLowerNE();
-		Location loc2 = cuboid.getUpperSW();
-		Location loc3 = new Location(cuboid.getWorld(), loc1.getX(), 0, loc2.getZ());
-		Location loc4 = new Location(cuboid.getWorld(), loc2.getX(), 0, loc1.getZ());
+		double particleDistance = 0.5;
+		Location corner1 = cuboid.getLowerNE().clone().add(1, -1, 0);
+		Location corner2 = cuboid.getUpperSW().clone().add(0, 1, 1);
+		List<Location> result = new ArrayList<>();
+		World world = corner1.getWorld();
+		double minX = Math.min(corner1.getX(), corner2.getX());
+		double minY = Math.min(corner1.getY(), corner2.getY());
+		double minZ = Math.min(corner1.getZ(), corner2.getZ());
+		double maxX = Math.max(corner1.getX(), corner2.getX());
+		double maxY = Math.max(corner1.getY(), corner2.getY());
+		double maxZ = Math.max(corner1.getZ(), corner2.getZ());
+
+		for (double x = minX; x <= maxX; x+=particleDistance) {
+			for (double y = minY; y <= maxY; y+=particleDistance) {
+				for (double z = minZ; z <= maxZ; z+=particleDistance) {
+					int components = 0;
+					if (x == minX || x == maxX) components++;
+					if (y == minY || y == maxY) components++;
+					if (z == minZ || z == maxZ) components++;
+					if (components >= 2) {
+						result.add(new Location(world, x, y, z));
+					}
+				}
+			}
+		}
 		particleTask = new BukkitRunnable() {
 
 			@Override
 			public void run() {
-				for (int y = loc1.getBlockY(); y < loc2.getBlockY(); y++) {
-					showParticle(loc1, y);
-					showParticle(loc2, y);
-					showParticle(loc3, y);
-					showParticle(loc4, y);
-				}			
+				for (Location location : result) {
+					showParticle(location);
+				}
 			}
 		}.runTaskTimer(LandsPlugin.getInstance(), 1L, 10L);
 
 	}
 
-	private void showParticle(Location loc, int y) {
-		loc.setY(y);
+	private void showParticle(Location loc) {
 		player.spawnParticle(Particle.VILLAGER_HAPPY, loc, 1);
 	}
 

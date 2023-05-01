@@ -99,6 +99,43 @@ public class Storage implements AbstractStorage {
     }
 
     @Override
+    public Map<String, Integer> getWorldsDefaultLands() {
+        Map<String, Integer> worlds = new HashMap<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT idL, world FROM sc_lands_world_default_lands WHERE server=?;")) {
+                ps.setString(1, LandsPlugin.getInstance().getServerName());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        int id = rs.getInt("idL");
+                        String world = rs.getString("world");
+                        worlds.put(world, id);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return worlds;
+    }
+
+    @Override
+    public void setWorldDefaultLand(String world, Land land) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO sc_lands_world_default_lands (server, world, idL) " +
+                            "VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE idL=VALUES(idL);")) {
+                ps.setString(1, LandsPlugin.getInstance().getServerName());
+                ps.setString(2, world);
+                ps.setInt(3, land.getId());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public Land getLand(int id) {
         Land land = null;
         String sql = "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt " +
@@ -222,7 +259,16 @@ public class Storage implements AbstractStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        String sql = "DELETE FROM sc_lands WHERE idL=?";
+        String deleteLandSql = "DELETE FROM sc_lands WHERE idL=?";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(deleteLandSql)) {
+                ps.setInt(1, land.getId());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        String sql = "DELETE FROM sc_lands_world_default_lands WHERE idL=?";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, land.getId());

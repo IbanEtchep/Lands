@@ -120,6 +120,14 @@ public class DbTables {
 				"    CONSTRAINT PK_chunks PRIMARY KEY (`server`, world, x, z),\n" +
 				"    CONSTRAINT FK_chunks_lands FOREIGN KEY (idL) REFERENCES sc_lands(idL)\n" + 
 				");");
+		createTable("CREATE TABLE IF NOT EXISTS sc_lands_world_default_lands(\n" +
+				"    `server` VARCHAR(255) NOT NULL,\n" +
+				"    `world` VARCHAR(255) NOT NULL,\n" +
+				"    idL INT NOT NULL,\n" +
+				"    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP," +
+				"    CONSTRAINT PK_world_default_lands PRIMARY KEY (`server`, world),\n" +
+				"    CONSTRAINT FK_world_default_lands FOREIGN KEY (idL) REFERENCES sc_lands(idL)\n" +
+				");");
 		createTable("CREATE TABLE IF NOT EXISTS sc_sublands(\n" + 
 				"    idSubLand INT NOT NULL,\n" + 
 				"    idLand INT NOT NULL,\n" + 

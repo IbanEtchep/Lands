@@ -139,8 +139,8 @@ public class LandCommand {
         if (land == null) {
             player.sendMessage("§cCe territoire n'existe pas.");
         } else {
-            new ConfirmMenu(player, "Supprimer le territoire " + land.getName() +" ?", confirmed -> {
-                if(confirmed) {
+            new ConfirmMenu(player, "Supprimer le territoire " + land.getName() + " ?", confirmed -> {
+                if (confirmed) {
                     landManager.deleteLand(land);
                 }
             }).open();
@@ -285,6 +285,13 @@ public class LandCommand {
         } else {
             player.sendMessage("§cCe chunk n'est pas claim.");
         }
+    }
+
+    @Subcommand("admin setDefaultWorldClaim")
+    @CommandPermission("lands.admin")
+    public void setDefaultWorldClaim(Player player, World world, Land land) {
+        landManager.setDefaultWorldLand(world, land);
+        player.sendMessage("§cLe claim par défaut du monde " + world.getName() + " est désormais " + land.getName() + ".");
     }
 
 
