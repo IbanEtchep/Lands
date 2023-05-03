@@ -39,6 +39,12 @@ public class CuboidSelector {
 		this.manager = manager;
 		this.player = player;
 		this.callback = callback;
+		Cuboid currentCuboid = land.getCuboid();
+		if(land.getCuboid() != null) {
+			this.pos1 = currentCuboid.getLowerNE();
+			this.pos2 = currentCuboid.getUpperSW();
+			showParticules(currentCuboid);
+		}
 	}
 
 	public void startSelecting() {
@@ -71,12 +77,12 @@ public class CuboidSelector {
 				Cuboid cuboid = getCuboid();
 				verif(cuboid).thenAcceptAsync(valid -> {
 					if(valid) {
+						cancelTask();
 						land.setCuboid(cuboid, LandsPlugin.getInstance().getServerName());
 						manager.saveSubLandCuboid(land);
 						player.sendMessage("§a§lLa selection a été sauvegardée avec succès.");
 						callback.quit();
 						plugin.getTextInputs().remove(player.getUniqueId());
-						cancelTask();
 					}
 				});
 			}else if(texte.startsWith("quit")){
@@ -156,8 +162,8 @@ public class CuboidSelector {
 
 	private void showParticules(Cuboid cuboid) {
 		double particleDistance = 0.5;
-		Location corner1 = cuboid.getLowerNE().clone().add(1, -1, 0);
-		Location corner2 = cuboid.getUpperSW().clone().add(0, 1, 1);
+		Location corner1 = cuboid.getLowerNE();
+		Location corner2 = cuboid.getUpperSW().clone().add(1, 1, 1);
 		List<Location> result = new ArrayList<>();
 		World world = corner1.getWorld();
 		double minX = Math.min(corner1.getX(), corner2.getX());

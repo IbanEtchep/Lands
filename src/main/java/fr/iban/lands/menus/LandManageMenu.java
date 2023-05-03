@@ -65,13 +65,15 @@ public class LandManageMenu extends Menu {
 		}else if(displayNameEquals(current, "§2Sous-territoires")) {
 			new SubLandMainMenu(player, plugin, new ArrayList<>(land.getSubLands().values()), land, previousMenu).open();;
 		}else if(displayNameEquals(current, "§2Zone protégée :")) {
-			player.sendMessage("§2§lDébut de la sélection de la zone.");
-			CuboidSelector selector = new CuboidSelector(player, (SubLand)land, manager, () -> {
-				player.sendMessage("§cVous avez quitté le mode selection.");
-				open();
-			});
-			player.closeInventory();
-			selector.startSelecting();
+			if(land instanceof SubLand subLand) {
+				player.sendMessage("§2§lDébut de la sélection de la zone.");
+				CuboidSelector selector = new CuboidSelector(player, subLand, manager, () -> {
+					player.sendMessage("§cVous avez quitté le mode selection.");
+					open();
+				});
+				player.closeInventory();
+				selector.startSelecting();
+			}
 		}
 
 	}
