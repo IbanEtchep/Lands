@@ -6,6 +6,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.land.Land;
 import io.papermc.paper.event.player.PlayerChangeBeaconEffectEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -45,8 +46,10 @@ public class InteractListener implements Listener {
     public void onPhysics(PlayerInteractEvent e) {
         Player player = e.getPlayer();
         Block block = e.getClickedBlock();
+
         if (block == null)
             return;
+
         Land land = landmanager.getLandAt(block.getLocation());
 
         if (land == null)
@@ -70,16 +73,13 @@ public class InteractListener implements Listener {
                     if (!land.isBypassing(e.getPlayer(), Action.ALL) && !toClose.contains(block.getLocation())) {
                         boolean opened = openable.isOpen();
                         toClose.add(block.getLocation());
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                Openable o = (Openable) block.getBlockData();
-                                o.setOpen(opened);
-                                block.setBlockData(o);
-                                block.getState().update();
-                                toClose.remove(block.getLocation());
-                            }
-                        }.runTaskLater(plugin, 60L);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            Openable o = (Openable) block.getBlockData();
+                            o.setOpen(opened);
+                            block.setBlockData(o);
+                            block.getState().update();
+                            toClose.remove(block.getLocation());
+                        }, 60L);
                     }
                 }
                 return;
@@ -105,10 +105,10 @@ public class InteractListener implements Listener {
                 e.setCancelled(true);
             }
         } else if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
-            if(block.getType() == Material.BIG_DRIPLEAF) {
+            if (block.getType() == Material.BIG_DRIPLEAF) {
                 return;
             }
-            if(!land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
+            if (!land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
                 e.setCancelled(true);
             }
         }
@@ -124,21 +124,22 @@ public class InteractListener implements Listener {
         if (land != null && e.getEntityType() != EntityType.VILLAGER) {
             if (land.hasFlag(Flag.PRESSURE_PLATE_BY_ENTITY)) {
                 switch (material) {
-                    case ACACIA_PRESSURE_PLATE:
-                    case OAK_PRESSURE_PLATE:
-                    case DARK_OAK_PRESSURE_PLATE:
-                    case JUNGLE_PRESSURE_PLATE:
-                    case BIRCH_PRESSURE_PLATE:
-                    case CRIMSON_PRESSURE_PLATE:
-                    case WARPED_PRESSURE_PLATE:
-                    case STONE_PRESSURE_PLATE:
-                    case SPRUCE_PRESSURE_PLATE:
-                    case LIGHT_WEIGHTED_PRESSURE_PLATE:
-                    case POLISHED_BLACKSTONE_PRESSURE_PLATE:
+                    case ACACIA_PRESSURE_PLATE,
+                            OAK_PRESSURE_PLATE,
+                            DARK_OAK_PRESSURE_PLATE,
+                            JUNGLE_PRESSURE_PLATE,
+                            BIRCH_PRESSURE_PLATE,
+                            CRIMSON_PRESSURE_PLATE,
+                            WARPED_PRESSURE_PLATE,
+                            STONE_PRESSURE_PLATE,
+                            SPRUCE_PRESSURE_PLATE,
+                            LIGHT_WEIGHTED_PRESSURE_PLATE,
+                            POLISHED_BLACKSTONE_PRESSURE_PLATE -> {
                         return;
+                    }
                 }
             }
-            if(land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && material == Material.TRIPWIRE) {
+            if (land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && material == Material.TRIPWIRE) {
                 return;
             }
 
@@ -200,7 +201,7 @@ public class InteractListener implements Listener {
 
     @EventHandler
     public void onBeaconChange(PlayerChangeBeaconEffectEvent e) {
-        if(e.getBeacon() == null) return;
+        if (e.getBeacon() == null) return;
         Player player = e.getPlayer();
         Land land = landmanager.getLandAt(e.getBeacon().getLocation());
 

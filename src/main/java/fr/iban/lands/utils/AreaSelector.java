@@ -113,22 +113,22 @@ public class AreaSelector {
     private Component getHelpText() {
         Component pos1 = Component.text("§6§lpos1")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 1")))
-                .clickEvent(ClickEvent.suggestCommand("pos1"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat pos1"));
         Component pos2 = Component.text("§6§lpos2")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 2")))
-                .clickEvent(ClickEvent.suggestCommand("pos2"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat pos2"));
         Component claim = Component.text("§a§lclaim")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour claim la sélection")))
-                .clickEvent(ClickEvent.suggestCommand("claim"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat claim"));
         Component unclaim = Component.text("§c§lunclaim")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour unclaim la sélection")))
-                .clickEvent(ClickEvent.suggestCommand("unclaim"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat unclaim"));
         Component forceunclaim = Component.text("§c§lforceunclaim")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez TOUS les chunks de la sélection.")))
-                .clickEvent(ClickEvent.suggestCommand("forceunclaim"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat forceunclaim"));
         Component quit = Component.text("§c§lquitter")
                 .hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour quitter le mode sélection")))
-                .clickEvent(ClickEvent.suggestCommand("quit"));
+                .clickEvent(ClickEvent.runCommand("/sayinchat quit"));
 
         Component helpText = Component.text("§e§lLes mots clés pour la création d'une sélection sont (hover-clic possible) : ")
                 .append(pos1).append(Component.text(" §e§l, "))

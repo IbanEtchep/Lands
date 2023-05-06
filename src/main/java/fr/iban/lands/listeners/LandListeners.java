@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class LandListeners implements Listener {
 
-	private LandsPlugin plugin;
+	private final LandsPlugin plugin;
 
 	public LandListeners(LandsPlugin plugin) {
 		this.plugin = plugin;

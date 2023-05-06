@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import com.google.gson.Gson;
 import fr.iban.bukkitcore.event.CoreMessageEvent;
 import fr.iban.common.messaging.Message;
 import fr.iban.lands.LandManager;
@@ -17,7 +16,6 @@ public class LandSyncListener implements Listener {
 
     private final LandsPlugin plugin;
     private final LandManager landManager;
-    private final Gson gson = new Gson();
 
     public LandSyncListener(LandsPlugin plugin) {
         this.plugin = plugin;
@@ -35,7 +33,7 @@ public class LandSyncListener implements Listener {
 
         if(plugin.isMultipaperSupportEnabled()) {
             if(message.getChannel().equals(LandsPlugin.CHUNK_SYNC_CHANNEL)) {
-                ChunkClaimSyncMessage claimSyncMessage = gson.fromJson(message.getMessage(), ChunkClaimSyncMessage.class);
+                ChunkClaimSyncMessage claimSyncMessage =  message.getMessage(ChunkClaimSyncMessage.class);
                 Land land = landManager.getLandByID(claimSyncMessage.getId());
                 SChunk sChunk = claimSyncMessage.getsChunk();
                 if(sChunk.getServer().equals(plugin.getServerName())) {

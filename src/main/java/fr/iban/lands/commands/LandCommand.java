@@ -16,7 +16,6 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -105,7 +104,7 @@ public class LandCommand {
 
     @Subcommand("bypass")
     @CommandPermission("lands.bypass")
-    public void bypass(Player player, @Optional String landName) {
+    public void bypass(Player player) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;

@@ -17,7 +17,7 @@ import java.util.Iterator;
 public class ExplodeListeners implements Listener {
 
 	private final LandsPlugin plugin;
-	private LandManager landmanager;
+	private final LandManager landmanager;
 
 	public ExplodeListeners(LandsPlugin landsPlugin) {
 		this.landmanager = landsPlugin.getLandManager();

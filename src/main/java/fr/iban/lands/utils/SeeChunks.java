@@ -44,9 +44,7 @@ public class SeeChunks {
     }
 
     public void stop() {
-        for (BukkitTask task : tasks) {
-            task.cancel();
-        }
+        tasks.forEach(BukkitTask::cancel);
     }
 
     private Collection<Location> getPoints() {

@@ -78,14 +78,14 @@ public class CuboidSelector {
 						land.setCuboid(cuboid, LandsPlugin.getInstance().getServerName());
 						manager.saveSubLandCuboid(land);
 						player.sendMessage("§a§lLa selection a été sauvegardée avec succès.");
-						quitCallback.run();
+						Bukkit.getScheduler().runTask(plugin, quitCallback);
 						plugin.getTextInputs().remove(player.getUniqueId());
 					}
 				});
 			}else if(texte.startsWith("quit")){
+				cancelTask();
 				quitCallback.run();
 				plugin.getTextInputs().remove(player.getUniqueId());
-				cancelTask();
 			}else {
 				player.sendMessage("§c§lLe texte que vous avez saisi est invalide.");
 				startSelecting();
@@ -103,16 +103,16 @@ public class CuboidSelector {
 	private Component getHelpText() {
 		Component pos1 = Component.text("§6§lpos1")
 				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 1")))
-				.clickEvent(ClickEvent.suggestCommand("pos1"));
+				.clickEvent(ClickEvent.runCommand("/sayinchat pos1"));
 		Component pos2 = Component.text("§6§lpos2")
 				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour définir la position 2")))
-				.clickEvent(ClickEvent.suggestCommand("pos2"));
+				.clickEvent(ClickEvent.runCommand("/sayinchat pos2"));
 		Component claim = Component.text("§a§lsauvegarder")
 				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour claim la sélection")))
-				.clickEvent(ClickEvent.suggestCommand("sauvegarder"));
+				.clickEvent(ClickEvent.runCommand("/sayinchat sauvegarder"));
 		Component quit = Component.text("§c§lquitter")
 				.hoverEvent(HoverEvent.showText(Component.text("§aCliquez pour quitter le mode sélection")))
-				.clickEvent(ClickEvent.suggestCommand("quit"));
+				.clickEvent(ClickEvent.runCommand("/sayinchat quit"));
 
 		return Component.text("§e§lLes mots clés pour la création d'une sélection sont (hover-clic possible) : ")
 				.append(pos1)

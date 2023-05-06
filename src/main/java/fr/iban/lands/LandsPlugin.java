@@ -4,6 +4,7 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.commands.LandCommand;
 import fr.iban.lands.commands.LandsCommand;
 import fr.iban.lands.commands.MaxClaimsCommand;
+import fr.iban.lands.commands.MiscellaneousCommands;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.listeners.*;
@@ -29,8 +30,8 @@ import java.util.UUID;
 
 public final class LandsPlugin extends JavaPlugin {
 
-    private LandManager landManager;
     private static LandsPlugin instance;
+    private LandManager landManager;
     private List<UUID> bypass;
     private List<UUID> debugPlayers;
     private AbstractGuildDataAccess guildDataAccess;
@@ -114,6 +115,7 @@ public final class LandsPlugin extends JavaPlugin {
         commandHandler.register(new LandCommand(this));
         commandHandler.register(new LandsCommand(this));
         commandHandler.register(new MaxClaimsCommand());
+        commandHandler.register(new MiscellaneousCommands());
         commandHandler.registerBrigadier();
     }
 
