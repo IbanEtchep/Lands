@@ -3,10 +3,12 @@ package fr.iban.lands.utils;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.land.*;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.*;
-import net.md_5.bungee.api.chat.HoverEvent.Action;
-import org.apache.commons.lang.StringUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -19,21 +21,20 @@ public class LandMap {
     private final LandManager manager;
     private final Map<UUID, Land> landMapSelection = new HashMap<>();
 
-
     public LandMap(LandManager manager) {
         this.manager = manager;
     }
 
     public void display(Player player, Land land) {
         landMapSelection.put(player.getUniqueId(), land);
-        List<BaseComponent[]> components = get(player, 15, 5, land);
-        for (BaseComponent[] baseComponents : components) {
-            player.sendMessage(baseComponents);
+        List<Component> components = get(player, 15, 5, land);
+        for (Component component : components) {
+            player.sendMessage(component);
         }
     }
 
-    public List<BaseComponent[]> get(Player player, int rangeX, int rangeZ, Land land) {
-        List<ComponentBuilder> components = new ArrayList<>();
+    public List<Component> get(Player player, int rangeX, int rangeZ, Land land) {
+        List<Component> components = new ArrayList<>();
         String servername = LandsPlugin.getInstance().getServerName();
         final Chunk center = player.getChunk();
         final World world = center.getWorld();
@@ -44,95 +45,92 @@ public class LandMap {
         final int endZ = center.getZ() + rangeZ + 1;
 
         for (int i = 0; i < rangeZ * 2 + 1; i++) {
-            components.add(new ComponentBuilder());
+            components.add(Component.empty());
         }
-
 
         for (int x = startX; x < endX; x++) {
-
             int i = 0;
             for (int z = startZ; z < endZ; z++) {
-
                 SChunk chunkXZ = new SChunk(servername, world.getName(), x, z);
-                components.get(i).append(getSymbole(player, center, chunkXZ, land));
+                components.set(i, components.get(i).append(getSymbole(player, center, chunkXZ, land)));
                 i++;
             }
-
         }
 
-        List<BaseComponent[]> baseComponents = new ArrayList<>();
-        for (ComponentBuilder componentBuilder : components) {
-            baseComponents.add(componentBuilder.create());
-        }
+        Component headerAndFooter = Component.text("█".repeat(rangeX * 2 + 1), NamedTextColor.BLACK);
+        components.add(0, headerAndFooter);
 
-        BaseComponent[] headerAndFooter = new ComponentBuilder(StringUtils.repeat("█", rangeX * 2 + 1)).color(ChatColor.BLACK).create();
-
-        baseComponents.add(0, headerAndFooter);
-
-        return baseComponents;
+        return components;
     }
 
+    private Component getSymbole(Player player, Chunk center, SChunk schunk, Land selectedLand) {
+        TextColor baseColor = TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex());
+        Component baseComponent = Component.text("█").color(baseColor);
 
-    @SuppressWarnings("deprecation")
-    private BaseComponent[] getSymbole(Player player, Chunk center, SChunk schunk, Land selectedLand) {
-
-        ComponentBuilder builder = new ComponentBuilder("█").color(HexColor.MARRON_CLAIR.getColor());
-
-        //Hover
-        ComponentBuilder hoverbase = new ComponentBuilder();
-        ComponentBuilder clicToClaim = new ComponentBuilder("\n(clic pour claim)").color(ChatColor.GRAY);
-        ComponentBuilder clicToUnclaim = new ComponentBuilder("\n(clic pour unclaim)").color(ChatColor.GRAY);
-
-		if (center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {
-			builder.color(ChatColor.YELLOW);
-			hoverbase.append(new ComponentBuilder("VOUS\n").bold(true).color(ChatColor.YELLOW).create());
-		}
+        if (center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {
+            baseComponent = baseComponent.color(NamedTextColor.YELLOW);
+        }
 
         Land land = manager.getLandAt(schunk);
 
         if (land instanceof SystemLand sland) {
-			hoverbase.append(new ComponentBuilder(sland.getName()).bold(true).color(HexColor.MARRON.getColor()).create());
+            TextColor systemLandColor = TextColor.fromHexString(HexColor.MARRON.getHex());
+            Component hoverComponent = Component.text(sland.getName()).color(systemLandColor).decorate(TextDecoration.BOLD);
             if (land.getName().equals("Zone sauvage")) {
                 if (selectedLand != null) {
-                    hoverbase.append(clicToClaim.create()).color(ChatColor.GRAY).create();
-                    builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land claimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+                    hoverComponent = hoverComponent.append(Component.text("\n(clic pour claim)").color(NamedTextColor.GRAY));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand("/land claimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
                 }
             } else {
-                builder.color(HexColor.OLIVE.getColor());
+                baseComponent = baseComponent.color(TextColor.fromHexString(HexColor.OLIVE.getHex()));
                 if (!sland.equals(selectedLand)) {
-                    builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, ""));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand(""));
                 } else {
-                    builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand("/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
                 }
             }
+            baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
         } else if (land instanceof PlayerLand pland) {
-			if (Objects.equals(pland.getOwner(), player.getUniqueId())) {
-                builder.color(ChatColor.DARK_GREEN);
-                hoverbase.append(new ComponentBuilder("Territoire : " + pland.getName() + "\n").color(ChatColor.DARK_GREEN).append(TextComponent.fromLegacyText("Propriétaire : Vous")).color(ChatColor.DARK_GREEN).create());
+            UUID owner = pland.getOwner();
+            if (Objects.equals(owner, player.getUniqueId())) {
+                baseComponent = baseComponent.color(NamedTextColor.DARK_GREEN);
+                Component hoverComponent = Component.text("Territoire : " + pland.getName() + "\n")
+                        .color(NamedTextColor.DARK_GREEN)
+                        .append(Component.text("Propriétaire : Vous").color(NamedTextColor.DARK_GREEN));
                 if (selectedLand != null) {
-                    hoverbase.append(clicToUnclaim.create());
-                    builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+                    hoverComponent = hoverComponent.append(Component.text("\n(clic pour unclaim)").color(NamedTextColor.GRAY));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand("/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
                 }
+                baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
             } else {
-                builder.color(HexColor.MARRON.getColor());
-                hoverbase.append(new ComponentBuilder("Territoire : " + pland.getName() + "\n").color(HexColor.MARRON.getColor()).append(TextComponent.fromLegacyText("Propriétaire : " + Bukkit.getOfflinePlayer(pland.getOwner()).getName())).color(HexColor.MARRON.getColor()).create());
+                baseComponent = baseComponent.color(TextColor.fromHexString(HexColor.MARRON.getHex()));
+                String ownerName = Bukkit.getOfflinePlayer(pland.getOwner()).getName();
+                Component hoverComponent = Component.text("Territoire : " + pland.getName() + "\n")
+                        .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
+                        .append(Component.text("Propriétaire : " + ownerName).color(TextColor.fromHexString(HexColor.MARRON.getHex())));
+                baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
             }
         } else if (land instanceof GuildLand guildLand) {
-			if (guildLand.isGuildMember(player.getUniqueId())) {
-                builder.color(ChatColor.AQUA);
-                hoverbase.append(new ComponentBuilder("Territoire de guilde : " + guildLand.getName() + "\n").color(ChatColor.DARK_GREEN).append(TextComponent.fromLegacyText("Propriétaire : Guilde " + guildLand.getGuildName())).color(HexColor.MARRON.getColor()).color(ChatColor.DARK_GREEN).create());
+            if (guildLand.isGuildMember(player.getUniqueId())) {
+                baseComponent = baseComponent.color(NamedTextColor.AQUA);
+                Component hoverComponent = Component.text("Territoire de guilde : " + guildLand.getName() + "\n")
+                        .color(NamedTextColor.DARK_GREEN)
+                        .append(Component.text("Propriétaire : Guilde " + guildLand.getGuildName()).color(TextColor.fromHexString(HexColor.MARRON.getHex())));
                 if (selectedLand != null) {
-                    hoverbase.append(clicToUnclaim.create());
-                    builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+                    hoverComponent = hoverComponent.append(Component.text("\n(clic pour unclaim)").color(NamedTextColor.GRAY));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand("/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
                 }
+                baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
             } else {
-                builder.color(HexColor.MARRON.getColor());
-                hoverbase.append(new ComponentBuilder("Territoire de guilde : " + guildLand.getName() + "\n").color(HexColor.MARRON.getColor()).append(TextComponent.fromLegacyText("Propriétaire : Guilde " + guildLand.getGuildName())).color(HexColor.MARRON.getColor()).create());
+                baseComponent = baseComponent.color(TextColor.fromHexString(HexColor.MARRON.getHex()));
+                Component hoverComponent = Component.text("Territoire de guilde : " + guildLand.getName() + "\n")
+                        .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
+                        .append(Component.text("Propriétaire : Guilde " + guildLand.getGuildName()).color(TextColor.fromHexString(HexColor.MARRON.getHex())));
+                baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
             }
         }
 
-		builder.event(new HoverEvent(Action.SHOW_TEXT, hoverbase.create()));
-        return builder.create();
+        return baseComponent;
     }
 
     public Map<UUID, Land> getLandMapSelection() {

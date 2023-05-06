@@ -674,4 +674,32 @@ public class Cuboid implements Iterable<Block>, Cloneable, ConfigurationSerializ
 
 	}
 
+	public List<Location> getCubeEdgeLocations(double distanceBetweenPoints) {
+		Location corner1 = getLowerNE();
+		Location corner2 = getUpperSW().clone().add(1, 1, 1);
+		List<Location> result = new ArrayList<>();
+		double minX = Math.min(corner1.getX(), corner2.getX());
+		double minY = Math.min(corner1.getY(), corner2.getY());
+		double minZ = Math.min(corner1.getZ(), corner2.getZ());
+		double maxX = Math.max(corner1.getX(), corner2.getX());
+		double maxY = Math.max(corner1.getY(), corner2.getY());
+		double maxZ = Math.max(corner1.getZ(), corner2.getZ());
+
+		for (double x = minX; x <= maxX; x+=distanceBetweenPoints) {
+			for (double y = minY; y <= maxY; y+=distanceBetweenPoints) {
+				for (double z = minZ; z <= maxZ; z+=distanceBetweenPoints) {
+					int components = 0;
+					if (x == minX || x == maxX) components++;
+					if (y == minY || y == maxY) components++;
+					if (z == minZ || z == maxZ) components++;
+					if (components >= 2) {
+						result.add(new Location(getWorld(), x, y, z));
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
 }

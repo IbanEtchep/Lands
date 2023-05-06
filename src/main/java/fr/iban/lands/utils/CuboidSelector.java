@@ -9,36 +9,33 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Axis;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class CuboidSelector {
 
-	private Player player;
+	private final Player player;
 
 	private Location pos1;
 	private Location pos2;
 
-	private SelectionCallback callback;
+	private final Runnable quitCallback;
 	private BukkitTask particleTask;
 
-	private LandManager manager;
-	private SubLand land;
+	private final LandManager manager;
+	private final SubLand land;
 
-	public CuboidSelector(Player player, SubLand land, LandManager manager, SelectionCallback callback) {
+	public CuboidSelector(Player player, SubLand land, LandManager manager, Runnable quitCallback) {
 		this.land = land;
 		this.manager = manager;
 		this.player = player;
-		this.callback = callback;
+		this.quitCallback = quitCallback;
 		Cuboid currentCuboid = land.getCuboid();
 		if(land.getCuboid() != null) {
 			this.pos1 = currentCuboid.getLowerNE();
@@ -81,12 +78,12 @@ public class CuboidSelector {
 						land.setCuboid(cuboid, LandsPlugin.getInstance().getServerName());
 						manager.saveSubLandCuboid(land);
 						player.sendMessage("§a§lLa selection a été sauvegardée avec succès.");
-						callback.quit();
+						quitCallback.run();
 						plugin.getTextInputs().remove(player.getUniqueId());
 					}
 				});
 			}else if(texte.startsWith("quit")){
-				callback.quit();
+				quitCallback.run();
 				plugin.getTextInputs().remove(player.getUniqueId());
 				cancelTask();
 			}else {
@@ -161,41 +158,17 @@ public class CuboidSelector {
 	}
 
 	private void showParticules(Cuboid cuboid) {
-		double particleDistance = 0.5;
-		Location corner1 = cuboid.getLowerNE();
-		Location corner2 = cuboid.getUpperSW().clone().add(1, 1, 1);
-		List<Location> result = new ArrayList<>();
-		World world = corner1.getWorld();
-		double minX = Math.min(corner1.getX(), corner2.getX());
-		double minY = Math.min(corner1.getY(), corner2.getY());
-		double minZ = Math.min(corner1.getZ(), corner2.getZ());
-		double maxX = Math.max(corner1.getX(), corner2.getX());
-		double maxY = Math.max(corner1.getY(), corner2.getY());
-		double maxZ = Math.max(corner1.getZ(), corner2.getZ());
+		List<Location> edgeLocations = cuboid.getCubeEdgeLocations(0.5);
 
-		for (double x = minX; x <= maxX; x+=particleDistance) {
-			for (double y = minY; y <= maxY; y+=particleDistance) {
-				for (double z = minZ; z <= maxZ; z+=particleDistance) {
-					int components = 0;
-					if (x == minX || x == maxX) components++;
-					if (y == minY || y == maxY) components++;
-					if (z == minZ || z == maxZ) components++;
-					if (components >= 2) {
-						result.add(new Location(world, x, y, z));
-					}
-				}
-			}
+		if(particleTask != null) {
+			particleTask.cancel();
 		}
-		particleTask = new BukkitRunnable() {
 
-			@Override
-			public void run() {
-				for (Location location : result) {
-					showParticle(location);
-				}
+		particleTask = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
+			for (Location location : edgeLocations) {
+				showParticle(location);
 			}
-		}.runTaskTimer(LandsPlugin.getInstance(), 1L, 10L);
-
+		},1L, 10L);
 	}
 
 	private void showParticle(Location loc) {

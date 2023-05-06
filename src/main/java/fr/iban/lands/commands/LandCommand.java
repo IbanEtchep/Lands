@@ -8,15 +8,15 @@ import fr.iban.lands.land.Land;
 import fr.iban.lands.land.PlayerLand;
 import fr.iban.lands.land.SChunk;
 import fr.iban.lands.land.SystemLand;
-import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -316,14 +316,18 @@ public class LandCommand {
                 + HexColor.MARRON.getColor() + "F3+G" + HexColor.MARRON_CLAIR.getColor() + ".");
     }
 
-    private BaseComponent[] getCommandUsage(String command, String desc) {
-        ComponentBuilder builder = new ComponentBuilder("- ").color(HexColor.MARRON_CLAIR.getColor());
-        builder.append(new ComponentBuilder(command)
-                .event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command))
-                .event(ChatUtils.getShowTextHoverEvent(ChatColor.GRAY + "Clic pour écrire la commande"))
-                .color(HexColor.MARRON.getColor()).create());
-        builder.append(new ComponentBuilder(" - ").color(HexColor.MARRON_CLAIR.getColor()).append(desc).color(HexColor.MARRON_CLAIR.getColor()).create());
-        return builder.create();
-    }
+    private Component getCommandUsage(String command, String desc) {
+        Component baseComponent = Component.text("- ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex()));
 
+        Component commandComponent = Component.text(command)
+                .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
+                .clickEvent(ClickEvent.suggestCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text("Clic pour écrire la commande").color(NamedTextColor.GRAY)));
+
+        baseComponent = baseComponent.append(commandComponent);
+        baseComponent = baseComponent.append(Component.text(" - ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+        baseComponent = baseComponent.append(Component.text(desc).color(TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+
+        return baseComponent;
+    }
 }

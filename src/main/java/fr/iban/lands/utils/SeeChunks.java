@@ -3,6 +3,7 @@ package fr.iban.lands.utils;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.land.Land;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -27,21 +28,19 @@ public class SeeChunks {
     }
 
     public void showParticles() {
-
-        tasks.add((new BukkitRunnable() {
-            @Override
-            public void run() {
-                int py = (int) player.getLocation().getY();
-				if(!player.isOnline()) return;
-                getPointsAsync().thenAccept(points -> {
-                    for (Location loc : getPoints()) {
-                        for (int y = (py - 10 >= 0 ? py - 30 : 0); y < (py + 10 <= 255 ? py + 30 : 255); y++) {
-                            showParticle(loc, y);
-                        }
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
+            int py = (int) player.getLocation().getY();
+            if(!player.isOnline()) return;
+            getPointsAsync().thenAccept(points -> {
+                for (Location loc : getPoints()) {
+                    for (int y = (py - 10 >= 0 ? py - 30 : 0); y < (py + 10 <= 255 ? py + 30 : 255); y++) {
+                        showParticle(loc, y);
                     }
-                });
-            }
-        }).runTaskTimer(LandsPlugin.getInstance(), 1L, 20L));
+                }
+            });
+        }, 1L, 20L);
+
+        tasks.add(task);
     }
 
     public void stop() {
