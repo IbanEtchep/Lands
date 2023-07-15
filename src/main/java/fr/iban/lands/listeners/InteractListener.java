@@ -14,12 +14,14 @@ import org.bukkit.block.data.Openable;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.RespawnAnchor;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFertilizeEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -166,23 +168,18 @@ public class InteractListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
     public void onInteractAtEntity(PlayerInteractEntityEvent e) {
+        Player player = e.getPlayer();
         Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
 
         if (land == null) {
             return;
         }
-        if (!land.isBypassing(e.getPlayer(), Action.ENTITY_INTERACT)) {
+
+        if (e.getRightClicked() instanceof ArmorStand && !land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
             e.setCancelled(true);
         }
-    }
 
-    @EventHandler
-    public void onInteractAtEntity(PlayerInteractAtEntityEvent e) {
-        Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
-        if (land == null) {
-            return;
-        }
-        if (!land.isBypassing(e.getPlayer(), Action.ENTITY_INTERACT)) {
+        if (!land.isBypassing(player, Action.ENTITY_INTERACT)) {
             e.setCancelled(true);
         }
     }

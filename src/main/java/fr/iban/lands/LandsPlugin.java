@@ -79,7 +79,8 @@ public final class LandsPlugin extends JavaPlugin {
                 new PortalListeners(this),
                 new FireListener(this),
                 new ServiceListeners(this),
-                new JoinQuitListeners(this)
+                new JoinQuitListeners(this),
+                new SignListeners(this)
         );
 
         if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
