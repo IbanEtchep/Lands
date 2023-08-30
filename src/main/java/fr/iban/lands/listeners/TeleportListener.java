@@ -1,8 +1,10 @@
 package fr.iban.lands.listeners;
 
+import fr.iban.bukkitcore.event.PlayerPreTeleportEvent;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
+import fr.iban.lands.enums.Flag;
 import fr.iban.lands.events.LandEnterEvent;
 import fr.iban.lands.land.Land;
 import org.bukkit.Bukkit;
@@ -44,6 +46,20 @@ public class TeleportListener implements Listener {
 		Bukkit.getPluginManager().callEvent(enter);
 		if(enter.isCancelled()) {
 			e.setCancelled(true);
+		}
+	}
+
+
+	@EventHandler
+	public void onCoreTeleport(PlayerPreTeleportEvent e) {
+		Player player = e.getPlayer();
+
+		if(player != null) {
+			Land land = manager.getLandAt(player.getLocation());
+
+			if(land.hasFlag(Flag.INSTANT_TELEPORT)) {
+				e.setDelay(0);
+			}
 		}
 	}
 

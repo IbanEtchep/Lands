@@ -67,10 +67,6 @@ public class LandMap {
         TextColor baseColor = TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex());
         Component baseComponent = Component.text("█").color(baseColor);
 
-        if (center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {
-            baseComponent = baseComponent.color(NamedTextColor.YELLOW);
-        }
-
         Land land = manager.getLandAt(schunk);
 
         if (land instanceof SystemLand sland) {
@@ -128,6 +124,10 @@ public class LandMap {
                         .append(Component.text("Propriétaire : Guilde " + guildLand.getGuildName()).color(TextColor.fromHexString(HexColor.MARRON.getHex())));
                 baseComponent = baseComponent.hoverEvent(HoverEvent.showText(hoverComponent));
             }
+        }
+
+        if (center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {
+            baseComponent = baseComponent.color(NamedTextColor.YELLOW);
         }
 
         return baseComponent;

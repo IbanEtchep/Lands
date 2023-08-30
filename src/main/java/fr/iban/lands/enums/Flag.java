@@ -12,6 +12,7 @@ public enum Flag {
 	DOORS_AUTOCLOSE("Active la fermeture automatique des portes", new ItemStack(Material.OAK_DOOR), LandType.SYSTEM),
 	NO_MOB_SPAWNING("Désactive le spawn des mobs", new ItemStack(Material.ZOMBIE_SPAWN_EGG), LandType.SYSTEM),
 	INVISIBLE("Rend les joueurs à l'intérieur invisibles.", new ItemStack(Material.POTION), LandType.SYSTEM),
+	INSTANT_TELEPORT("Supprime le délais des téléportation depuis ce territoire.", new ItemStack(Material.ENDER_PEARL), LandType.SYSTEM),
 	EXPLOSIONS("Active les explosions", new ItemStack(Material.TNT)),
 	BLOCK_DAMAGES_BY_ENTITY("Active les dégâts aux blocs par les entités (endermans, withers...)", new ItemStack(Material.DIRT)),
 	PRESSURE_PLATE_BY_ENTITY("Active l'utilisation des plaques de pression par les entités", new ItemStack(Material.OAK_PRESSURE_PLATE)),
