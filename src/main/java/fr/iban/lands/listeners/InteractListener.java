@@ -24,6 +24,7 @@ import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -175,10 +176,6 @@ public class InteractListener implements Listener {
             return;
         }
 
-        if (e.getRightClicked() instanceof ArmorStand && !land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
-            e.setCancelled(true);
-        }
-
         if (!land.isBypassing(player, Action.ENTITY_INTERACT)) {
             e.setCancelled(true);
         }
@@ -219,4 +216,18 @@ public class InteractListener implements Listener {
                 || player.getInventory().getItemInOffHand().getType() == Material.ARMOR_STAND;
     }
 
+
+    @EventHandler
+    public void onArmorStandManipulate(PlayerArmorStandManipulateEvent e) {
+        Player player = e.getPlayer();
+        Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
+
+        if (land == null) {
+            return;
+        }
+
+        if (!land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
+            e.setCancelled(true);
+        }
+    }
 }

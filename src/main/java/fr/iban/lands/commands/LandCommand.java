@@ -38,12 +38,6 @@ public class LandCommand {
         this.landManager = plugin.getLandManager();
     }
 
-    @Command("land")
-    @Default
-    public void land(Player player) {
-        help(player);
-    }
-
     @Subcommand("claim")
     public void claim(Player player, @Optional Land withLand) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
@@ -295,6 +289,7 @@ public class LandCommand {
 
 
     @Subcommand("help")
+    @DefaultFor({"land", "l"})
     public void help(Player player) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");

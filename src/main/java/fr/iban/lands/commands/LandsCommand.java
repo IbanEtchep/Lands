@@ -9,7 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import revxrsal.commands.annotation.Command;
-import revxrsal.commands.annotation.Default;
+import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.annotation.Subcommand;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
@@ -27,8 +27,8 @@ public class LandsCommand {
         this.landManager = plugin.getLandManager();
     }
 
-    @Command("lands")
-    @Default
+    @Subcommand("menu")
+    @DefaultFor("lands")
     public void lands(Player player, @Optional OfflinePlayer target) {
         if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.admin")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
