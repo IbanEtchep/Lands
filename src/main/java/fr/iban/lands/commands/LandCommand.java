@@ -18,6 +18,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import revxrsal.commands.annotation.*;
@@ -32,21 +33,28 @@ public class LandCommand {
 
     private final LandManager landManager;
     private final LandsPlugin plugin;
+    private final boolean playerLandsEnabled;
 
     public LandCommand(LandsPlugin plugin) {
         this.plugin = plugin;
         this.landManager = plugin.getLandManager();
+        this.playerLandsEnabled = plugin.getConfig().getBoolean("players-lands-enabled");
     }
 
     @Subcommand("claim")
     public void claim(Player player, @Optional Land withLand) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
         if (withLand == null) {
-            landManager.getPlayerFirstLand(player).thenAccept(land -> landManager.claim(player, new SChunk(player.getLocation().getChunk()), land, true));
+            landManager
+                    .getPlayerFirstLand(player)
+                    .thenAccept(
+                            land ->
+                                    landManager.claim(
+                                            player, new SChunk(player.getLocation().getChunk()), land, true));
         } else {
             landManager.claim(player, new SChunk(player.getLocation().getChunk()), withLand, true);
         }
@@ -54,7 +62,7 @@ public class LandCommand {
 
     @Subcommand("unclaim")
     public void unclaim(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -66,7 +74,7 @@ public class LandCommand {
     @CommandPermission("lands.admin")
     @SecretCommand
     public void forceunclaim(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -77,7 +85,7 @@ public class LandCommand {
 
     @Subcommand("kick")
     public void kick(Player player, Player target) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -85,11 +93,17 @@ public class LandCommand {
         if (!target.getUniqueId().equals(player.getUniqueId())) {
             Land land = landManager.getLandAt(target.getLocation());
             if (landManager.canManageLand(player, land)) {
-                target.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
+                target.teleportAsync(
+                        plugin
+                                .getConfig()
+                                .getLocation(
+                                        "spawn-location",
+                                        Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
                 target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
                 player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
             } else {
-                player.sendMessage("§cVous n'avez pas la permission d'exclure ce joueur du territoire où il se trouve.");
+                player.sendMessage(
+                        "§cVous n'avez pas la permission d'exclure ce joueur du territoire où il se trouve.");
             }
         } else {
             player.sendMessage("§cImpossible de faire cela sur vous même...");
@@ -99,18 +113,14 @@ public class LandCommand {
     @Subcommand("bypass")
     @CommandPermission("lands.bypass")
     public void bypass(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
-            player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
-            return;
-        }
-
         plugin.setBypassing(player.getUniqueId(), !plugin.getBypass().contains(player.getUniqueId()));
         player.sendMessage("§8§lBypass : " + (plugin.isBypassing(player) ? "§aActivé" : "§cDésactivé"));
     }
 
     @Subcommand("create")
     public void create(Player player, @Optional String name) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -124,7 +134,8 @@ public class LandCommand {
 
     @Subcommand("delete")
     public void create(Player player, Land land) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -132,29 +143,39 @@ public class LandCommand {
         if (land == null) {
             player.sendMessage("§cCe territoire n'existe pas.");
         } else {
-            new ConfirmMenu(player, "Supprimer le territoire " + land.getName() + " ?", confirmed -> {
-                if (confirmed) {
-                    landManager.deleteLand(land);
-                }
-            }).open();
+            new ConfirmMenu(
+                    player,
+                    "Supprimer le territoire " + land.getName() + " ?",
+                    confirmed -> {
+                        if (confirmed) {
+                            landManager.deleteLand(land);
+                        }
+                    })
+                    .open();
         }
     }
 
     @Subcommand("claimat")
     @SecretCommand
     public void claimat(Player player, World world, int X, int Z) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
         LandMap map = landManager.getLandMap();
-        if (!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(player.getUniqueId())) {
+        if (!map.getLandMapSelection().isEmpty()
+                && map.getLandMapSelection().containsKey(player.getUniqueId())) {
             Land land = map.getLandMapSelection().get(player.getUniqueId());
             if (land != null) {
-                landManager.claim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
-                    map.display(player, land);
-                }));
+                landManager
+                        .claim(
+                                player,
+                                new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
+                                land,
+                                true)
+                        .thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> map.display(player, land)));
             }
         }
     }
@@ -162,48 +183,54 @@ public class LandCommand {
     @Subcommand("unclaimat")
     @SecretCommand
     public void unclaimat(Player player, World world, int X, int Z) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
         LandMap map = landManager.getLandMap();
-        if (!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(player.getUniqueId())) {
+        if (!map.getLandMapSelection().isEmpty()
+                && map.getLandMapSelection().containsKey(player.getUniqueId())) {
             Land land = map.getLandMapSelection().get(player.getUniqueId());
             if (land != null) {
                 if (land instanceof PlayerLand) {
-                    landManager.unclaim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true);
+                    landManager.unclaim(
+                            player,
+                            new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
+                            land,
+                            true);
                 } else if (land instanceof SystemLand && player.hasPermission("lands.admin")) {
                     landManager.unclaim(world.getChunkAt(X, Z));
                 }
                 player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
-                landManager.unclaim(player, new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
-                    map.display(player, land);
-                }));
+                landManager
+                        .unclaim(
+                                player,
+                                new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
+                                land,
+                                true)
+                        .thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> map.display(player, land)));
             }
         }
     }
 
     @Subcommand("map")
     public void map(Player player, @Optional Land land) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
-        if (land == null) {
-            landManager.getLandMap().display(player, null);
-        } else {
-            landManager.getLandMap().display(player, land);
-        }
+        landManager.getLandMap().display(player, land);
     }
 
     @Subcommand("seeclaims")
     public void seeclaims(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
+
         UUID uuid = player.getUniqueId();
         if (!landManager.getSeeChunks().containsKey(uuid)) {
             SeeChunks sc = new SeeChunks(player, landManager);
@@ -220,7 +247,8 @@ public class LandCommand {
 
     @Subcommand("menu")
     public void menu(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -230,7 +258,8 @@ public class LandCommand {
 
     @Subcommand("pay")
     public void pay(Player player, Land land) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -241,9 +270,11 @@ public class LandCommand {
         }
 
         if (landManager.handlePayment(land)) {
-            player.sendMessage("§aLa transaction s'est déroulée avec succès. Le territoire est débloqué.");
+            player.sendMessage(
+                    "§aLa transaction s'est déroulée avec succès. Le territoire est débloqué.");
         } else {
-            player.sendMessage("§cLe paiement n'a pas pu être effectué. Vérifiez que les fonds nécessaires sont disponibles.");
+            player.sendMessage(
+                    "§cLe paiement n'a pas pu être effectué. Vérifiez que les fonds nécessaires sont disponibles.");
         }
     }
 
@@ -259,7 +290,8 @@ public class LandCommand {
     @CommandPermission("lands.admin")
     public void debugMode(Player player) {
         plugin.setDebugging(player.getUniqueId(), !plugin.isInDebugMode(player.getUniqueId()));
-        player.sendMessage("§fMode debug : " + (plugin.isInDebugMode(player) ? "§aActivé" : "§cDésactivé"));
+        player.sendMessage(
+                "§fMode debug : " + (plugin.isInDebugMode(player) ? "§aActivé" : "§cDésactivé"));
     }
 
     @Subcommand("admin chunkinfo")
@@ -267,8 +299,11 @@ public class LandCommand {
     public void chunkInfo(Player player) {
         Chunk chunk = player.getChunk();
         SChunk sChunk = new SChunk(chunk);
-        Map.Entry<SChunk, Land> entry = landManager.getChunks().entrySet().stream()
-                .filter(e -> e.getKey().equals(sChunk)).findFirst().orElse(null);
+        Map.Entry<SChunk, Land> entry =
+                landManager.getChunks().entrySet().stream()
+                        .filter(e -> e.getKey().equals(sChunk))
+                        .findFirst()
+                        .orElse(null);
         if (entry != null) {
             SChunk schunk = entry.getKey();
             Land land = entry.getValue();
@@ -284,44 +319,92 @@ public class LandCommand {
     @CommandPermission("lands.admin")
     public void setDefaultWorldClaim(Player player, World world, Land land) {
         landManager.setDefaultWorldLand(world, land);
-        player.sendMessage("§cLe claim par défaut du monde " + world.getName() + " est désormais " + land.getName() + ".");
+        player.sendMessage(
+                "§cLe claim par défaut du monde "
+                        + world.getName()
+                        + " est désormais "
+                        + land.getName()
+                        + ".");
     }
-
 
     @Subcommand("help")
     @DefaultFor({"land", "l"})
     public void help(Player player) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.bypass")) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
-        player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "La protection de vos territoires se gère avec les commandes ci-dessous.");
+        player.sendMessage(
+                HexColor.MARRON_CLAIR.getColor()
+                        + "La protection de vos territoires se gère avec les commandes ci-dessous.");
         player.sendMessage("");
         player.sendMessage(getCommandUsage("/lands", "Ouvre le menu de gestion de vos territoires."));
-        player.sendMessage(getCommandUsage("/land claim <territoire(optionnel)>", "Attribue le tronçon où vous vous trouvez au territoire choisi ou à votre premier territoire."));
-        player.sendMessage(getCommandUsage("/land unclaim", "Retire le tronçon où vous vous trouvez de vos territoires."));
-        player.sendMessage(getCommandUsage("/land map <territoire(optionnel)>", "Affiche une carte des territoires alentours. Permet de claim/unclaim si un territoire est selectionné."));
-        player.sendMessage(getCommandUsage("/land kick <joueur> ", "Renvois un joueur qui se trouve dans votre territoire au spawn."));
-        player.sendMessage(getCommandUsage("/land seeclaims ", "Permet de voir les bordures des claims."));
+        player.sendMessage(
+                getCommandUsage(
+                        "/land claim <territoire(optionnel)>",
+                        "Attribue le tronçon où vous vous trouvez au territoire choisi ou à votre premier territoire."));
+        player.sendMessage(
+                getCommandUsage(
+                        "/land unclaim", "Retire le tronçon où vous vous trouvez de vos territoires."));
+        player.sendMessage(
+                getCommandUsage(
+                        "/land map <territoire(optionnel)>",
+                        "Affiche une carte des territoires alentours. Permet de claim/unclaim si un territoire est selectionné."));
+        player.sendMessage(
+                getCommandUsage(
+                        "/land kick <joueur> ",
+                        "Renvois un joueur qui se trouve dans votre territoire au spawn."));
+        player.sendMessage(
+                getCommandUsage("/land seeclaims ", "Permet de voir les bordures des claims."));
         player.sendMessage("");
-        player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "Les " + HexColor.MARRON.getColor() + "tronçons(chunks) " + HexColor.MARRON_CLAIR.getColor() + "mesurent "
-                + HexColor.MARRON.getColor() + "16x256x16 blocs" + HexColor.MARRON_CLAIR.getColor() + " et sont visible en appuyant sur les touche "
-                + HexColor.MARRON.getColor() + "F3+G" + HexColor.MARRON_CLAIR.getColor() + ".");
+        player.sendMessage(
+                HexColor.MARRON_CLAIR.getColor()
+                        + "Les "
+                        + HexColor.MARRON.getColor()
+                        + "tronçons(chunks) "
+                        + HexColor.MARRON_CLAIR.getColor()
+                        + "mesurent "
+                        + HexColor.MARRON.getColor()
+                        + "16x256x16 blocs"
+                        + HexColor.MARRON_CLAIR.getColor()
+                        + " et sont visible en appuyant sur les touche "
+                        + HexColor.MARRON.getColor()
+                        + "F3+G"
+                        + HexColor.MARRON_CLAIR.getColor()
+                        + ".");
     }
 
     private Component getCommandUsage(String command, String desc) {
-        Component baseComponent = Component.text("- ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex()));
+        Component baseComponent =
+                Component.text("- ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex()));
 
-        Component commandComponent = Component.text(command)
-                .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
-                .clickEvent(ClickEvent.suggestCommand(command))
-                .hoverEvent(HoverEvent.showText(Component.text("Clic pour écrire la commande").color(NamedTextColor.GRAY)));
+        Component commandComponent =
+                Component.text(command)
+                        .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
+                        .clickEvent(ClickEvent.suggestCommand(command))
+                        .hoverEvent(
+                                HoverEvent.showText(
+                                        Component.text("Clic pour écrire la commande").color(NamedTextColor.GRAY)));
 
         baseComponent = baseComponent.append(commandComponent);
-        baseComponent = baseComponent.append(Component.text(" - ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
-        baseComponent = baseComponent.append(Component.text(desc).color(TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+        baseComponent =
+                baseComponent.append(
+                        Component.text(" - ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+        baseComponent =
+                baseComponent.append(
+                        Component.text(desc).color(TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
 
         return baseComponent;
+    }
+
+    @Subcommand("giveclaims")
+    private void giveClaims(Player player, OfflinePlayer target, int amount) {
+        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
+            player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
+            return;
+        }
+
+        landManager.giveClaims(player, target.getUniqueId(), amount);
     }
 }

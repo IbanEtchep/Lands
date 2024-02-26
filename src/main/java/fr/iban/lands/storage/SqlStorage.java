@@ -18,16 +18,19 @@ import java.sql.*;
 import java.util.Date;
 import java.util.*;
 
-public class Storage implements AbstractStorage {
+public class SqlStorage implements AbstractStorage {
 
     private final DataSource ds = DbAccess.getDataSource();
+
+    public SqlStorage() {
+        DbTables.createTables();
+    }
 
     @Override
     public Map<SChunk, Integer> getChunks() {
         Map<SChunk, Integer> chunks = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM sc_chunks WHERE server=?;")) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM sc_chunks WHERE server=?;")) {
                 ps.setString(1, LandsPlugin.getInstance().getServerName());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -47,15 +50,15 @@ public class Storage implements AbstractStorage {
         return chunks;
     }
 
-
     @Override
     public Map<Integer, Land> getLands() {
         Map<Integer, Land> lands = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt " +
-                            "FROM sc_lands L"
-                            + " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND';")) {
+            String sql = "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt "
+                    + "FROM sc_lands L"
+                    + " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND';";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         Land land = null;
@@ -69,8 +72,9 @@ public class Storage implements AbstractStorage {
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            if(LandsPlugin.getInstance().isGuildsHookEnabled()) {
-                                AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                            if (LandsPlugin.getInstance().isGuildsHookEnabled()) {
+                                AbstractGuildDataAccess guildDataAccess =
+                                        LandsPlugin.getInstance().getGuildDataAccess();
                                 if (guildDataAccess.guildExists(uuid)) {
                                     land = new GuildLand(id, uuid, name);
                                 } else continue;
@@ -78,6 +82,7 @@ public class Storage implements AbstractStorage {
                         } else {
                             land = new SystemLand(id, name);
                         }
+
                         if (land != null) {
                             land.setId(id);
                             land.setName(name);
@@ -95,6 +100,7 @@ public class Storage implements AbstractStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return lands;
     }
 
@@ -102,8 +108,9 @@ public class Storage implements AbstractStorage {
     public Map<String, Integer> getWorldsDefaultLands() {
         Map<String, Integer> worlds = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT idL, world FROM sc_lands_world_default_lands WHERE server=?;")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "SELECT idL, world FROM sc_lands_world_default_lands WHERE server=?;")) {
                 ps.setString(1, LandsPlugin.getInstance().getServerName());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -122,9 +129,10 @@ public class Storage implements AbstractStorage {
     @Override
     public void setWorldDefaultLand(String world, Land land) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_lands_world_default_lands (server, world, idL) " +
-                            "VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE idL=VALUES(idL);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "INSERT INTO sc_lands_world_default_lands (server, world, idL) "
+                                         + "VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE idL=VALUES(idL);")) {
                 ps.setString(1, LandsPlugin.getInstance().getServerName());
                 ps.setString(2, world);
                 ps.setInt(3, land.getId());
@@ -138,9 +146,10 @@ public class Storage implements AbstractStorage {
     @Override
     public Land getLand(int id) {
         Land land = null;
-        String sql = "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt " +
-                "FROM sc_lands L" +
-                " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND' AND L.idL=?;";
+        String sql =
+                "SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid, L.lastPayment, L.createdAt "
+                        + "FROM sc_lands L"
+                        + " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND' AND L.idL=?;";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, id);
@@ -155,8 +164,9 @@ public class Storage implements AbstractStorage {
                             land = new PlayerLand(id, uuid, name);
                         } else if (type == LandType.GUILD) {
                             UUID uuid = UUID.fromString(rs.getString("uuid"));
-                            if(LandsPlugin.getInstance().isGuildsHookEnabled()) {
-                                AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
+                            if (LandsPlugin.getInstance().isGuildsHookEnabled()) {
+                                AbstractGuildDataAccess guildDataAccess =
+                                        LandsPlugin.getInstance().getGuildDataAccess();
                                 if (guildDataAccess.guildExists(uuid)) {
                                     land = new GuildLand(id, uuid, name);
                                 } else continue;
@@ -186,7 +196,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public void addLand(Land land) {
-        String sql = "INSERT INTO sc_lands (libelleL, idTL, uuid) VALUES(?, (SELECT idTL FROM sc_land_types WHERE libelleTL LIKE ?), ?);";
+        String sql =
+                "INSERT INTO sc_lands (libelleL, idTL, uuid) VALUES(?, (SELECT idTL FROM sc_land_types WHERE libelleTL LIKE ?), ?);";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, land.getName());
@@ -284,7 +295,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public int getLandID(LandType type, UUID uuid, String name) {
-        String sql = "SELECT idL FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? AND L.uuid=? AND L.libelleL=? LIMIT 1;";
+        String sql =
+                "SELECT idL FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? AND L.uuid=? AND L.libelleL=? LIMIT 1;";
         int id = 0;
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -305,7 +317,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public int getSystemLandID(String name) {
-        String sql = "SELECT idL FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? AND L.libelleL=? LIMIT 1;";
+        String sql =
+                "SELECT idL FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? AND L.libelleL=? LIMIT 1;";
         int id = 0;
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -326,9 +339,10 @@ public class Storage implements AbstractStorage {
     @Override
     public void setChunk(Land land, SChunk chunk) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_chunks (server, world, x, z, idL) " +
-                            "VALUES(?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE idL=VALUES(idL);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "INSERT INTO sc_chunks (server, world, x, z, idL) "
+                                         + "VALUES(?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE idL=VALUES(idL);")) {
                 ps.setString(1, chunk.getServer());
                 ps.setString(2, chunk.getWorld());
                 ps.setInt(3, chunk.getX());
@@ -359,7 +373,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public void loadTrusts(Land land) {
-        String sql = "SELECT T.uuid, LP.libelleLP FROM sc_trusts T JOIN sc_land_permissions LP ON T.idLP=LP.idLP WHERE T.idL=?;";
+        String sql =
+                "SELECT T.uuid, LP.libelleLP FROM sc_trusts T JOIN sc_land_permissions LP ON T.idLP=LP.idLP WHERE T.idL=?;";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, land.getId());
@@ -386,11 +401,12 @@ public class Storage implements AbstractStorage {
     @Override
     public void addTrust(Land land, UUID uuid, Action action) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_trusts (idL, uuid, idLP) VALUES("
-                            + "?, "
-                            + "?,"
-                            + " (SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?));")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "INSERT INTO sc_trusts (idL, uuid, idLP) VALUES("
+                                         + "?, "
+                                         + "?,"
+                                         + " (SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?));")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, uuid.toString());
                 ps.setString(3, action.toString());
@@ -404,11 +420,12 @@ public class Storage implements AbstractStorage {
     @Override
     public void removeTrust(Land land, UUID uuid, Action action) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_trusts "
-                            + "WHERE idL=? "
-                            + "AND uuid=? "
-                            + "AND idLP=(SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "DELETE FROM sc_trusts "
+                                         + "WHERE idL=? "
+                                         + "AND uuid=? "
+                                         + "AND idLP=(SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?);")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, uuid.toString());
                 ps.setString(3, action.toString());
@@ -442,11 +459,14 @@ public class Storage implements AbstractStorage {
     @Override
     public void addCustomTrust(Land land, Action action, String identifier) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_trusts (idL, uuid, idLP) VALUES("
-                            + "?, "
-                            + "'" + identifier + "', "
-                            + " (SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?));")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "INSERT INTO sc_trusts (idL, uuid, idLP) VALUES("
+                                         + "?, "
+                                         + "'"
+                                         + identifier
+                                         + "', "
+                                         + " (SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?));")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, action.toString());
                 ps.executeUpdate();
@@ -459,11 +479,14 @@ public class Storage implements AbstractStorage {
     @Override
     public void removeCustomTrust(Land land, Action action, String identifier) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_trusts "
-                            + "WHERE idL=? "
-                            + "AND uuid LIKE '" + identifier + "' "
-                            + "AND idLP=(SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "DELETE FROM sc_trusts "
+                                         + "WHERE idL=? "
+                                         + "AND uuid LIKE '"
+                                         + identifier
+                                         + "' "
+                                         + "AND idLP=(SELECT idLP FROM sc_land_permissions WHERE libelleLP LIKE ?);")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, action.toString());
                 ps.executeUpdate();
@@ -475,7 +498,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public Map<SChunk, Integer> getChunks(UUID uuid) {
-        String sql = "SELECT * FROM `sc_chunks` HAVING idL IN (SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE '?'";
+        String sql =
+                "SELECT * FROM `sc_chunks` HAVING idL IN (SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE '?'";
         Map<SChunk, Integer> chunks = new HashMap<>();
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -500,7 +524,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public int getChunkCount(UUID uuid) {
-        String sql = "SELECT COUNT(*) FROM sc_chunks WHERE idL IN (SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE ?);";
+        String sql =
+                "SELECT COUNT(*) FROM sc_chunks WHERE idL IN (SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE ?);";
         int count = 0;
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -544,7 +569,8 @@ public class Storage implements AbstractStorage {
     @Override
     public Set<Flag> getFlags(Land land) {
         Set<Flag> flags = new HashSet<>();
-        String sql = "SELECT LF.libelleTF FROM sc_flags F JOIN sc_land_flags LF ON F.idTF=LF.idTF WHERE F.idL=?;";
+        String sql =
+                "SELECT LF.libelleTF FROM sc_flags F JOIN sc_land_flags LF ON F.idTF=LF.idTF WHERE F.idL=?;";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, land.getId());
@@ -567,10 +593,11 @@ public class Storage implements AbstractStorage {
     @Override
     public void addFlag(Land land, Flag flag) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_flags (idL, idTF) VALUES("
-                            + "?, "
-                            + " (SELECT idTF FROM sc_land_flags WHERE libelleTF LIKE ?));")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "INSERT INTO sc_flags (idL, idTF) VALUES("
+                                         + "?, "
+                                         + " (SELECT idTF FROM sc_land_flags WHERE libelleTF LIKE ?));")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, flag.toString());
                 ps.executeUpdate();
@@ -583,10 +610,11 @@ public class Storage implements AbstractStorage {
     @Override
     public void removeFlag(Land land, Flag flag) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_flags "
-                            + "WHERE idL=? "
-                            + "AND idTF=(SELECT idTF FROM sc_land_flags WHERE libelleTF LIKE ?);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "DELETE FROM sc_flags "
+                                         + "WHERE idL=? "
+                                         + "AND idTF=(SELECT idTF FROM sc_land_flags WHERE libelleTF LIKE ?);")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, flag.toString());
                 ps.executeUpdate();
@@ -618,8 +646,8 @@ public class Storage implements AbstractStorage {
     @Override
     public void addBan(Land land, UUID uuid) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_lands_bans VALUES(?,?);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement("INSERT INTO sc_lands_bans VALUES(?,?);")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, uuid.toString());
                 ps.executeUpdate();
@@ -632,10 +660,9 @@ public class Storage implements AbstractStorage {
     @Override
     public void removeBan(Land land, UUID uuid) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_lands_bans "
-                            + "WHERE idL=? "
-                            + "AND uuid=?;")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "DELETE FROM sc_lands_bans " + "WHERE idL=? " + "AND uuid=?;")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, uuid.toString());
                 ps.executeUpdate();
@@ -661,7 +688,7 @@ public class Storage implements AbstractStorage {
 
                         if (landwith != null && land != null) {
                             land.addLink(link, landwith);
-                        } else if(land != null) {
+                        } else if (land != null) {
                             removeLink(land, link);
                         }
                     }
@@ -675,8 +702,8 @@ public class Storage implements AbstractStorage {
     @Override
     public void addLink(Land land, Link link, Land with) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO sc_lands_links VALUES(?,?,?);")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement("INSERT INTO sc_lands_links VALUES(?,?,?);")) {
                 ps.setInt(1, land.getId());
                 ps.setInt(2, with.getId());
                 ps.setString(3, link.toString());
@@ -690,10 +717,9 @@ public class Storage implements AbstractStorage {
     @Override
     public void removeLink(Land land, Link link) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_lands_links "
-                            + "WHERE idL=? "
-                            + "AND LinkType LIKE ?;")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement(
+                                 "DELETE FROM sc_lands_links " + "WHERE idL=? " + "AND LinkType LIKE ?;")) {
                 ps.setInt(1, land.getId());
                 ps.setString(2, link.toString());
                 ps.executeUpdate();
@@ -722,7 +748,8 @@ public class Storage implements AbstractStorage {
         String sql = "UPDATE sc_lands SET lastPayment=? WHERE idL=?;";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setTimestamp(1, Timestamp.valueOf(DateUtils.convertToLocalDateTime(land.getLastPayment())));
+                ps.setTimestamp(
+                        1, Timestamp.valueOf(DateUtils.convertToLocalDateTime(land.getLastPayment())));
                 ps.setInt(2, land.getId());
                 ps.executeUpdate();
             }
@@ -731,11 +758,11 @@ public class Storage implements AbstractStorage {
         }
     }
 
-
     @Override
     public Map<Integer, SubLand> getSubLands(Land land) {
         Map<Integer, SubLand> sublands = new HashMap<>();
-        String sql = "SELECT * FROM sc_sublands SL JOIN sc_lands L ON SL.idSubLand=L.idL WHERE SL.idLand=?;";
+        String sql =
+                "SELECT * FROM sc_sublands SL JOIN sc_lands L ON SL.idSubLand=L.idL WHERE SL.idLand=?;";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, land.getId());
@@ -756,7 +783,10 @@ public class Storage implements AbstractStorage {
 
                         SubLand subland = new SubLand(land, idSL, name);
                         if (Bukkit.getWorld(world) != null) {
-                            subland.setCuboid(new Cuboid(Objects.requireNonNull(Bukkit.getWorld(world)), x1, y1, z1, x2, y2, z2), server);
+                            subland.setCuboid(
+                                    new Cuboid(
+                                            Objects.requireNonNull(Bukkit.getWorld(world)), x1, y1, z1, x2, y2, z2),
+                                    server);
                         }
                         loadTrusts(subland);
                         subland.setFlags(getFlags(subland));
@@ -771,12 +801,12 @@ public class Storage implements AbstractStorage {
         return sublands;
     }
 
-
     @Override
     public void setSubLandRegion(Land land, SubLand subland) {
-        String sql = "INSERT INTO sc_sublands (idSubLand, idLand, server, world, x1, y1, z1, x2, y2, z2) VALUES("
-                + "?, ?, ?, ?, ?, ?, ? ,? ,? ,?) ON DUPLICATE KEY UPDATE server=VALUES(server), world=VALUES(world),"
-                + "x1=VALUES(x1), y1=VALUES(y1), z1=VALUES(z1), x2=VALUES(x2), y2=VALUES(y2), z2=VALUES(z2);";
+        String sql =
+                "INSERT INTO sc_sublands (idSubLand, idLand, server, world, x1, y1, z1, x2, y2, z2) VALUES("
+                        + "?, ?, ?, ?, ?, ?, ? ,? ,? ,?) ON DUPLICATE KEY UPDATE server=VALUES(server), world=VALUES(world),"
+                        + "x1=VALUES(x1), y1=VALUES(y1), z1=VALUES(z1), x2=VALUES(x2), y2=VALUES(y2), z2=VALUES(z2);";
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, subland.getId());
@@ -797,13 +827,11 @@ public class Storage implements AbstractStorage {
         }
     }
 
-
     @Override
     public void deleteSubLandRegion(SubLand land) {
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM sc_sublands "
-                            + "WHERE idSubLand=?;")) {
+            try (PreparedStatement ps =
+                         connection.prepareStatement("DELETE FROM sc_sublands " + "WHERE idSubLand=?;")) {
                 ps.setInt(1, land.getId());
                 ps.executeUpdate();
             }
@@ -814,7 +842,8 @@ public class Storage implements AbstractStorage {
 
     @Override
     public int getLastId(LandType type) {
-        String sql = "SELECT max(idL) FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? LIMIT 1;";
+        String sql =
+                "SELECT max(idL) FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? LIMIT 1;";
         int id = 0;
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -831,5 +860,70 @@ public class Storage implements AbstractStorage {
         return id;
     }
 
+    @Override
+    public int getChunkLimit(UUID uuid) {
+        String sql = "SELECT maxClaims FROM sc_lands_limits WHERE uuid LIKE ?;";
 
+        int maxClaims = 0;
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        maxClaims = rs.getInt("maxClaims");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return maxClaims;
+    }
+
+    @Override
+    public void setChunkLimit(UUID uuid, int limit) {
+        String sql =
+                "INSERT INTO sc_lands_limits (uuid, maxClaims) VALUES(?, ?) ON DUPLICATE KEY UPDATE maxClaims=VALUES(maxClaims);";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setInt(2, limit);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void increaseChunkLimit(UUID uuid, int amount) {
+        String sql =
+                "INSERT INTO sc_lands_limits (uuid, maxClaims) VALUES(?, ?) ON DUPLICATE KEY UPDATE maxClaims=maxClaims+VALUES(maxClaims);";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setInt(2, amount);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void decreaseChunkLimit(UUID uuid, int amount) {
+        String sql =
+                "INSERT INTO sc_lands_limits (uuid, maxClaims) VALUES(?, ?) ON DUPLICATE KEY UPDATE maxClaims=maxClaims-VALUES(maxClaims);";
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setInt(2, amount);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -4,7 +4,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public enum ActionGroup {
-
     BUILDING("Construction/destruction", new ItemStack(Material.STONE)),
     CONTAINERS("Conteneurs", new ItemStack(Material.CHEST)),
     PLUGINS("Actions de plugins", new ItemStack(Material.BUCKET)),
@@ -15,12 +14,10 @@ public enum ActionGroup {
     private final String displayName;
     private final ItemStack item;
 
-
     ActionGroup(String displayName, ItemStack item) {
         this.displayName = displayName;
         this.item = item;
     }
-
 
     public String getDisplayName() {
         return displayName;
@@ -29,5 +26,4 @@ public enum ActionGroup {
     public ItemStack getItem() {
         return item;
     }
-
 }

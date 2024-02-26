@@ -26,7 +26,8 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     @Override
     public void load() {
-        RegisteredServiceProvider<GuildsManager> rsp = landsPlugin.getServer().getServicesManager().getRegistration(GuildsManager.class);
+        RegisteredServiceProvider<GuildsManager> rsp =
+                landsPlugin.getServer().getServicesManager().getRegistration(GuildsManager.class);
         if (rsp != null) {
             guildsManager = rsp.getProvider();
             landsPlugin.getServer().getPluginManager().registerEvents(this, landsPlugin);
@@ -36,7 +37,6 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     @Override
     public void unload() {
-
     }
 
     public boolean isEnabled() {
@@ -70,7 +70,9 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     public boolean areInSameGuild(UUID uuid1, UUID uuid2) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid1);
         GuildPlayer guildPlayer2 = guildsManager.getGuildPlayer(uuid2);
-        return guildPlayer != null && guildPlayer2 != null && guildPlayer.getGuildId().equals(guildPlayer2.getGuildId());
+        return guildPlayer != null
+                && guildPlayer2 != null
+                && guildPlayer.getGuildId().equals(guildPlayer2.getGuildId());
     }
 
     @Override
@@ -81,7 +83,9 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public boolean isGuildLeader(UUID uuid, UUID guildId) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
-        return guildPlayer != null && guildPlayer.getGuildId().equals(guildId) && guildPlayer.isGranted(Rank.OWNER);
+        return guildPlayer != null
+                && guildPlayer.getGuildId().equals(guildId)
+                && guildPlayer.isGranted(Rank.OWNER);
     }
 
     @Override
@@ -99,7 +103,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public boolean withdraw(UUID guildId, double amount, String reason) {
         Guild guild = guildsManager.getGuildById(guildId);
-        if(guild == null) {
+        if (guild == null) {
             return false;
         }
         return guildsManager.guildWithdraw(guild, amount, reason);
@@ -108,7 +112,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public boolean withdraw(UUID guildId, double amount) {
         Guild guild = guildsManager.getGuildById(guildId);
-        if(guild == null) {
+        if (guild == null) {
             return false;
         }
         return guildsManager.guildWithdraw(guild, amount);
@@ -117,7 +121,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public boolean deposit(UUID guildId, double amount) {
         Guild guild = guildsManager.getGuildById(guildId);
-        if(guild == null) {
+        if (guild == null) {
             return false;
         }
         return guildsManager.guildDeposit(guild, amount);
@@ -126,7 +130,11 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @EventHandler
     public void onDisband(GuildDisbandEvent e) {
         LandManager landManager = landsPlugin.getLandManager();
-        landManager.getGuildLandsAsync(e.getGuild().getId()).thenAccept(lands -> {
+        UUID guildId = e.getGuild().getId();
+
+        landManager.transferClaims(guildId, e.getGuild().getOwner().getUuid());
+
+        landManager.getGuildLandsAsync(guildId).thenAccept(lands -> {
             lands.forEach(landManager::deleteLand);
         });
     }

@@ -7,8 +7,8 @@ import fr.iban.lands.commands.MaxClaimsCommand;
 import fr.iban.lands.commands.MiscellaneousCommands;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
-import fr.iban.lands.listeners.*;
 import fr.iban.lands.land.Land;
+import fr.iban.lands.listeners.*;
 import fr.iban.lands.utils.Head;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -60,28 +60,27 @@ public final class LandsPlugin extends JavaPlugin {
         registerCommands();
 
         registerListeners(
-                new PlayerMoveListener(this),
-                new PlayerTakeLecternBookListener(this),
-                new BlockPlaceListener(this),
                 new BlockBreakListener(this),
-                new PistonListeners(this),
-                new InteractListener(this),
+                new BlockPlaceListener(this),
+                new CommandListener(this),
+                new DamageListeners(this),
+                new DropListener(this),
+                new EntityBlockDamageListener(this),
                 new EntitySpawnListener(this),
                 new ExplodeListeners(this),
-                new DamageListeners(this),
-                new EntityBlockDamageListener(this),
-                new CommandListener(this),
-                new HangingListeners(this),
-                new TeleportListener(this),
-                new DropListener(this),
-                new LandListeners(this),
-                new HeadDatabaseListener(),
-                new PortalListeners(this),
                 new FireListener(this),
-                new ServiceListeners(this),
+                new HangingListeners(this),
+                new HeadDatabaseListener(),
+                new InteractListener(this),
                 new JoinQuitListeners(this),
-                new SignListeners(this)
-        );
+                new LandListeners(this),
+                new PistonListeners(this),
+                new PlayerMoveListener(this),
+                new PlayerTakeLecternBookListener(this),
+                new PortalListeners(this),
+                new ServiceListeners(this),
+                new SignListeners(this),
+                new TeleportListener(this));
 
         if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
             getServer().getPluginManager().registerEvents(new ShopListeners(this), this);
@@ -89,33 +88,38 @@ public final class LandsPlugin extends JavaPlugin {
         }
 
         Head.loadAPI();
-
     }
 
     private void registerCommands() {
         BukkitCommandHandler commandHandler = BukkitCommandHandler.create(this);
         commandHandler.accept(CoreBukkitPlugin.getInstance().getCommandHandlerVisitor());
 
-        //Land resolver
-        commandHandler.getAutoCompleter().registerParameterSuggestions(Land.class, (args, sender, command) -> {
-            Player player = ((BukkitCommandActor) sender).getAsPlayer();
-            return landManager.getManageableLandsNames(player);
-        });
+        // Land resolver
+        commandHandler
+                .getAutoCompleter()
+                .registerParameterSuggestions(
+                        Land.class,
+                        (args, sender, command) -> {
+                            Player player = ((BukkitCommandActor) sender).getAsPlayer();
+                            return landManager.getManageableLandsNames(player);
+                        });
 
-        commandHandler.registerValueResolver(Land.class, context -> {
-            String value = context.arguments().pop();
-            CommandActor actor = context.actor();
-            Player sender = ((BukkitCommandActor) actor).getAsPlayer();
-            Land land = getLandManager().getManageableLandFromName(sender, value);
-            if (land == null) {
-                throw new CommandErrorException("Le territoire " + value + " n''existe pas.");
-            }
-            return land;
-        });
+        commandHandler.registerValueResolver(
+                Land.class,
+                context -> {
+                    String value = context.arguments().pop();
+                    CommandActor actor = context.actor();
+                    Player sender = ((BukkitCommandActor) actor).getAsPlayer();
+                    Land land = getLandManager().getManageableLandFromName(sender, value);
+                    if (land == null) {
+                        throw new CommandErrorException("Le territoire " + value + " n''existe pas.");
+                    }
+                    return land;
+                });
 
         commandHandler.register(new LandCommand(this));
         commandHandler.register(new LandsCommand(this));
-        commandHandler.register(new MaxClaimsCommand());
+        commandHandler.register(new MaxClaimsCommand(this));
         commandHandler.register(new MiscellaneousCommands());
         commandHandler.registerBrigadier();
     }
@@ -124,7 +128,8 @@ public final class LandsPlugin extends JavaPlugin {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
         }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        RegisteredServiceProvider<Economy> rsp =
+                getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
             return;
         }
@@ -138,7 +143,8 @@ public final class LandsPlugin extends JavaPlugin {
     private void hookGuilds() {
         if (getConfig().getBoolean("guild-lands-enabled", false)) {
             if (getServer().getPluginManager().getPlugin("Guilds") != null) {
-                if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds")).isEnabled()) {
+                if (Objects.requireNonNull(getServer().getPluginManager().getPlugin("Guilds"))
+                        .isEnabled()) {
                     GuildsDataAccess guildsDataAccess = new GuildsDataAccess(this);
                     guildsDataAccess.load();
                     if (guildsDataAccess.isEnabled()) {
@@ -168,7 +174,6 @@ public final class LandsPlugin extends JavaPlugin {
         for (Listener listener : listeners) {
             pm.registerEvents(listener, this);
         }
-
     }
 
     public List<UUID> getBypass() {
@@ -184,13 +189,15 @@ public final class LandsPlugin extends JavaPlugin {
     }
 
     public void setBypassing(UUID uuid, boolean value) {
-        if(value) {
+        if (value) {
             bypass.add(uuid);
-        }else {
+        } else {
             bypass.remove(uuid);
         }
-        if(isMultipaperSupportEnabled()) {
-            CoreBukkitPlugin.getInstance().getMessagingManager().sendMessage(LandsPlugin.BYPASS_SYNC_CHANNEL, uuid.toString());
+        if (isMultipaperSupportEnabled()) {
+            CoreBukkitPlugin.getInstance()
+                    .getMessagingManager()
+                    .sendMessage(LandsPlugin.BYPASS_SYNC_CHANNEL, uuid.toString());
         }
     }
 
@@ -212,8 +219,10 @@ public final class LandsPlugin extends JavaPlugin {
         } else {
             debugPlayers.remove(uuid);
         }
-        if(isMultipaperSupportEnabled()) {
-            CoreBukkitPlugin.getInstance().getMessagingManager().sendMessage(LandsPlugin.DEBUG_SYNC_CHANNEL, uuid.toString());
+        if (isMultipaperSupportEnabled()) {
+            CoreBukkitPlugin.getInstance()
+                    .getMessagingManager()
+                    .sendMessage(LandsPlugin.DEBUG_SYNC_CHANNEL, uuid.toString());
         }
     }
 
@@ -226,12 +235,13 @@ public final class LandsPlugin extends JavaPlugin {
     }
 
     public @Nullable String getMultipaperServerName() {
-        return isMultipaperSupportEnabled() ? getConfig().getString("multipaper-support.server-name") : null;
+        return isMultipaperSupportEnabled()
+                ? getConfig().getString("multipaper-support.server-name")
+                : null;
     }
 
     public String getServerName() {
         String multipaperServer = getMultipaperServerName();
         return multipaperServer != null ? multipaperServer : CoreBukkitPlugin.getInstance().getServerName();
     }
-
 }

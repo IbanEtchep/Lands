@@ -6,10 +6,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 public class HeadDatabaseListener implements Listener {
-	
+
     @EventHandler
     public void onDatabaseLoad(DatabaseLoadEvent e) {
-    	Head.loadAPI();
+        Head.loadAPI();
     }
-
 }

@@ -8,15 +8,16 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.ActionGroup;
 import fr.iban.lands.land.Land;
 import fr.iban.lands.permissions.Trust;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 public abstract class TrustEditMenu extends PaginatedMenu {
 
@@ -27,7 +28,8 @@ public abstract class TrustEditMenu extends PaginatedMenu {
     protected ActionGroup actionGroup;
     protected Map<Integer, Consumer<InventoryClickEvent>> clickActionAtSlot = new HashMap<>();
 
-    public TrustEditMenu(Player player, Land land, LandManager manager, Menu previousMenu, ActionGroup actionGroup) {
+    public TrustEditMenu(
+            Player player, Land land, LandManager manager, Menu previousMenu, ActionGroup actionGroup) {
         super(player);
         this.land = land;
         this.manager = manager;
@@ -49,7 +51,6 @@ public abstract class TrustEditMenu extends PaginatedMenu {
         }
     }
 
-
     @Override
     public void handleMenu(InventoryClickEvent e) {
         ItemStack item = e.getCurrentItem();
@@ -66,7 +67,7 @@ public abstract class TrustEditMenu extends PaginatedMenu {
             return;
         }
 
-        if(clickActionAtSlot.containsKey(e.getSlot())) {
+        if (clickActionAtSlot.containsKey(e.getSlot())) {
             clickActionAtSlot.get(e.getSlot()).accept(e);
         }
     }
@@ -76,9 +77,12 @@ public abstract class TrustEditMenu extends PaginatedMenu {
         addMenuBorder();
 
         if (previousMenu != null) {
-            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
-                    .addLore("§cRetourner au menu précédent")
-                    .build());
+            inventory.setItem(
+                    31,
+                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                            .setDisplayName("§4Retour")
+                            .addLore("§cRetourner au menu précédent")
+                            .build());
         }
 
         int startIndex = getMaxItemsPerPage() * page;
@@ -87,7 +91,7 @@ public abstract class TrustEditMenu extends PaginatedMenu {
         if (actionGroup == null) {
             if (page == 0) {
                 addActionToInventory(Action.ALL);
-                if(trust.hasPermission(Action.ALL)) {
+                if (trust.hasPermission(Action.ALL)) {
                     return;
                 }
                 currentIndex++;
@@ -122,15 +126,19 @@ public abstract class TrustEditMenu extends PaginatedMenu {
 
     private void addActionGroupToInventory(ActionGroup actionGroup) {
         int slot = inventory.firstEmpty();
-        clickActionAtSlot.put(slot, clickEvent -> {
-            this.actionGroup = actionGroup;
-            open();
-        });
-        ItemBuilder itemBuilder = new ItemBuilder(actionGroup.getItem().clone()).setName("§f§l" + actionGroup.getDisplayName());
-        for(Action action : Action.getActionsGrouped(actionGroup)) {
-            if(trust.hasPermission(action)) {
+        clickActionAtSlot.put(
+                slot,
+                clickEvent -> {
+                    this.actionGroup = actionGroup;
+                    open();
+                });
+        ItemBuilder itemBuilder =
+                new ItemBuilder(actionGroup.getItem().clone())
+                        .setName("§f§l" + actionGroup.getDisplayName());
+        for (Action action : Action.getActionsGrouped(actionGroup)) {
+            if (trust.hasPermission(action)) {
                 itemBuilder.addLore("§f• §2" + action.getDisplayName());
-            }else {
+            } else {
                 itemBuilder.addLore("§f• §4" + action.getDisplayName());
             }
         }
@@ -140,19 +148,29 @@ public abstract class TrustEditMenu extends PaginatedMenu {
     private void addActionToInventory(Action action) {
         int slot = inventory.firstEmpty();
 
-        clickActionAtSlot.put(slot, event -> {
-            if(trust.hasPermission(action)) {
-                removeTrust(action);
-            }else {
-                addTrust(action);
-            }
-            super.open();
-        });
+        clickActionAtSlot.put(
+                slot,
+                event -> {
+                    if (trust.hasPermission(action)) {
+                        removeTrust(action);
+                    } else {
+                        addTrust(action);
+                    }
+                    super.open();
+                });
 
         if (trust.hasPermission(action)) {
-            inventory.setItem(slot, new ItemBuilder(action.getItem().clone()).setName("§2" + action.getDisplayName()).build());
+            inventory.setItem(
+                    slot,
+                    new ItemBuilder(action.getItem().clone())
+                            .setName("§2" + action.getDisplayName())
+                            .build());
         } else {
-            inventory.setItem(slot, new ItemBuilder(action.getItem().clone()).setName("§4" + action.getDisplayName()).build());
+            inventory.setItem(
+                    slot,
+                    new ItemBuilder(action.getItem().clone())
+                            .setName("§4" + action.getDisplayName())
+                            .build());
         }
     }
 }

@@ -4,10 +4,11 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 public class GuildLand extends Land {
 
@@ -29,7 +30,8 @@ public class GuildLand extends Land {
         UUID uuid = player.getUniqueId();
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         if (guildDataAccess.isGuildLeader(uuid, guildId)
-                || (guildDataAccess.isGuildMember(uuid, guildId) && getGuildTrust().hasPermission(action))) {
+                || (guildDataAccess.isGuildMember(uuid, guildId)
+                && getGuildTrust().hasPermission(action))) {
             return true;
         }
         return super.isBypassing(player, action);
@@ -44,7 +46,6 @@ public class GuildLand extends Land {
         return guildDataAccess.getGuildLeader(guildId);
     }
 
-
     public String getGuildName() {
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.getGuildName(guildId);
@@ -53,10 +54,5 @@ public class GuildLand extends Land {
     public boolean isGuildMember(UUID uuid) {
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         return guildDataAccess.isGuildMember(uuid, guildId);
-    }
-
-    @Override
-    public double getChunkWeeklyPrice() {
-        return 100;
     }
 }

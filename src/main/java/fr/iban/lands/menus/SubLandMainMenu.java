@@ -10,15 +10,16 @@ import fr.iban.lands.land.Land;
 import fr.iban.lands.land.SubLand;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SubLandMainMenu extends PaginatedMenu {
 
@@ -36,7 +37,8 @@ public class SubLandMainMenu extends PaginatedMenu {
         this.superLand = superLand;
     }
 
-    public SubLandMainMenu(Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand, Menu previousMenu) {
+    public SubLandMainMenu(
+            Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand, Menu previousMenu) {
         this(player, plugin, lands, superLand);
         this.previousMenu = previousMenu;
     }
@@ -75,14 +77,27 @@ public class SubLandMainMenu extends PaginatedMenu {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
-            core.getTextInputs().put(player.getUniqueId(), texte -> {
-                manager.createSublandAsync(player, superLand, texte)
-                        .thenRun(() -> Bukkit.getScheduler()
-                                .runTask(plugin, () ->
-                                        new SubLandMainMenu(player, plugin, new ArrayList<>(superLand.getSubLands().values()), superLand, previousMenu)
-                                                .open()));
-                core.getTextInputs().remove(player.getUniqueId());
-            });
+            core.getTextInputs()
+                    .put(
+                            player.getUniqueId(),
+                            texte -> {
+                                manager
+                                        .createSublandAsync(player, superLand, texte)
+                                        .thenRun(
+                                                () ->
+                                                        Bukkit.getScheduler()
+                                                                .runTask(
+                                                                        plugin,
+                                                                        () ->
+                                                                                new SubLandMainMenu(
+                                                                                        player,
+                                                                                        plugin,
+                                                                                        new ArrayList<>(superLand.getSubLands().values()),
+                                                                                        superLand,
+                                                                                        previousMenu)
+                                                                                        .open()));
+                                core.getTextInputs().remove(player.getUniqueId());
+                            });
         }
 
         if (current.getType() == Material.PLAYER_HEAD) {
@@ -94,21 +109,28 @@ public class SubLandMainMenu extends PaginatedMenu {
 
             ClickType click = e.getClick();
             if (click == ClickType.RIGHT) {
-                new ConfirmMenu(player, "§cConfirmation de suppression", "§eVoulez-vous supprimer le territoire " + land.getName() + " ?", result -> {
-                    if (result) {
-                        lands.remove((SubLand) land);
-                        manager.deleteLand(land).thenRun(() -> {
-                            player.sendMessage("§cLe territoire " + land.getName() + " a bien été supprimé.");
-                        });
-                    }
-                    super.open();
-                }).open();
+                new ConfirmMenu(
+                        player,
+                        "§cConfirmation de suppression",
+                        "§eVoulez-vous supprimer le territoire " + land.getName() + " ?",
+                        result -> {
+                            if (result) {
+                                lands.remove((SubLand) land);
+                                manager
+                                        .deleteLand(land)
+                                        .thenRun(
+                                                () -> {
+                                                    player.sendMessage(
+                                                            "§cLe territoire " + land.getName() + " a bien été supprimé.");
+                                                });
+                            }
+                            super.open();
+                        })
+                        .open();
             } else if (click == ClickType.LEFT) {
                 new LandManageMenu(player, plugin, manager, land, this).open();
             }
-
         }
-
     }
 
     @Override
@@ -127,12 +149,20 @@ public class SubLandMainMenu extends PaginatedMenu {
         }
 
         if (previousMenu != null) {
-            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
-                    .addLore("§cRetourner au menu précédent")
-                    .build());
+            inventory.setItem(
+                    31,
+                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                            .setDisplayName("§4Retour")
+                            .addLore("§cRetourner au menu précédent")
+                            .build());
         }
 
-        inventory.setItem(35, new ItemBuilder(Head.OAK_PLUS.get()).setName("§2Créer").addLore("§aPermet de créer un nouveau territoire").build());
+        inventory.setItem(
+                35,
+                new ItemBuilder(Head.OAK_PLUS.get())
+                        .setName("§2Créer")
+                        .addLore("§aPermet de créer un nouveau territoire")
+                        .build());
     }
 
     private ItemStack getLandItem(Land land) {
@@ -155,5 +185,4 @@ public class SubLandMainMenu extends PaginatedMenu {
         }
         return null;
     }
-
 }

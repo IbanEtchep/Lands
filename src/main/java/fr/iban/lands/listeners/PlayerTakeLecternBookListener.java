@@ -11,21 +11,19 @@ import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 
 public class PlayerTakeLecternBookListener implements Listener {
 
-	private LandManager landManager;
+    private LandManager landManager;
 
-	public PlayerTakeLecternBookListener(LandsPlugin plugin) {
-		//this.plugin = plugin;
-		this.landManager = plugin.getLandManager();
-	}
+    public PlayerTakeLecternBookListener(LandsPlugin plugin) {
+        // this.plugin = plugin;
+        this.landManager = plugin.getLandManager();
+    }
 
-	@EventHandler
-	public void onTakeBook(PlayerTakeLecternBookEvent e) {
-		Player player = e.getPlayer();
-		Land land = landManager.getLandAt(e.getLectern().getLocation());
-		if(land != null && !land.isBypassing(player, Action.LECTERN_TAKE)) {
-			e.setCancelled(true);
-		}
-	}
-
-
+    @EventHandler
+    public void onTakeBook(PlayerTakeLecternBookEvent e) {
+        Player player = e.getPlayer();
+        Land land = landManager.getLandAt(e.getLectern().getLocation());
+        if (land != null && !land.isBypassing(player, Action.LECTERN_TAKE)) {
+            e.setCancelled(true);
+        }
+    }
 }

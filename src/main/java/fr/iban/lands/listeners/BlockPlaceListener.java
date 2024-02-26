@@ -18,13 +18,11 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 
 public class BlockPlaceListener implements Listener {
 
-
     private LandManager landmanager;
 
     public BlockPlaceListener(LandsPlugin landsPlugin) {
         this.landmanager = landsPlugin.getLandManager();
     }
-
 
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
@@ -44,7 +42,6 @@ public class BlockPlaceListener implements Listener {
             }
         }
     }
-
 
     @EventHandler
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
@@ -103,7 +100,11 @@ public class BlockPlaceListener implements Listener {
         Land dispenserLand = landmanager.getLandAt(block.getLocation());
         Land targetBlockLand = landmanager.getLandAt(targetBlock.getLocation());
 
-        if (targetBlockLand.isWilderness() || dispenserLand == targetBlockLand || (dispenserLand.getOwner() != null && targetBlockLand.getOwner() != null && dispenserLand.getOwner().equals(targetBlockLand.getOwner()))) {
+        if (targetBlockLand.isWilderness()
+                || dispenserLand == targetBlockLand
+                || (dispenserLand.getOwner() != null
+                && targetBlockLand.getOwner() != null
+                && dispenserLand.getOwner().equals(targetBlockLand.getOwner()))) {
             return;
         }
 
@@ -115,8 +116,12 @@ public class BlockPlaceListener implements Listener {
         Land fromLand = landmanager.getLandAt(e.getBlock().getLocation());
         Land toLand = landmanager.getLandAt(e.getToBlock().getLocation());
 
-        if (toLand.isWilderness() || toLand.hasFlag(Flag.LIQUID_SPREAD) || fromLand == toLand
-                || (toLand.getOwner() != null && fromLand.getOwner() != null && fromLand.getOwner().equals(toLand.getOwner()))) {
+        if (toLand.isWilderness()
+                || toLand.hasFlag(Flag.LIQUID_SPREAD)
+                || fromLand == toLand
+                || (toLand.getOwner() != null
+                && fromLand.getOwner() != null
+                && fromLand.getOwner().equals(toLand.getOwner()))) {
             return;
         }
 

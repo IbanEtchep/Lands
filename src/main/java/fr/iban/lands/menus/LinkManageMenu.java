@@ -7,12 +7,13 @@ import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import fr.iban.lands.utils.LandSelectCallback;
+
+import java.util.stream.Collectors;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.stream.Collectors;
 
 public class LinkManageMenu extends Menu {
 
@@ -55,24 +56,31 @@ public class LinkManageMenu extends Menu {
 
     private void clickAction(Link link) {
         if (land.getLinkedLand(link) == null) {
-            new LandSelectMenu(player,
-					manager.getLands(player).stream()
-							.filter(l -> !l.equals(land) && !(l.getLinkedLand(link) != null && l.getLinkedLand(link).equals(land)))
-							.collect(Collectors.toList()), new LandSelectCallback() {
+            new LandSelectMenu(
+                    player,
+                    manager.getLands(player).stream()
+                            .filter(
+                                    l ->
+                                            !l.equals(land)
+                                                    && !(l.getLinkedLand(link) != null
+                                                    && l.getLinkedLand(link).equals(land)))
+                            .collect(Collectors.toList()),
+                    new LandSelectCallback() {
 
-                @Override
-                public void select(Land selected) {
+                        @Override
+                        public void select(Land selected) {
 
-                    manager.addLink(land, link, selected);
+                            manager.addLink(land, link, selected);
 
-                    open();
-                }
+                            open();
+                        }
 
-                @Override
-                public void cancel() {
-                    open();
-                }
-            }).open();
+                        @Override
+                        public void cancel() {
+                            open();
+                        }
+                    })
+                    .open();
 
         } else {
             manager.removeLink(land, link);
@@ -86,30 +94,47 @@ public class LinkManageMenu extends Menu {
         Land trustLink = land.getLinkedLand(Link.TRUSTS);
         Land banLink = land.getLinkedLand(Link.BANS);
 
-        inventory.setItem(10, new ItemBuilder(Head.GLOBE.get()).setDisplayName("§2Lien permissions globales")
-                .addLore("§aPermet de faire en sorte que les permissions globales")
-                .addLore("§adu territoire soient celles d'un autre territoire.")
-                .addLore("")
-                .addLore("§f§lActuellement : " + (globalTrustLink == null ? "§c§lAucun" : "§a§l" + globalTrustLink.getName()))
-                .build());
-        inventory.setItem(13, new ItemBuilder(Head.HAL.get()).setDisplayName("§2Lien permissions joueurs")
-                .addLore("§aPermet de faire en sorte que les permissions joueur")
-                .addLore("§adu territoire soient celles d'un autre territoire.")
-                .addLore("")
-                .addLore("§f§lActuellement : " + (trustLink == null ? "§c§lAucun" : "§a§l" + trustLink.getName()))
-                .build());
-        inventory.setItem(16, new ItemBuilder(Head.NO_ENTRY.get()).setDisplayName("§2Lien bannissements")
-                .addLore("§aPermet de faire en sorte que les bannissements")
-                .addLore("§adu territoire soient ceux d'un autre territoire.")
-                .addLore("")
-                .addLore("§f§lActuellement : " + (banLink == null ? "§c§lAucun" : "§a§l" + banLink.getName()))
-                .build());
+        inventory.setItem(
+                10,
+                new ItemBuilder(Head.GLOBE.get())
+                        .setDisplayName("§2Lien permissions globales")
+                        .addLore("§aPermet de faire en sorte que les permissions globales")
+                        .addLore("§adu territoire soient celles d'un autre territoire.")
+                        .addLore("")
+                        .addLore(
+                                "§f§lActuellement : "
+                                        + (globalTrustLink == null ? "§c§lAucun" : "§a§l" + globalTrustLink.getName()))
+                        .build());
+        inventory.setItem(
+                13,
+                new ItemBuilder(Head.HAL.get())
+                        .setDisplayName("§2Lien permissions joueurs")
+                        .addLore("§aPermet de faire en sorte que les permissions joueur")
+                        .addLore("§adu territoire soient celles d'un autre territoire.")
+                        .addLore("")
+                        .addLore(
+                                "§f§lActuellement : "
+                                        + (trustLink == null ? "§c§lAucun" : "§a§l" + trustLink.getName()))
+                        .build());
+        inventory.setItem(
+                16,
+                new ItemBuilder(Head.NO_ENTRY.get())
+                        .setDisplayName("§2Lien bannissements")
+                        .addLore("§aPermet de faire en sorte que les bannissements")
+                        .addLore("§adu territoire soient ceux d'un autre territoire.")
+                        .addLore("")
+                        .addLore(
+                                "§f§lActuellement : "
+                                        + (banLink == null ? "§c§lAucun" : "§a§l" + banLink.getName()))
+                        .build());
         if (previousMenu != null) {
-            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
-                    .addLore("§cRetourner au menu précédent")
-                    .build());
+            inventory.setItem(
+                    31,
+                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                            .setDisplayName("§4Retour")
+                            .addLore("§cRetourner au menu précédent")
+                            .build());
         }
         fillWithGlass();
     }
-
 }

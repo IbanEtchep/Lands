@@ -16,52 +16,51 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class TeleportListener implements Listener {
 
-	private LandManager manager;
-	private LandsPlugin plugin;
+    private LandManager manager;
+    private LandsPlugin plugin;
 
-	public TeleportListener(LandsPlugin plugin) {
-		this.manager = plugin.getLandManager();
-		this.plugin = plugin;
-	}
+    public TeleportListener(LandsPlugin plugin) {
+        this.manager = plugin.getLandManager();
+        this.plugin = plugin;
+    }
 
-	@EventHandler
-	public void onTeleport(PlayerTeleportEvent e) {
-		Location from = e.getFrom();
-		Location to = e.getTo();
-		Land lto = manager.getLandAt(to);
-		Land lfrom = manager.getLandAt(from);
-		Player player = e.getPlayer();
+    @EventHandler
+    public void onTeleport(PlayerTeleportEvent e) {
+        Location from = e.getFrom();
+        Location to = e.getTo();
+        Land lto = manager.getLandAt(to);
+        Land lfrom = manager.getLandAt(from);
+        Player player = e.getPlayer();
 
-		if(e.getCause() == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT && !lto.isBypassing(player, Action.CHORUS_TELEPORT)){
-			e.setCancelled(true);
-			return;
-		}
+        if (e.getCause() == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
+                && !lto.isBypassing(player, Action.CHORUS_TELEPORT)) {
+            e.setCancelled(true);
+            return;
+        }
 
-		if(e.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL && !lto.isBypassing(player, Action.ENDER_PEARL_TELEPORT)){
-			e.setCancelled(true);
-			return;
-		}
+        if (e.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+                && !lto.isBypassing(player, Action.ENDER_PEARL_TELEPORT)) {
+            e.setCancelled(true);
+            return;
+        }
 
-		LandEnterEvent enter = new LandEnterEvent(player, lfrom, lto);
-		Bukkit.getPluginManager().callEvent(enter);
-		if(enter.isCancelled()) {
-			e.setCancelled(true);
-		}
-	}
+        LandEnterEvent enter = new LandEnterEvent(player, lfrom, lto);
+        Bukkit.getPluginManager().callEvent(enter);
+        if (enter.isCancelled()) {
+            e.setCancelled(true);
+        }
+    }
 
+    @EventHandler
+    public void onCoreTeleport(PlayerPreTeleportEvent e) {
+        Player player = e.getPlayer();
 
-	@EventHandler
-	public void onCoreTeleport(PlayerPreTeleportEvent e) {
-		Player player = e.getPlayer();
+        if (player != null) {
+            Land land = manager.getLandAt(player.getLocation());
 
-		if(player != null) {
-			Land land = manager.getLandAt(player.getLocation());
-
-			if(land.hasFlag(Flag.INSTANT_TELEPORT)) {
-				e.setDelay(0);
-			}
-		}
-	}
-
-
+            if (land.hasFlag(Flag.INSTANT_TELEPORT)) {
+                e.setDelay(0);
+            }
+        }
+    }
 }

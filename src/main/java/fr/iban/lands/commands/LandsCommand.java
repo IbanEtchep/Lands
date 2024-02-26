@@ -30,30 +30,37 @@ public class LandsCommand {
     @Subcommand("menu")
     @DefaultFor("lands")
     public void lands(Player player, @Optional OfflinePlayer target) {
-        if (!plugin.getConfig().getBoolean("players-lands-enabled") && !player.hasPermission("lands.admin")) {
+        if (!plugin.getConfig().getBoolean("players-lands-enabled")
+                && !player.hasPermission("lands.admin")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
 
         if (target == null) {
-            landManager.getLandsAsync(player).thenAccept(lands -> {
-                Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER).open());
-            });
+            landManager
+                    .getLandsAsync(player)
+                    .thenAccept(lands -> Bukkit.getScheduler().runTask(plugin,
+                            () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER, player.getUniqueId()).open()
+                    ));
         }
 
         if (target != null && player.hasPermission("lands.admin")) {
-            landManager.getLandsAsync(target.getUniqueId()).thenAccept(lands -> {
-                Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER).open());
-            });
+            landManager
+                    .getLandsAsync(target.getUniqueId())
+                    .thenAccept(lands -> Bukkit.getScheduler().runTask(plugin,
+                            () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER, target.getUniqueId()).open()
+                    ));
         }
     }
 
     @Subcommand("system")
     @CommandPermission("lands.admin")
     public void landsSystem(Player player) {
-        landManager.getSystemLandsAsync().thenAccept(lands -> {
-            Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.SYSTEM).open());
-        });
+        landManager
+                .getSystemLandsAsync()
+                .thenAccept(lands -> Bukkit.getScheduler().runTask(plugin,
+                        () -> new LandMainMenu(player, plugin, lands, LandType.SYSTEM, null).open())
+                );
     }
 
     @Subcommand("guild")
@@ -66,13 +73,13 @@ public class LandsCommand {
         AbstractGuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
         UUID guildId = guildDataAccess.getGuildId(player.getUniqueId());
         if (guildId != null && guildDataAccess.canManageGuildLand(player.getUniqueId())) {
-            landManager.getGuildLandsAsync(guildId).thenAccept(lands -> {
-                Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.GUILD).open());
-            });
+            landManager
+                    .getGuildLandsAsync(guildId)
+                    .thenAccept(lands -> Bukkit.getScheduler().runTask(plugin,
+                            () -> new LandMainMenu(player, plugin, lands, LandType.GUILD, guildId).open()
+                    ));
         } else {
             player.sendMessage("§cVous devez être administrateur d'une guilde pour accéder à ce menu.");
         }
     }
-
-
 }

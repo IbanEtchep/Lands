@@ -10,27 +10,24 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 public class CommandListener implements Listener {
-	
-	private LandManager landmanager;
 
-	public CommandListener(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onCommand(PlayerCommandPreprocessEvent e) {
-		Player player = e.getPlayer();
+    private LandManager landmanager;
 
-		if(e.getMessage().toLowerCase().contains("sethome")) {
-			Land land = landmanager.getLandAt(player.getLocation());
-			if(land == null)
-				return;
-			
-			if(land.isBypassing(player, Action.SET_HOME))
-				return;
-			
-			e.setCancelled(true);
-		}
-	}
+    public CommandListener(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent e) {
+        Player player = e.getPlayer();
+
+        if (e.getMessage().toLowerCase().contains("sethome")) {
+            Land land = landmanager.getLandAt(player.getLocation());
+            if (land == null) return;
+
+            if (land.isBypassing(player, Action.SET_HOME)) return;
+
+            e.setCancelled(true);
+        }
+    }
 }

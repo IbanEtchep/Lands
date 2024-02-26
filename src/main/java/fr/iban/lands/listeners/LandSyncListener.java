@@ -22,35 +22,34 @@ public class LandSyncListener implements Listener {
         this.landManager = plugin.getLandManager();
     }
 
-
     @EventHandler
     public void onSyncMessage(CoreMessageEvent e) {
         Message message = e.getMessage();
 
-        if(message.getChannel().equals(LandsPlugin.LAND_SYNC_CHANNEL)){
+        if (message.getChannel().equals(LandsPlugin.LAND_SYNC_CHANNEL)) {
             landManager.loadLand(Integer.parseInt(message.getMessage()));
         }
 
-        if(plugin.isMultipaperSupportEnabled()) {
-            if(message.getChannel().equals(LandsPlugin.CHUNK_SYNC_CHANNEL)) {
-                ChunkClaimSyncMessage claimSyncMessage =  message.getMessage(ChunkClaimSyncMessage.class);
+        if (plugin.isMultipaperSupportEnabled()) {
+            if (message.getChannel().equals(LandsPlugin.CHUNK_SYNC_CHANNEL)) {
+                ChunkClaimSyncMessage claimSyncMessage = message.getMessage(ChunkClaimSyncMessage.class);
                 Land land = landManager.getLandByID(claimSyncMessage.getId());
                 SChunk sChunk = claimSyncMessage.getsChunk();
-                if(sChunk.getServer().equals(plugin.getServerName())) {
-                    if(claimSyncMessage.isUnclaim()) {
-                        landManager.unclaim(sChunk,false);
-                    }else {
+                if (sChunk.getServer().equals(plugin.getServerName())) {
+                    if (claimSyncMessage.isUnclaim()) {
+                        landManager.unclaim(sChunk, false);
+                    } else {
                         landManager.claim(sChunk, land, false);
                     }
                 }
             }
 
-            if(message.getChannel().equals(LandsPlugin.BYPASS_SYNC_CHANNEL)){
+            if (message.getChannel().equals(LandsPlugin.BYPASS_SYNC_CHANNEL)) {
                 UUID uuid = UUID.fromString(message.getMessage());
                 plugin.setBypassing(uuid, !plugin.isBypassing(uuid));
             }
 
-            if(message.getChannel().equals(LandsPlugin.DEBUG_SYNC_CHANNEL)){
+            if (message.getChannel().equals(LandsPlugin.DEBUG_SYNC_CHANNEL)) {
                 UUID uuid = UUID.fromString(message.getMessage());
                 plugin.setDebugging(uuid, !plugin.isInDebugMode(uuid));
             }

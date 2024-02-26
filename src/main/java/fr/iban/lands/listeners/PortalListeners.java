@@ -13,27 +13,28 @@ import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 
 public class PortalListeners implements Listener {
 
-	private LandManager manager;
+    private LandManager manager;
 
-	public PortalListeners(LandsPlugin plugin) {
-		this.manager = plugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onPortalCreate(PortalCreateEvent e) {
-		if(e.getEntity() instanceof Player) {
-			Player player = (Player) e.getEntity();
-			
-			if(e.getReason() == CreateReason.NETHER_PAIR) {
-				for(BlockState block : e.getBlocks()) {
-					Land land = manager.getLandAt(block.getLocation());
-					if(!land.isBypassing(player, Action.BLOCK_PLACE)) {
-						e.setCancelled(true);
-						player.sendMessage("§cLa création du portail a été annulée, celui-ci se trouvant sur un claim où vous n'êtes pas autorisé à poser des blocs.");
-						return;
-					}
-				}
-			}
-		}
-	}
+    public PortalListeners(LandsPlugin plugin) {
+        this.manager = plugin.getLandManager();
+    }
+
+    @EventHandler
+    public void onPortalCreate(PortalCreateEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player player = (Player) e.getEntity();
+
+            if (e.getReason() == CreateReason.NETHER_PAIR) {
+                for (BlockState block : e.getBlocks()) {
+                    Land land = manager.getLandAt(block.getLocation());
+                    if (!land.isBypassing(player, Action.BLOCK_PLACE)) {
+                        e.setCancelled(true);
+                        player.sendMessage(
+                                "§cLa création du portail a été annulée, celui-ci se trouvant sur un claim où vous n'êtes pas autorisé à poser des blocs.");
+                        return;
+                    }
+                }
+            }
+        }
+    }
 }

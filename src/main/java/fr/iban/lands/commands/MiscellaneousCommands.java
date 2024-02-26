@@ -9,5 +9,4 @@ public class MiscellaneousCommands {
     public void sayInChat(Player player, String message) {
         player.chat(message);
     }
-
 }

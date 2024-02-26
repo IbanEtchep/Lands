@@ -12,14 +12,11 @@ public class DateUtils {
     }
 
     public static LocalDateTime convertToLocalDateTime(Date dateToConvert) {
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     public static String format(Date date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         return dateFormat.format(date);
     }
-
 }

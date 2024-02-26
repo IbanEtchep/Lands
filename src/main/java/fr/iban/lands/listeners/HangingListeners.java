@@ -15,62 +15,59 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 
 public class HangingListeners implements Listener {
 
-	private LandManager landmanager;
+    private LandManager landmanager;
 
-	public HangingListeners(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
+    public HangingListeners(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
-	@EventHandler
-	public void onHangingBreak(HangingBreakByEntityEvent e) {	
-		
-		Player player = getPlayerRemover(e);
-		
-		if(player != null) {			
-			
-			Land land = landmanager.getLandAt(e.getEntity().getLocation());
+    @EventHandler
+    public void onHangingBreak(HangingBreakByEntityEvent e) {
 
-			if(land != null) {
-				if(land.isBypassing(player, Action.BLOCK_BREAK)) {
-					return;
-				}
-				e.setCancelled(true);
-			}
-		}
+        Player player = getPlayerRemover(e);
 
-	}
+        if (player != null) {
 
-	@EventHandler
-	public void onHangingBreak(HangingPlaceEvent e) {	
-		Player player = e.getPlayer();
-		Land land = landmanager.getLandAt(e.getEntity().getLocation());
+            Land land = landmanager.getLandAt(e.getEntity().getLocation());
 
+            if (land != null) {
+                if (land.isBypassing(player, Action.BLOCK_BREAK)) {
+                    return;
+                }
+                e.setCancelled(true);
+            }
+        }
+    }
 
-		if(land != null && !land.isBypassing(player, Action.BLOCK_PLACE)) {
-			e.setCancelled(true);
-		}
+    @EventHandler
+    public void onHangingBreak(HangingPlaceEvent e) {
+        Player player = e.getPlayer();
+        Land land = landmanager.getLandAt(e.getEntity().getLocation());
 
-	}
+        if (land != null && !land.isBypassing(player, Action.BLOCK_PLACE)) {
+            e.setCancelled(true);
+        }
+    }
 
-	private Player getPlayerRemover(HangingBreakByEntityEvent event) {
-		Player player = null;
-		if(event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile) {
-			Projectile projectile = (Projectile) event.getRemover();
-			if(projectile.getShooter() instanceof Player) {
-				player = (Player)projectile.getShooter();
-			}
-		}
-		if(event.getCause() == RemoveCause.EXPLOSION) {
-			if(event.getRemover() instanceof Mob) {
-				Mob mob = (Mob)event.getRemover();
-				if(mob.getTarget() instanceof Player) {
-					player = (Player)mob.getTarget();
-				}
-			}
-		}
-		if(event.getRemover() instanceof Player) {
-			player = (Player) event.getRemover();
-		}
-		return player;
-	}
+    private Player getPlayerRemover(HangingBreakByEntityEvent event) {
+        Player player = null;
+        if (event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile) {
+            Projectile projectile = (Projectile) event.getRemover();
+            if (projectile.getShooter() instanceof Player) {
+                player = (Player) projectile.getShooter();
+            }
+        }
+        if (event.getCause() == RemoveCause.EXPLOSION) {
+            if (event.getRemover() instanceof Mob) {
+                Mob mob = (Mob) event.getRemover();
+                if (mob.getTarget() instanceof Player) {
+                    player = (Player) mob.getTarget();
+                }
+            }
+        }
+        if (event.getRemover() instanceof Player) {
+            player = (Player) event.getRemover();
+        }
+        return player;
+    }
 }

@@ -10,23 +10,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 
 public class DropListener implements Listener {
-	
-	private LandManager landmanager;
 
-	public DropListener(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onDrop(PlayerDropItemEvent e) {
-		Player player = e.getPlayer();
-		Land land = landmanager.getLandAt(player.getLocation());
-		
-		if(land == null) return;
-		
-		if(!land.isBypassing(player, Action.DROP)) {
-			e.setCancelled(true);
-		}
-	}
+    private LandManager landmanager;
 
+    public DropListener(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
+
+    @EventHandler
+    public void onDrop(PlayerDropItemEvent e) {
+        Player player = e.getPlayer();
+        Land land = landmanager.getLandAt(player.getLocation());
+
+        if (land == null) return;
+
+        if (!land.isBypassing(player, Action.DROP)) {
+            e.setCancelled(true);
+        }
+    }
 }

@@ -9,15 +9,16 @@ import fr.iban.lands.enums.Flag;
 import fr.iban.lands.events.LandFlagChangeEvent;
 import fr.iban.lands.land.Land;
 import fr.iban.lands.utils.Head;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class LandSettingsMenu extends PaginatedMenu {
 
@@ -30,10 +31,14 @@ public class LandSettingsMenu extends PaginatedMenu {
         super(player);
         this.land = land;
         this.manager = manager;
-        flags = Arrays.stream(Flag.values()).filter(flag -> flag.isEnabled(land)).collect(Collectors.toList());
+        flags =
+                Arrays.stream(Flag.values())
+                        .filter(flag -> flag.isEnabled(land))
+                        .collect(Collectors.toList());
     }
 
-    public LandSettingsMenu(Player player, Land land, LandManager manager, LandManageMenu previousMenu) {
+    public LandSettingsMenu(
+            Player player, Land land, LandManager manager, LandManageMenu previousMenu) {
         this(player, land, manager);
         this.previousMenu = previousMenu;
     }
@@ -86,20 +91,29 @@ public class LandSettingsMenu extends PaginatedMenu {
         }
         if (displayNameEquals(item, "§2Renommer")) {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
-            player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité (ou \"annuler\" pour annuler):");
+            player.sendMessage(
+                    "§2§lVeuillez entrer le nom du territoire souhaité (ou \"annuler\" pour annuler):");
             player.closeInventory();
-            core.getTextInputs().put(player.getUniqueId(), texte -> {
-                if (texte.equalsIgnoreCase("annuler")) {
-                    open();
-                } else {
-                    manager.renameLand(land, player, texte).thenRun(() ->
-                            Bukkit.getScheduler().runTask(LandsPlugin.getInstance(), () -> {
-                                open();
-                                core.getTextInputs().remove(player.getUniqueId());
-                            })
-                    );
-                }
-            });
+            core.getTextInputs()
+                    .put(
+                            player.getUniqueId(),
+                            texte -> {
+                                if (texte.equalsIgnoreCase("annuler")) {
+                                    open();
+                                } else {
+                                    manager
+                                            .renameLand(land, player, texte)
+                                            .thenRun(
+                                                    () ->
+                                                            Bukkit.getScheduler()
+                                                                    .runTask(
+                                                                            LandsPlugin.getInstance(),
+                                                                            () -> {
+                                                                                open();
+                                                                                core.getTextInputs().remove(player.getUniqueId());
+                                                                            }));
+                                }
+                            });
             return;
         }
 
@@ -116,21 +130,35 @@ public class LandSettingsMenu extends PaginatedMenu {
             Flag flag = flags.get(index);
             if (flag != null) {
                 if (land.hasFlag(flag)) {
-                    inventory.addItem(new ItemBuilder(flag.getItem()).setName("§2" + flag.getDisplayName()).build());
+                    inventory.addItem(
+                            new ItemBuilder(flag.getItem()).setName("§2" + flag.getDisplayName()).build());
                 } else {
-                    inventory.addItem(new ItemBuilder(flag.getItem()).setName("§4" + flag.getDisplayName()).build());
+                    inventory.addItem(
+                            new ItemBuilder(flag.getItem()).setName("§4" + flag.getDisplayName()).build());
                 }
             }
         }
 
         if (previousMenu != null) {
-            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
-                    .addLore("§cRetourner au menu précédent")
-                    .build());
+            inventory.setItem(
+                    31,
+                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                            .setDisplayName("§4Retour")
+                            .addLore("§cRetourner au menu précédent")
+                            .build());
         }
-        inventory.setItem(27, new ItemBuilder(Head.OAK_L.get()).setName("§2Liens").addLore("§aPermet de définir des liens avec vos autres territoires.").build());
-        inventory.setItem(35, new ItemBuilder(Material.NAME_TAG).setName("§2Renommer").addLore("§aPermet de renommer le territoire.").build());
-
+        inventory.setItem(
+                27,
+                new ItemBuilder(Head.OAK_L.get())
+                        .setName("§2Liens")
+                        .addLore("§aPermet de définir des liens avec vos autres territoires.")
+                        .build());
+        inventory.setItem(
+                35,
+                new ItemBuilder(Material.NAME_TAG)
+                        .setName("§2Renommer")
+                        .addLore("§aPermet de renommer le territoire.")
+                        .build());
     }
 
     public LandManager getManager() {

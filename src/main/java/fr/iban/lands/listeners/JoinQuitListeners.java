@@ -27,21 +27,21 @@ public class JoinQuitListeners implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         Player player = e.getPlayer();
         Land land = landManager.getLandAt(player.getLocation());
-        if(land.hasFlag(Flag.INVISIBLE)) {
+        if (land.hasFlag(Flag.INVISIBLE)) {
             player.removePotionEffect(PotionEffectType.INVISIBILITY);
         }
         SeeChunks seeChunks = landManager.getSeeChunks().get(player.getUniqueId());
-        if(seeChunks != null) {
+        if (seeChunks != null) {
             seeChunks.stop();
             landManager.getSeeChunks().remove(player.getUniqueId());
         }
-        if(player.isSilent()) {
+        if (player.isSilent()) {
             player.setSilent(false);
         }
-        if(plugin.isInDebugMode(player)) {
+        if (plugin.isInDebugMode(player)) {
             plugin.setDebugging(player.getUniqueId(), false);
         }
-        if(plugin.isBypassing(player)) {
+        if (plugin.isBypassing(player)) {
             plugin.setBypassing(player.getUniqueId(), false);
         }
     }
@@ -50,11 +50,10 @@ public class JoinQuitListeners implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
         Land land = landManager.getLandAt(player.getLocation());
-        if(land.hasFlag(Flag.INVISIBLE)) {
+        if (land.hasFlag(Flag.INVISIBLE)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1));
         }
         plugin.getBypass().remove(player.getUniqueId());
         plugin.getDebugPlayers().remove(player.getUniqueId());
     }
-
 }

@@ -24,8 +24,11 @@ public class PistonListeners implements Listener {
         for (Block block : e.getBlocks()) {
             Land land = landmanager.getLandAt(block.getRelative(e.getDirection()).getLocation());
 
-            if (land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
-                continue;
+            if (land.isWilderness()
+                    || land == pistonLand
+                    || (land.getOwner() != null
+                    && pistonLand.getOwner() != null
+                    && land.getOwner().equals(pistonLand.getOwner()))) continue;
 
             e.setCancelled(true);
         }
@@ -36,10 +39,15 @@ public class PistonListeners implements Listener {
         Land pistonLand = landmanager.getLandAt(e.getBlock().getLocation());
 
         for (Block block : e.getBlocks()) {
-            Land land = landmanager.getLandAt(block.getRelative(e.getDirection().getOppositeFace()).getLocation());
+            Land land =
+                    landmanager.getLandAt(
+                            block.getRelative(e.getDirection().getOppositeFace()).getLocation());
 
-            if (land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
-                continue;
+            if (land.isWilderness()
+                    || land == pistonLand
+                    || (land.getOwner() != null
+                    && pistonLand.getOwner() != null
+                    && land.getOwner().equals(pistonLand.getOwner()))) continue;
 
             e.setCancelled(true);
         }

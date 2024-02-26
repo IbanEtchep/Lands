@@ -13,32 +13,29 @@ import org.bukkit.event.block.BlockSpreadEvent;
 
 public class FireListener implements Listener {
 
-	private LandManager landmanager;
+    private LandManager landmanager;
 
-	public FireListener(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onFireSpread(BlockSpreadEvent e) {
-		Block block = e.getBlock();
-		Land land = landmanager.getLandAt(block.getLocation());
+    public FireListener(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
-		if (e.getSource().getType() == Material.FIRE && !land.hasFlag(Flag.FIRE)) {
-			e.setCancelled(true);
-		}
+    @EventHandler
+    public void onFireSpread(BlockSpreadEvent e) {
+        Block block = e.getBlock();
+        Land land = landmanager.getLandAt(block.getLocation());
 
-	}
+        if (e.getSource().getType() == Material.FIRE && !land.hasFlag(Flag.FIRE)) {
+            e.setCancelled(true);
+        }
+    }
 
-	@EventHandler
-	public void onFireSpread(BlockBurnEvent e) {
-		Block block = e.getBlock();
-		Land land = landmanager.getLandAt(block.getLocation());
+    @EventHandler
+    public void onFireSpread(BlockBurnEvent e) {
+        Block block = e.getBlock();
+        Land land = landmanager.getLandAt(block.getLocation());
 
-		if (!land.hasFlag(Flag.FIRE)) {
-			e.setCancelled(true);
-		}
-
-	}
-
+        if (!land.hasFlag(Flag.FIRE)) {
+            e.setCancelled(true);
+        }
+    }
 }

@@ -11,7 +11,6 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class ItemBuilder {
 
     private ItemStack stack;
@@ -19,31 +18,30 @@ public class ItemBuilder {
     public ItemBuilder(Material mat) {
         stack = new ItemStack(mat);
     }
-    
+
     public ItemBuilder(ItemStack item) {
-    	stack = item;
+        stack = item;
     }
 
     public ItemMeta getItemMeta() {
         return stack.getItemMeta();
     }
-    
+
     public ItemBuilder setName(String name) {
         ItemMeta meta = stack.getItemMeta();
-    	meta.setDisplayName(name);
-    	stack.setItemMeta(meta);
-    	return this;
-    }
-    
-
-    public ItemBuilder setColor(Color color) {
-            LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
-            meta.setColor(color);
-            setItemMeta(meta);
+        meta.setDisplayName(name);
+        stack.setItemMeta(meta);
         return this;
     }
 
-    public ItemBuilder setGlow (boolean glow) {
+    public ItemBuilder setColor(Color color) {
+        LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
+        meta.setColor(color);
+        setItemMeta(meta);
+        return this;
+    }
+
+    public ItemBuilder setGlow(boolean glow) {
         if (glow) {
             addEnchant(Enchantment.KNOCKBACK, 1);
             addItemFlag(ItemFlag.HIDE_ENCHANTS);
@@ -56,7 +54,7 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setUnbreakable (boolean unbreakable) {
+    public ItemBuilder setUnbreakable(boolean unbreakable) {
         ItemMeta meta = stack.getItemMeta();
         meta.setUnbreakable(unbreakable);
         stack.setItemMeta(meta);
@@ -80,7 +78,7 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setItemStack (ItemStack stack) {
+    public ItemBuilder setItemStack(ItemStack stack) {
         this.stack = stack;
         return this;
     }
@@ -92,7 +90,7 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setLore (String lore) {
+    public ItemBuilder setLore(String lore) {
         ArrayList<String> loreList = new ArrayList<>();
         loreList.add(lore);
         ItemMeta meta = getItemMeta();
@@ -100,8 +98,8 @@ public class ItemBuilder {
         setItemMeta(meta);
         return this;
     }
-    
-    public ItemBuilder addLore (String lore) {
+
+    public ItemBuilder addLore(String lore) {
         List<String> loreList = stack.getLore() == null ? new ArrayList<>() : stack.getLore();
         loreList.add(lore);
         ItemMeta meta = getItemMeta();
@@ -127,5 +125,4 @@ public class ItemBuilder {
     public ItemStack build() {
         return stack;
     }
-
 }

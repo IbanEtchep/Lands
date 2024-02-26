@@ -12,26 +12,25 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 
 public class EntityBlockDamageListener implements Listener {
 
-	private LandManager landmanager;
+    private LandManager landmanager;
 
-	public EntityBlockDamageListener(LandsPlugin landsPlugin) {
-		this.landmanager = landsPlugin.getLandManager();
-	}
-	
-	@EventHandler
-	public void onEntityDamageBlock(EntityChangeBlockEvent e) {
-		if(e.getEntityType() == EntityType.ENDERMAN || e.getEntityType() == EntityType.WITHER || e.getEntityType() == EntityType.ENDER_DRAGON) {
-			Block block = e.getBlock();
-			Land land = landmanager.getLandAt(block.getLocation());
+    public EntityBlockDamageListener(LandsPlugin landsPlugin) {
+        this.landmanager = landsPlugin.getLandManager();
+    }
 
-			if(land == null) 
-				return;
+    @EventHandler
+    public void onEntityDamageBlock(EntityChangeBlockEvent e) {
+        if (e.getEntityType() == EntityType.ENDERMAN
+                || e.getEntityType() == EntityType.WITHER
+                || e.getEntityType() == EntityType.ENDER_DRAGON) {
+            Block block = e.getBlock();
+            Land land = landmanager.getLandAt(block.getLocation());
 
-			if(!land.hasFlag(Flag.BLOCK_DAMAGES_BY_ENTITY)) {
-				e.setCancelled(true);
-			}
-		}
+            if (land == null) return;
 
-	}
-
+            if (!land.hasFlag(Flag.BLOCK_DAMAGES_BY_ENTITY)) {
+                e.setCancelled(true);
+            }
+        }
+    }
 }

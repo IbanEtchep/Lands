@@ -3,18 +3,18 @@ package fr.iban.lands.utils;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.land.Land;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 public class SeeChunks {
 
@@ -28,17 +28,27 @@ public class SeeChunks {
     }
 
     public void showParticles() {
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
-            int py = (int) player.getLocation().getY();
-            if(!player.isOnline()) return;
-            getPointsAsync().thenAccept(points -> {
-                for (Location loc : getPoints()) {
-                    for (int y = (py - 10 >= 0 ? py - 30 : 0); y < (py + 10 <= 255 ? py + 30 : 255); y++) {
-                        showParticle(loc, y);
-                    }
-                }
-            });
-        }, 1L, 20L);
+        BukkitTask task =
+                Bukkit.getScheduler()
+                        .runTaskTimer(
+                                LandsPlugin.getInstance(),
+                                () -> {
+                                    int py = (int) player.getLocation().getY();
+                                    if (!player.isOnline()) return;
+                                    getPointsAsync()
+                                            .thenAccept(
+                                                    points -> {
+                                                        for (Location loc : getPoints()) {
+                                                            for (int y = (py - 10 >= 0 ? py - 30 : 0);
+                                                                 y < (py + 10 <= 255 ? py + 30 : 255);
+                                                                 y++) {
+                                                                showParticle(loc, y);
+                                                            }
+                                                        }
+                                                    });
+                                },
+                                1L,
+                                20L);
 
         tasks.add(task);
     }
@@ -71,46 +81,69 @@ public class SeeChunks {
         Collection<Location> corners = new ArrayList<>();
         Land land = manager.getLandAt(chunk);
         Location nordwest = chunk.getBlock(0, 0, 0).getLocation().clone();
-        if (!manager.getLandAt(nordwest.clone().add(0, 0, -1).getChunk()).equals(land) || !manager.getLandAt(nordwest.clone().add(-1, 0, 0).getChunk()).equals(land)) {
+        if (!manager.getLandAt(nordwest.clone().add(0, 0, -1).getChunk()).equals(land)
+                || !manager.getLandAt(nordwest.clone().add(-1, 0, 0).getChunk()).equals(land)) {
             corners.add(nordwest);
         }
         Location sudest = chunk.getBlock(15, 0, 15).getLocation().add(1, 0, 1).clone();
-        if (!manager.getLandAt(sudest.clone().add(0, 0, 1).getChunk()).equals(land) || !manager.getLandAt(sudest.clone().add(1, 0, 0).getChunk()).equals(land)) {
+        if (!manager.getLandAt(sudest.clone().add(0, 0, 1).getChunk()).equals(land)
+                || !manager.getLandAt(sudest.clone().add(1, 0, 0).getChunk()).equals(land)) {
             corners.add(sudest);
         }
         Location sudwest = new Location(chunk.getWorld(), nordwest.getX(), 0, sudest.getZ());
-        if (!manager.getLandAt(sudwest.clone().add(0, 0, 1).getChunk()).equals(land) || !manager.getLandAt(sudwest.clone().add(-1, 0, 0).getChunk()).equals(land)) {
+        if (!manager.getLandAt(sudwest.clone().add(0, 0, 1).getChunk()).equals(land)
+                || !manager.getLandAt(sudwest.clone().add(-1, 0, 0).getChunk()).equals(land)) {
             corners.add(sudwest);
         }
         Location nordest = new Location(chunk.getWorld(), sudest.getX(), 0, nordwest.getZ());
-        if (!manager.getLandAt(nordest.clone().add(0, 0, -1).getChunk()).equals(land) || !manager.getLandAt(nordest.clone().add(1, 0, 0).getChunk()).equals(land)) {
+        if (!manager.getLandAt(nordest.clone().add(0, 0, -1).getChunk()).equals(land)
+                || !manager.getLandAt(nordest.clone().add(1, 0, 0).getChunk()).equals(land)) {
             corners.add(nordest);
         }
 
         if (corners.contains(sudwest) && corners.contains(nordwest)) {
-            Location mid = new Location(chunk.getWorld(), (sudwest.getX() + nordwest.getX()) / 2, 0, (sudwest.getZ() + nordwest.getZ()) / 2);
+            Location mid =
+                    new Location(
+                            chunk.getWorld(),
+                            (sudwest.getX() + nordwest.getX()) / 2,
+                            0,
+                            (sudwest.getZ() + nordwest.getZ()) / 2);
             if (!land.equals(manager.getLandAt(mid.clone().add(-1, 0, 0).getChunk()))) {
                 corners.add(mid);
             }
-
         }
 
         if (corners.contains(nordest) && corners.contains(sudest)) {
-            Location mid = new Location(chunk.getWorld(), (sudest.getX() + nordest.getX()) / 2, 0, (sudest.getZ() + nordest.getZ()) / 2);
+            Location mid =
+                    new Location(
+                            chunk.getWorld(),
+                            (sudest.getX() + nordest.getX()) / 2,
+                            0,
+                            (sudest.getZ() + nordest.getZ()) / 2);
             if (!land.equals(manager.getLandAt(mid.clone().add(1, 0, 0).getChunk()))) {
                 corners.add(mid);
             }
         }
 
         if (corners.contains(nordwest) && corners.contains(nordest)) {
-            Location mid = new Location(chunk.getWorld(), (nordest.getX() + nordwest.getX()) / 2, 0, (nordest.getZ() + nordwest.getZ()) / 2);
+            Location mid =
+                    new Location(
+                            chunk.getWorld(),
+                            (nordest.getX() + nordwest.getX()) / 2,
+                            0,
+                            (nordest.getZ() + nordwest.getZ()) / 2);
             if (!land.equals(manager.getLandAt(mid.clone().add(0, 0, -1).getChunk()))) {
                 corners.add(mid);
             }
         }
 
         if (corners.contains(sudest) && corners.contains(sudwest)) {
-            Location mid = new Location(chunk.getWorld(), (sudest.getX() + sudwest.getX()) / 2, 0, (sudest.getZ() + sudwest.getZ()) / 2);
+            Location mid =
+                    new Location(
+                            chunk.getWorld(),
+                            (sudest.getX() + sudwest.getX()) / 2,
+                            0,
+                            (sudest.getZ() + sudwest.getZ()) / 2);
             if (!land.equals(manager.getLandAt(mid.clone().add(0, 0, 1).getChunk()))) {
                 corners.add(mid);
             }
@@ -139,5 +172,4 @@ public class SeeChunks {
         loc.setY(y);
         player.spawnParticle(Particle.FALLING_OBSIDIAN_TEAR, loc, 1);
     }
-
 }

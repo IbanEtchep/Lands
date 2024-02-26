@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.guilds.GuildsPlugin;
 import fr.iban.lands.LandsPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,5 +29,4 @@ public class ServiceListeners implements Listener {
         }
         plugin.setupEconomy();
     }
-
 }

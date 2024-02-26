@@ -14,79 +14,88 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface AbstractStorage {
-		
-	Map<SChunk, Integer> getChunks();
-	
-	Map<SChunk, Integer> getChunks(UUID uuid);
-	
-	Map<SChunk, Integer> getChunks(Land land);
-	
-	int getChunkCount(UUID uuid);
-	
-	Map<Integer, Land> getLands();
-	Map<String, Integer> getWorldsDefaultLands();
-	void setWorldDefaultLand(String world, Land land);
 
-	Land getLand(int id);
+    Map<SChunk, Integer> getChunks();
 
-	void addLand(Land land);
-	
-	void deleteLand(Land land);
-	
-	void renameLand(Land land, String name);
-	
-	int getLandID(LandType type, UUID uuid, String name);
-	
-	int getSystemLandID(String name);
-		
-	void setChunk(Land land, SChunk chunk);
-	
-	void removeChunk(SChunk chunk);
-	
-	void loadTrusts(Land land);
+    Map<SChunk, Integer> getChunks(UUID uuid);
 
-	void addTrust(Land land, UUID uuid, Action action);
-	
-	void removeTrust(Land land, UUID uuid, Action action);
-	
-	void addGlobalTrust(Land land, Action action);
-	
-	void removeGlobalTrust(Land land, Action action);
+    Map<SChunk, Integer> getChunks(Land land);
 
-	void addGuildTrust(Land land, Action action);
+    int getChunkCount(UUID uuid);
 
-	void removeGuildTrust(Land land, Action action);
+    Map<Integer, Land> getLands();
 
-	void addCustomTrust(Land land, Action action, String identifier);
+    Map<String, Integer> getWorldsDefaultLands();
 
-	void removeCustomTrust(Land land, Action action, String identifier);
+    void setWorldDefaultLand(String world, Land land);
 
-	Set<Flag> getFlags(Land land);
-	
-	void addFlag(Land land, Flag flag);
-	
-	void removeFlag(Land land, Flag flag);
-	
-	Set<UUID> getBans(Land land);
-	
-	void addBan(Land land, UUID uuid);
-	
-	void removeBan(Land land, UUID uuid);
-	
-	void loadLinks(LandManager manager);
-	
-	void addLink(Land land, Link link, Land with);
-	
-	void removeLink(Land land, Link link);
+    Land getLand(int id);
 
-	void updateLandLastPaymentDate(Land land);
+    void addLand(Land land);
 
-	Map<Integer, SubLand> getSubLands(Land land);
+    void deleteLand(Land land);
 
-	void setSubLandRegion(Land land, SubLand subland);
+    void renameLand(Land land, String name);
 
-	void deleteSubLandRegion(SubLand land);
+    int getLandID(LandType type, UUID uuid, String name);
 
-	int getLastId(LandType type);
+    int getSystemLandID(String name);
 
+    void setChunk(Land land, SChunk chunk);
+
+    void removeChunk(SChunk chunk);
+
+    void loadTrusts(Land land);
+
+    void addTrust(Land land, UUID uuid, Action action);
+
+    void removeTrust(Land land, UUID uuid, Action action);
+
+    void addGlobalTrust(Land land, Action action);
+
+    void removeGlobalTrust(Land land, Action action);
+
+    void addGuildTrust(Land land, Action action);
+
+    void removeGuildTrust(Land land, Action action);
+
+    void addCustomTrust(Land land, Action action, String identifier);
+
+    void removeCustomTrust(Land land, Action action, String identifier);
+
+    Set<Flag> getFlags(Land land);
+
+    void addFlag(Land land, Flag flag);
+
+    void removeFlag(Land land, Flag flag);
+
+    Set<UUID> getBans(Land land);
+
+    void addBan(Land land, UUID uuid);
+
+    void removeBan(Land land, UUID uuid);
+
+    void loadLinks(LandManager manager);
+
+    void addLink(Land land, Link link, Land with);
+
+    void removeLink(Land land, Link link);
+
+    void updateLandLastPaymentDate(Land land);
+
+    Map<Integer, SubLand> getSubLands(Land land);
+
+    void setSubLandRegion(Land land, SubLand subland);
+
+    void deleteSubLandRegion(SubLand land);
+
+    int getLastId(LandType type);
+
+    int getChunkLimit(UUID uuid);
+
+    void setChunkLimit(UUID uuid, int limit);
+
+    void increaseChunkLimit(UUID uuid, int amount);
+
+    void decreaseChunkLimit(UUID uuid, int amount);
 }
