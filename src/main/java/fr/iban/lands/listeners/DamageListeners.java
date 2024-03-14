@@ -1,12 +1,14 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.MobUtils;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,42 +18,37 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 public class DamageListeners implements Listener {
 
-    private final LandManager landmanager;
+    private final LandRepository landRepository;
 
     public DamageListeners(LandsPlugin landsPlugin) {
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onDamage(EntityDamageEvent e) {
-        Land land = landmanager.getLandAt(e.getEntity().getLocation());
+    public void onDamage(EntityDamageEvent event) {
+        Land land = landRepository.getLandAt(event.getEntity().getLocation());
 
-        if (land == null) {
-            return;
-        }
-
-        if (e.getEntity() instanceof Player) {
+        if (event.getEntity() instanceof Player) {
             if (land.hasFlag(Flag.INVINCIBLE)) {
-                e.setCancelled(true);
+                event.setCancelled(true);
                 return;
             }
             if (land.hasFlag(Flag.PVP)) {
-                e.setCancelled(false);
+                event.setCancelled(false);
                 return;
             }
         }
 
-        if (e instanceof EntityDamageByEntityEvent) {
-            EntityDamageByEntityEvent event = (EntityDamageByEntityEvent) e;
-            Player player = getPlayerDamager(event);
+        if (event instanceof EntityDamageByEntityEvent damageByEntityEvent) {
+            Player player = getPlayerDamager(damageByEntityEvent);
             if (player != null) {
-                if ((MobUtils.blockEntityList.contains(e.getEntityType())
+                if ((MobUtils.blockEntityList.contains(event.getEntityType())
                         && !land.isBypassing(player, Action.BLOCK_BREAK))
-                        || (!MobUtils.mobsList.contains(e.getEntityType())
+                        || (!MobUtils.mobsList.contains(event.getEntityType())
                         && !land.isBypassing(player, Action.PASSIVE_KILL))
-                        || (e.getEntity().getCustomName() != null
+                        || (event.getEntity().getCustomName() != null
                         && !land.isBypassing(player, Action.TAGGED_KILL))) {
-                    e.setCancelled(true);
+                    event.setCancelled(true);
                 }
             }
         }
@@ -59,15 +56,13 @@ public class DamageListeners implements Listener {
 
     private Player getPlayerDamager(EntityDamageByEntityEvent event) {
         Player player = null;
-        if (event.getCause() == DamageCause.PROJECTILE && event.getDamager() instanceof Projectile) {
-            Projectile projectile = (Projectile) event.getDamager();
+        if (event.getCause() == DamageCause.PROJECTILE && event.getDamager() instanceof Projectile projectile) {
             if (projectile.getShooter() instanceof Player) {
                 player = (Player) projectile.getShooter();
             }
         }
         if (event.getCause() == DamageCause.ENTITY_EXPLOSION) {
-            if (event.getDamager() instanceof Mob) {
-                Mob mob = (Mob) event.getDamager();
+            if (event.getDamager() instanceof Mob mob) {
                 if (mob.getTarget() instanceof Player) {
                     player = (Player) mob.getTarget();
                 }

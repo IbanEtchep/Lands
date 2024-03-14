@@ -1,24 +1,22 @@
-package fr.iban.lands.land;
+package fr.iban.lands.model.land;
 
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.utils.Cuboid;
-
-import java.util.UUID;
-
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public class SubLand extends Land {
 
-    private final Land superLand;
+    private Land superLand;
+
     private Cuboid cuboid;
     private String server;
 
-    public SubLand(Land superLand, int id, String name) {
+    public SubLand(UUID id, String name) {
         super(id, name);
-        this.superLand = superLand;
-        setType(LandType.SUBLAND);
     }
 
     public void setCuboid(Cuboid cuboid, String server) {
@@ -38,6 +36,10 @@ public class SubLand extends Land {
         return superLand;
     }
 
+    public void setSuperLand(Land superLand) {
+        this.superLand = superLand;
+    }
+
     @Override
     public boolean isBypassing(Player player, Action action) {
         UUID owner = getOwner();
@@ -53,5 +55,10 @@ public class SubLand extends Land {
             return pland.getOwner();
         }
         return null;
+    }
+
+    @Override
+    public LandType getType() {
+        return LandType.SUBLAND;
     }
 }

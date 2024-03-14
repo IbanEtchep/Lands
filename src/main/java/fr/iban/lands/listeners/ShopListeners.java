@@ -1,16 +1,11 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.GuildLand;
-import fr.iban.lands.land.Land;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
+import fr.iban.lands.model.land.GuildLand;
+import fr.iban.lands.model.land.Land;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,21 +24,24 @@ import org.maxgamer.quickshop.api.shop.Shop;
 import org.maxgamer.quickshop.api.shop.ShopType;
 import org.maxgamer.quickshop.util.Util;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 public class ShopListeners implements Listener {
 
-    private LandsPlugin plugin;
-    private final LandManager landmanager;
+    private final LandsPlugin plugin;
+    private final LandRepository landRepository;
     List<UUID> tempStaffs = new ArrayList<>();
 
     public ShopListeners(LandsPlugin landsPlugin) {
         this.plugin = landsPlugin;
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
     public void onShopCreate(ShopPreCreateEvent e) {
-        Land land = landmanager.getLandAt(e.getLocation());
-        if (land == null) return;
+        Land land = landRepository.getLandAt(e.getLocation());
 
         if (!land.isBypassing(e.getPlayer(), Action.SHOP_CREATE)) {
             e.setCancelled(true);
@@ -51,8 +49,8 @@ public class ShopListeners implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void beforeCheck(PlayerInteractEvent e) {
-        final Block b = e.getClickedBlock();
+    public void beforeCheck(PlayerInteractEvent event) {
+        final Block b = event.getClickedBlock();
 
         if (b == null) {
             return;
@@ -62,7 +60,7 @@ public class ShopListeners implements Listener {
             return;
         }
 
-        if (e.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
             return; // Didn't right click it, we dont care.
         }
 
@@ -72,10 +70,10 @@ public class ShopListeners implements Listener {
             return;
         }
 
-        Player player = e.getPlayer();
+        Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        Land land = landmanager.getLandAt(b.getLocation());
+        Land land = landRepository.getLandAt(b.getLocation());
         if (!land.isBypassing(player, Action.SHOP_OPEN)) {
             return;
         }
@@ -87,8 +85,8 @@ public class ShopListeners implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void afterCheck(PlayerInteractEvent e) {
-        final Block b = e.getClickedBlock();
+    public void afterCheck(PlayerInteractEvent event) {
+        final Block b = event.getClickedBlock();
 
         if (b == null) {
             return;
@@ -98,7 +96,7 @@ public class ShopListeners implements Listener {
             return;
         }
 
-        if (e.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
             return; // Didn't right click it, we dont care.
         }
 
@@ -108,7 +106,7 @@ public class ShopListeners implements Listener {
             return;
         }
 
-        UUID uuid = e.getPlayer().getUniqueId();
+        UUID uuid = event.getPlayer().getUniqueId();
 
         if (tempStaffs.contains(uuid)) {
             shop.getModerator().delStaff(uuid);
@@ -133,7 +131,7 @@ public class ShopListeners implements Listener {
 
         if (!plugin.isGuildsHookEnabled()) return;
 
-        if (landmanager.getLandAt(e.getShop().getLocation()) instanceof GuildLand guildLand) {
+        if (landRepository.getLandAt(e.getShop().getLocation()) instanceof GuildLand guildLand) {
             if (!guildLand.hasFlag(Flag.SHOP_MONEY_TO_GUILD_BANK)) return;
             UUID seller = shop.getOwner();
             double price = e.getBalance();

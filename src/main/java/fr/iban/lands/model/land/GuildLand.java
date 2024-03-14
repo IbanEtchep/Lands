@@ -1,28 +1,31 @@
-package fr.iban.lands.land;
+package fr.iban.lands.model.land;
 
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
-
-import java.util.UUID;
-
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 public class GuildLand extends Land {
 
     private final UUID guildId;
 
-    public GuildLand(int id, UUID guildId, String name) {
+    public GuildLand(UUID id, UUID guildId, String name) {
         super(id, name);
         this.guildId = guildId;
-        setType(LandType.GUILD);
     }
 
     @Override
     public @Nullable UUID getOwner() {
         return guildId;
+    }
+
+    @Override
+    public LandType getType() {
+        return LandType.GUILD;
     }
 
     @Override
@@ -34,6 +37,7 @@ public class GuildLand extends Land {
                 && getGuildTrust().hasPermission(action))) {
             return true;
         }
+
         return super.isBypassing(player, action);
     }
 

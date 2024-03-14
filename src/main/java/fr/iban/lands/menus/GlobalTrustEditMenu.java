@@ -1,17 +1,20 @@
 package fr.iban.lands.menus;
 
 import fr.iban.bukkitcore.menu.Menu;
-import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.ActionGroup;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Player;
 
 public class GlobalTrustEditMenu extends TrustEditMenu {
 
-    public GlobalTrustEditMenu(
-            Player player, Land land, LandManager manager, Menu previousMenu, ActionGroup actionGroup) {
-        super(player, land, manager, previousMenu, actionGroup);
+    private final LandRepository landRepository;
+
+    public GlobalTrustEditMenu(Player player, Land land, LandsPlugin plugin, Menu previousMenu, ActionGroup actionGroup) {
+        super(player, land, plugin, previousMenu, actionGroup);
+        this.landRepository = plugin.getLandRepository();
         this.trust = land.getGlobalTrust();
     }
 
@@ -22,13 +25,13 @@ public class GlobalTrustEditMenu extends TrustEditMenu {
 
     @Override
     protected void addTrust(Action action) {
-        manager.addGlobalTrust(land, action);
+        landRepository.addGlobalTrust(land, action);
         trust.addPermission(action);
     }
 
     @Override
     protected void removeTrust(Action action) {
-        manager.removeGlobalTrust(land, action);
+        landRepository.removeGlobalTrust(land, action);
         trust.removePermission(action);
     }
 }

@@ -1,10 +1,11 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -16,32 +17,31 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.EnumSet;
 import java.util.Set;
 
 public class BlockBreakListener implements Listener {
 
-    private LandManager landmanager;
-    private final Set<Material> cropList =
-            EnumSet.of(
-                    Material.WHEAT,
-                    Material.POTATOES,
-                    Material.CARROTS,
-                    Material.BEETROOTS,
-                    Material.NETHER_WART);
-    private LandsPlugin plugin;
+    private final LandsPlugin plugin;
+    private final LandRepository landRepository;
+    private final Set<Material> cropList = EnumSet.of(
+            Material.WHEAT,
+            Material.POTATOES,
+            Material.CARROTS,
+            Material.BEETROOTS,
+            Material.NETHER_WART
+    );
 
     public BlockBreakListener(LandsPlugin landsPlugin) {
         this.plugin = landsPlugin;
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
-    public void onBreak(BlockBreakEvent e) {
-        Block block = e.getBlock();
-        Land land = landmanager.getLandAt(block.getLocation());
+    public void onBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+        Land land = landRepository.getLandAt(block.getLocation());
 
         if (land == null) return;
 
@@ -58,46 +58,38 @@ public class BlockBreakListener implements Listener {
                 Ageable age = (Ageable) bd;
 
                 if (age.getAge() == age.getMaximumAge()) {
-
-                    new BukkitRunnable() {
-
-                        @Override
-                        public void run() {
-
-                            block.setType(material);
-                        }
-                    }.runTaskLater(plugin, 1L);
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> block.setType(material), 1L);
                     return;
                 }
             }
         }
 
-        if (!land.isBypassing(e.getPlayer(), Action.BLOCK_BREAK)) {
-            e.setCancelled(true);
+        if (!land.isBypassing(event.getPlayer(), Action.BLOCK_BREAK)) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onVehicleBreak(VehicleDestroyEvent e) {
-        if (e.getAttacker() instanceof Player) {
-            Land land = landmanager.getLandAt(e.getVehicle().getLocation());
-            if (!land.isBypassing((Player) e.getAttacker(), Action.VEHICLE_PLACE_BREAK)) {
-                e.setCancelled(true);
+    public void onVehicleBreak(VehicleDestroyEvent event) {
+        if (event.getAttacker() instanceof Player) {
+            Land land = landRepository.getLandAt(event.getVehicle().getLocation());
+            if (!land.isBypassing((Player) event.getAttacker(), Action.VEHICLE_PLACE_BREAK)) {
+                event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onProjectileHit(ProjectileHitEvent e) {
-        if (e.getHitBlock() == null) {
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (event.getHitBlock() == null) {
             return;
         }
 
-        if (e.getEntity().getShooter() instanceof Player player) {
-            Land land = landmanager.getLandAt(e.getHitBlock().getLocation());
+        if (event.getEntity().getShooter() instanceof Player player) {
+            Land land = landRepository.getLandAt(event.getHitBlock().getLocation());
 
             if (!land.isBypassing(player, Action.BLOCK_BREAK)) {
-                e.setCancelled(true);
+                event.setCancelled(true);
             }
         }
     }

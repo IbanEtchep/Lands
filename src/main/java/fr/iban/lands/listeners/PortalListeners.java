@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,24 +13,23 @@ import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 
 public class PortalListeners implements Listener {
 
-    private LandManager manager;
+    private LandRepository landRepository;
 
     public PortalListeners(LandsPlugin plugin) {
-        this.manager = plugin.getLandManager();
+        this.landRepository = plugin.getLandRepository();
     }
 
     @EventHandler
-    public void onPortalCreate(PortalCreateEvent e) {
-        if (e.getEntity() instanceof Player) {
-            Player player = (Player) e.getEntity();
+    public void onPortalCreate(PortalCreateEvent event) {
+        if (event.getEntity() instanceof Player player) {
 
-            if (e.getReason() == CreateReason.NETHER_PAIR) {
-                for (BlockState block : e.getBlocks()) {
-                    Land land = manager.getLandAt(block.getLocation());
+            if (event.getReason() == CreateReason.NETHER_PAIR) {
+                for (BlockState block : event.getBlocks()) {
+                    Land land = landRepository.getLandAt(block.getLocation());
+
                     if (!land.isBypassing(player, Action.BLOCK_PLACE)) {
-                        e.setCancelled(true);
-                        player.sendMessage(
-                                "§cLa création du portail a été annulée, celui-ci se trouvant sur un claim où vous n'êtes pas autorisé à poser des blocs.");
+                        event.setCancelled(true);
+                        player.sendMessage("§cLa création du portail a été annulée, celui-ci se trouvant sur un claim où vous n'êtes pas autorisé à poser des blocs.");
                         return;
                     }
                 }

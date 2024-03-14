@@ -1,14 +1,13 @@
-package fr.iban.lands.land;
+package fr.iban.lands.model;
 
 import fr.iban.lands.LandsPlugin;
-
-import java.util.Date;
-import java.util.concurrent.CompletableFuture;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 public class SChunk {
 

@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,18 +11,16 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 
 public class DropListener implements Listener {
 
-    private LandManager landmanager;
+    private final LandRepository landRepository;
 
     public DropListener(LandsPlugin landsPlugin) {
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
         Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(player.getLocation());
-
-        if (land == null) return;
+        Land land = landRepository.getLandAt(player.getLocation());
 
         if (!land.isBypassing(player, Action.DROP)) {
             e.setCancelled(true);

@@ -5,13 +5,15 @@ import fr.iban.guilds.GuildPlayer;
 import fr.iban.guilds.GuildsManager;
 import fr.iban.guilds.enums.Rank;
 import fr.iban.guilds.event.GuildDisbandEvent;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServiceRegisterEvent;
 import org.bukkit.event.server.ServiceUnregisterEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicesManager;
 
 import java.util.UUID;
 
@@ -26,8 +28,9 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     @Override
     public void load() {
-        RegisteredServiceProvider<GuildsManager> rsp =
-                landsPlugin.getServer().getServicesManager().getRegistration(GuildsManager.class);
+        ServicesManager servicesManager = landsPlugin.getServer().getServicesManager();
+        RegisteredServiceProvider<GuildsManager> rsp = servicesManager.getRegistration(GuildsManager.class);
+
         if (rsp != null) {
             guildsManager = rsp.getProvider();
             landsPlugin.getServer().getPluginManager().registerEvents(this, landsPlugin);
@@ -129,14 +132,13 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     @EventHandler
     public void onDisband(GuildDisbandEvent e) {
-        LandManager landManager = landsPlugin.getLandManager();
+        LandService landService = landsPlugin.getLandService();
+        LandRepository landRepository = landsPlugin.getLandRepository();
         UUID guildId = e.getGuild().getId();
 
-        landManager.transferClaims(guildId, e.getGuild().getOwner().getUuid());
+        landService.transferClaims(guildId, e.getGuild().getOwner().getUuid());
 
-        landManager.getGuildLandsAsync(guildId).thenAccept(lands -> {
-            lands.forEach(landManager::deleteLand);
-        });
+        landRepository.getGuildLands(guildId).forEach(landRepository::deleteLand);
     }
 
     @EventHandler

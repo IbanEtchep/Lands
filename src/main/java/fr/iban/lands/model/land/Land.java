@@ -1,51 +1,48 @@
-package fr.iban.lands.land;
+package fr.iban.lands.model.land;
 
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.enums.Link;
-import fr.iban.lands.permissions.Trust;
-import fr.iban.lands.utils.DateUtils;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
+import fr.iban.lands.enums.LinkType;
+import fr.iban.lands.model.Trust;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 public abstract class Land {
 
-    protected int id;
+    protected UUID id;
     protected String name;
     protected Trust globalTrust = new Trust();
     private final Trust guildTrust = new Trust();
-    protected LandType type;
     protected Map<UUID, Trust> trusts = new HashMap<>();
     protected Set<Flag> flags = new HashSet<>();
     protected Set<UUID> bans = new HashSet<>();
-    protected Map<Link, Land> links;
-    protected Map<Integer, SubLand> subLands = new ConcurrentHashMap<>();
-    protected Date lastPayment;
-    protected boolean paymentDue = false;
+    protected Map<LinkType, Land> links;
+    protected Map<UUID, SubLand> subLands = new ConcurrentHashMap<>();
     protected Date createdAt = new Date();
 
-    public Land(int id, String name) {
+    public Land(UUID id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public int getId() {
+    public abstract @Nullable UUID getOwner();
+
+    public abstract LandType getType();
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(UUID id) {
         this.id = id;
     }
-
-    public abstract @Nullable UUID getOwner();
 
     public String getName() {
         if (name == null) {
@@ -58,24 +55,12 @@ public abstract class Land {
         this.name = name;
     }
 
-    public LandType getType() {
-        return type;
-    }
-
-    public void setType(LandType type) {
-        this.type = type;
-    }
-
-    public boolean isWilderness() {
-        return this instanceof SystemLand && getName().equals("Zone sauvage");
-    }
-
     /*
      * TRUSTS
      */
 
     public Trust getGlobalTrust() {
-        Land linkedLand = getLinkedLand(Link.GLOBALTRUST);
+        Land linkedLand = getLinkedLand(LinkType.GLOBALTRUST);
         if (linkedLand != null) {
             return linkedLand.getGlobalTrust();
         }
@@ -87,7 +72,7 @@ public abstract class Land {
     }
 
     public Map<UUID, Trust> getTrusts() {
-        Land linkedLand = getLinkedLand(Link.TRUSTS);
+        Land linkedLand = getLinkedLand(LinkType.TRUSTS);
         if (linkedLand != null) {
             return linkedLand.getTrusts();
         }
@@ -147,12 +132,6 @@ public abstract class Land {
                         && getGuildTrust().hasPermission(action)
                         && plugin.getGuildDataAccess().areInSameGuild(getOwner(), player.getUniqueId()));
 
-        if (isPaymentDue()
-                && (action.equals(Action.BLOCK_BREAK) || action.equals(Action.BLOCK_PLACE))) {
-            player.sendMessage("§cCe claim est en défaut de paiement, les actions y sont donc limitées.");
-            return false;
-        }
-
         if ((!bypass) && !(this instanceof SystemLand)) {
             player.sendActionBar(
                     Component.text("§cVous n'avez pas la permission de faire cela dans ce claim."));
@@ -201,7 +180,7 @@ public abstract class Land {
     }
 
     public Set<UUID> getBans() {
-        Land linkedLand = getLinkedLand(Link.BANS);
+        Land linkedLand = getLinkedLand(LinkType.BANS);
         if (linkedLand != null) {
             return linkedLand.getBans();
         }
@@ -216,22 +195,22 @@ public abstract class Land {
         return getBans().contains(uuid);
     }
 
-    public Map<Link, Land> getLinks() {
+    public Map<LinkType, Land> getLinks() {
         if (links == null) {
-            links = new EnumMap<>(Link.class);
+            links = new EnumMap<>(LinkType.class);
         }
         return links;
     }
 
-    public void addLink(Link link, Land with) {
+    public void setLink(LinkType link, Land with) {
         getLinks().put(link, with);
     }
 
-    public void removeLink(Link link) {
+    public void removeLink(LinkType link) {
         getLinks().remove(link);
     }
 
-    public Land getLinkedLand(Link link) {
+    public Land getLinkedLand(LinkType link) {
         Land land = getLinks().get(link);
         if (land == null) {
             removeLink(link);
@@ -240,44 +219,28 @@ public abstract class Land {
     }
 
     public boolean hasSubLand() {
-        return type != LandType.SUBLAND && getSubLands() != null && !getSubLands().isEmpty();
+        return getType() != LandType.SUBLAND && getSubLands() != null && !getSubLands().isEmpty();
     }
 
     public SubLand getSubLandAt(Location loc) {
-        if (hasSubLand()) {
-            for (SubLand subland : subLands.values()) {
-                if (subland.getCuboid() != null
-                        && subland.getServer() != null
-                        && subland.getServer().equals(LandsPlugin.getInstance().getServerName())
-                        && subland.getCuboid().contains(loc)) {
-                    return subland;
-                }
-            }
-        }
-        return null;
+        return subLands.values().stream()
+                .filter(subland -> subland.getCuboid() != null
+                        && subland.getCuboid().contains(loc)
+                        && subland.getServer().equals(LandsPlugin.getInstance().getServerName()))
+                .findFirst()
+                .orElse(null);
     }
 
-    public void setSubLands(Map<Integer, SubLand> subLands) {
+    public void setSubLands(Map<UUID, SubLand> subLands) {
         this.subLands = subLands;
     }
 
-    public Map<Integer, SubLand> getSubLands() {
+    public Map<UUID, SubLand> getSubLands() {
         return subLands;
     }
 
     public Trust getGuildTrust() {
         return guildTrust;
-    }
-
-    public Date getLastPayment() {
-        return lastPayment;
-    }
-
-    public Date getNextPaiement() {
-        if (getLastPayment() == null) {
-            return null;
-        }
-        return DateUtils.convertToDate(DateUtils.convertToLocalDateTime(getLastPayment()).plusWeeks(1));
     }
 
     public Date getCreatedAt() {
@@ -286,26 +249,5 @@ public abstract class Land {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public void setLastPayment(Date lastPayment) {
-        this.lastPayment = lastPayment;
-    }
-
-    public boolean isPaymentDue() {
-        return paymentDue;
-    }
-
-    public void setPaymentDue(boolean paymentDue) {
-        this.paymentDue = paymentDue;
-    }
-
-    public double getTotalWeeklyPrice() {
-        return LandsPlugin.getInstance().getLandManager().getChunks(this).size()
-                * getChunkWeeklyPrice();
-    }
-
-    public double getChunkWeeklyPrice() {
-        return 0;
     }
 }

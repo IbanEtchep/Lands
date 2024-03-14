@@ -3,14 +3,13 @@ package fr.iban.lands.menus;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
 import fr.iban.lands.enums.LandType;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.utils.DateUtils;
+import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -24,7 +23,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class LandMainMenu extends PaginatedMenu {
 
-    private final LandManager manager;
+    private final LandService landService;
+    private final LandRepository landRepository;
     private final List<Land> lands;
     private final LandsPlugin plugin;
     private final LandType landType;
@@ -33,7 +33,8 @@ public class LandMainMenu extends PaginatedMenu {
 
     public LandMainMenu(Player player, LandsPlugin plugin, List<Land> lands, LandType landType, UUID landOwner) {
         super(player);
-        this.manager = plugin.getLandManager();
+        this.landService = plugin.getLandService();
+        this.landRepository = plugin.getLandRepository();
         this.lands = lands;
         this.plugin = plugin;
         this.landType = landType;
@@ -77,38 +78,16 @@ public class LandMainMenu extends PaginatedMenu {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
-            core.getTextInputs()
-                    .put(
-                            player.getUniqueId(),
-                            texte -> {
-                                switch (landType) {
-                                    case PLAYER:
-                                        manager.createLand(player, texte)
-                                                .thenAccept(land -> Bukkit.getScheduler().runTask(plugin, () -> {
-                                                    lands.add(land);
-                                                    open();
-                                                }));
-                                        break;
-                                    case SYSTEM:
-                                        manager.createSystemLand(player, texte)
-                                                .thenAccept(land -> Bukkit.getScheduler().runTask(plugin, () -> {
-                                                    lands.add(land);
-                                                    open();
-                                                }));
-                                        break;
-                                    case GUILD:
-                                        manager
-                                                .createGuildLand(player, texte)
-                                                .thenAccept(land -> Bukkit.getScheduler().runTask(plugin, () -> {
-                                                    lands.add(land);
-                                                    open();
-                                                }));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                core.getTextInputs().remove(player.getUniqueId());
-                            });
+            core.getTextInputs().put(player.getUniqueId(), texte -> {
+                Land newLand = landService.createLand(player, texte, landType);
+
+                if (newLand != null) {
+                    lands.add(newLand);
+                    open();
+                }
+
+                core.getTextInputs().remove(player.getUniqueId());
+            });
         }
 
         if (current.getType() == Material.PLAYER_HEAD) {
@@ -120,26 +99,20 @@ public class LandMainMenu extends PaginatedMenu {
 
             ClickType click = e.getClick();
             if (click == ClickType.RIGHT) {
-                new ConfirmMenu(
-                        player,
+                new ConfirmMenu(player,
                         "§cConfirmation de suppression",
                         "§eVoulez-vous supprimer le territoire " + land.getName() + " ?",
                         result -> {
                             if (result) {
                                 lands.remove(land);
-                                manager
-                                        .deleteLand(land)
-                                        .thenRun(
-                                                () -> {
-                                                    player.sendMessage(
-                                                            "§cLe territoire " + land.getName() + " a bien été supprimé.");
-                                                });
+                                plugin.getLandRepository().deleteLand(land);
+                                player.sendMessage("§cLe territoire " + land.getName() + " a bien été supprimé.");
                             }
                             super.open();
-                        })
-                        .open();
+                        }
+                ).open();
             } else if (click == ClickType.LEFT) {
-                new LandManageMenu(player, plugin, manager, land, this).open();
+                new LandManageMenu(player, plugin, land, this).open();
             }
         }
     }
@@ -183,26 +156,9 @@ public class LandMainMenu extends PaginatedMenu {
                         .addLore("§aClic gauche pour gérer ce territoire.")
                         .addLore("§cClic droit pour supprimer ce territoire.")
                         .addLore("")
-                        .addLore("§fTronçons : " + manager.getChunks(land).size())
+                        .addLore("§fTronçons : " + plugin.getLandRepository().getChunks(land).size())
                         .addLore("§fJoueurs trust : " + land.getTrusts().size())
                         .addLore("§fBannissements : " + land.getBans().size());
-        if (land.getTotalWeeklyPrice() > 0) {
-            itemBuilder
-                    .addLore(
-                            "§fCoût hebdomadaire : " + plugin.getEconomy().format(land.getTotalWeeklyPrice()))
-                    .addLore(
-                            land.getNextPaiement() != null
-                                    ? "§fProchain paiement : " + DateUtils.format(land.getNextPaiement())
-                                    : "");
-        }
-        if (land.isPaymentDue()) {
-            itemBuilder
-                    .addLore("")
-                    .addLore("§4§L⚠ Défaut de paiement.")
-                    .addLore(
-                            "§fVous devez payer " + plugin.getEconomy().format(land.getTotalWeeklyPrice()) + ". ")
-                    .addLore("§fUtilisez la commande §b/land pay " + land.getName() + ".");
-        }
         return itemBuilder.build();
     }
 
@@ -216,26 +172,24 @@ public class LandMainMenu extends PaginatedMenu {
     }
 
     private CompletableFuture<ItemStack> getInfoItem() {
-        return manager.future(
-                () -> {
-                    int count = manager.getChunkCount(landOwner).join();
-                    int maxCount = manager.getMaxChunkCount(landOwner).join();
+        return CompletableFuture.supplyAsync(() -> {
+            int count = landRepository.getChunkCount(landOwner);
+            int maxCount = landRepository.getMaxChunkCount(landOwner);
 
-                    ItemBuilder itemBuilder = new ItemBuilder(Head.OAK_INFO.get())
-                            .setName("§2Informations")
-                            .addLore("§f§lTronçons utilisés : §a" + count + "/" + maxCount);
+            ItemBuilder itemBuilder = new ItemBuilder(Head.OAK_INFO.get())
+                    .setName("§2Informations")
+                    .addLore("§f§lTronçons utilisés : §a" + count + "/" + maxCount);
 
-                    if (landType == LandType.GUILD) {
-                        int personalCount = manager.getChunkCount(player.getUniqueId()).join();
-                        int personalMaxCount = manager.getMaxChunkCount(player.getUniqueId()).join();
-                        itemBuilder.addLore("§f§lTronçons personnels : §a" + personalCount + "/" + personalMaxCount);
+            if (landType == LandType.GUILD) {
+                int personalCount = landRepository.getChunkCount(player.getUniqueId());
+                int personalMaxCount = landRepository.getMaxChunkCount(player.getUniqueId());
+                itemBuilder.addLore("§f§lTronçons personnels : §a" + personalCount + "/" + personalMaxCount);
 
-                        itemBuilder.addLore("§7Si la guilde n'a plus de tronçons, vos ");
-                        itemBuilder.addLore("§7tronçons personnels seront utilisés.");
-                    }
+                itemBuilder.addLore("§7Si la guilde n'a plus de tronçons, vos ");
+                itemBuilder.addLore("§7tronçons personnels seront utilisés.");
+            }
 
-                    return itemBuilder.build();
-                }
-        );
+            return itemBuilder.build();
+        });
     }
 }

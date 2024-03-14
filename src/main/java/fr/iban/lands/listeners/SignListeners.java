@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,18 +11,18 @@ import org.bukkit.event.block.SignChangeEvent;
 
 public class SignListeners implements Listener {
 
-    private final LandManager landManager;
+    private final LandRepository landRepository;
 
     public SignListeners(LandsPlugin plugin) {
-        this.landManager = plugin.getLandManager();
+        this.landRepository = plugin.getLandRepository();
     }
 
     @EventHandler
-    public void onSignChange(SignChangeEvent e) {
-        Player player = e.getPlayer();
-        Land land = landManager.getLandAt(e.getBlock().getLocation());
+    public void onSignChange(SignChangeEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getBlock().getLocation());
         if (land != null && !land.isBypassing(player, Action.SIGN_EDIT)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 }

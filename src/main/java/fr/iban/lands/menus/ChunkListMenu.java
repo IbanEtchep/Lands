@@ -3,9 +3,13 @@ package fr.iban.lands.menus;
 import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
-import fr.iban.lands.LandManager;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.SChunk;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.Land;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,28 +17,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
-
 public class ChunkListMenu extends PaginatedMenu {
 
+    private final LandsPlugin plugin;
     private final Land land;
     private final List<SChunk> chunks = new ArrayList<>();
     private Map<Integer, SChunk> chunkAtSlot;
-    private final LandManager manager;
     private Menu previousMenu;
 
-    public ChunkListMenu(Player player, LandManager manager, Land land) {
+    public ChunkListMenu(Player player, LandsPlugin plugin, Land land) {
         super(player);
-        this.manager = manager;
+        this.plugin = plugin;
         this.land = land;
-        chunks.addAll(manager.getChunks(land));
+        chunks.addAll(plugin.getLandRepository().getChunks(land));
     }
 
-    public ChunkListMenu(Player player, LandManager manager, Land land, Menu previousMenu) {
-        this(player, manager, land);
+    public ChunkListMenu(Player player, LandsPlugin plugin, Land land, Menu previousMenu) {
+        this(player, plugin, land);
         this.previousMenu = previousMenu;
     }
 
@@ -53,6 +52,8 @@ public class ChunkListMenu extends PaginatedMenu {
         Player player = (Player) e.getWhoClicked();
         ItemStack item = e.getCurrentItem();
 
+        if (item == null) return;
+
         if (e.getClickedInventory() != e.getView().getTopInventory()) {
             return;
         }
@@ -69,7 +70,7 @@ public class ChunkListMenu extends PaginatedMenu {
             return;
         }
 
-        manager.unclaim(schunk);
+        plugin.getLandService().unclaim(schunk);
         chunks.remove(schunk);
         open();
     }
@@ -79,16 +80,16 @@ public class ChunkListMenu extends PaginatedMenu {
         addMenuBorder();
         chunkAtSlot = new HashMap<>();
 
-        if (chunks != null && !chunks.isEmpty()) {
+        if (!chunks.isEmpty()) {
             for (int i = 0; i < getMaxItemsPerPage(); i++) {
                 index = getMaxItemsPerPage() * page + i;
+
                 if (index >= chunks.size()) break;
+
                 if (chunks.get(index) != null) {
                     final int slot = inventory.firstEmpty();
                     SChunk schunk = chunks.get(index);
-                    inventory.setItem(
-                            slot,
-                            new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
+                    inventory.setItem(slot, new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
                     chunkAtSlot.put(slot, schunk);
                     getChunkItem(schunk).thenAccept(item -> inventory.setItem(slot, item));
                 }
@@ -96,12 +97,10 @@ public class ChunkListMenu extends PaginatedMenu {
         }
 
         if (previousMenu != null) {
-            inventory.setItem(
-                    31,
-                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
-                            .setDisplayName("§4Retour")
-                            .addLore("§cRetourner au menu précédent")
-                            .build());
+            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                    .setDisplayName("§4Retour")
+                    .addLore("§cRetourner au menu précédent")
+                    .build());
         }
     }
 
@@ -111,21 +110,13 @@ public class ChunkListMenu extends PaginatedMenu {
     }
 
     private CompletableFuture<ItemStack> getChunkItem(SChunk chunk) {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    return new ItemBuilder(Material.DIRT)
-                            .setDisplayName("§2§lTronçon")
-                            .addLore("§fServeur : §a§l" + chunk.getServer())
-                            .addLore("§fMonde : §a§l" + chunk.getWorld())
-                            .addLore(
-                                    "§fCoordonnées (en chunk) : X: §a§l" + chunk.getX() + " §fZ: §a§l" + chunk.getZ())
-                            .addLore(
-                                    "§fCoordonées (en bloc) : X: §a§l"
-                                            + (chunk.getX() * 16)
-                                            + " §fZ: §a§l"
-                                            + (chunk.getZ() * 16))
-                            .addLore("§cCliquez pour supprimer.")
-                            .build();
-                });
+        return CompletableFuture.supplyAsync(() -> new ItemBuilder(Material.DIRT)
+                .setDisplayName("§2§lTronçon")
+                .addLore("§fServeur : §a§l" + chunk.getServer())
+                .addLore("§fMonde : §a§l" + chunk.getWorld())
+                .addLore("§fCoordonnées (en chunk) : X: §a§l" + chunk.getX() + " §fZ: §a§l" + chunk.getZ())
+                .addLore("§fCoordonées (en bloc) : X: §a§l" + (chunk.getX() * 16) + " §fZ: §a§l" + (chunk.getZ() * 16))
+                .addLore("§cCliquez pour supprimer.")
+                .build());
     }
 }

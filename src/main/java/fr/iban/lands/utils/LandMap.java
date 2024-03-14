@@ -1,11 +1,12 @@
 package fr.iban.lands.utils;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.land.*;
-
-import java.util.*;
-
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.GuildLand;
+import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.PlayerLand;
+import fr.iban.lands.model.land.SystemLand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -17,13 +18,15 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.*;
+
 public class LandMap {
 
-    private final LandManager manager;
+    private final LandRepository landRepository;
     private final Map<UUID, Land> landMapSelection = new HashMap<>();
 
-    public LandMap(LandManager manager) {
-        this.manager = manager;
+    public LandMap(LandRepository landRepository) {
+        this.landRepository = landRepository;
     }
 
     public void display(Player player, Land land) {
@@ -68,7 +71,7 @@ public class LandMap {
         TextColor baseColor = TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex());
         Component baseComponent = Component.text("█").color(baseColor);
 
-        Land land = manager.getLandAt(schunk);
+        Land land = landRepository.getLandAt(schunk);
 
         if (land instanceof SystemLand sland) {
             TextColor systemLandColor = TextColor.fromHexString(HexColor.MARRON.getHex());
@@ -76,18 +79,8 @@ public class LandMap {
                     Component.text(sland.getName()).color(systemLandColor).decorate(TextDecoration.BOLD);
             if (land.getName().equals("Zone sauvage")) {
                 if (selectedLand != null) {
-                    hoverComponent =
-                            hoverComponent.append(
-                                    Component.text("\n(clic pour claim)").color(NamedTextColor.GRAY));
-                    baseComponent =
-                            baseComponent.clickEvent(
-                                    ClickEvent.runCommand(
-                                            "/land claimat "
-                                                    + schunk.getWorld()
-                                                    + " "
-                                                    + schunk.getX()
-                                                    + " "
-                                                    + schunk.getZ()));
+                    hoverComponent = hoverComponent.append(Component.text("\n(clic pour claim)").color(NamedTextColor.GRAY));
+                    baseComponent = baseComponent.clickEvent(ClickEvent.runCommand("/land claimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
                 }
             } else {
                 baseComponent = baseComponent.color(TextColor.fromHexString(HexColor.OLIVE.getHex()));

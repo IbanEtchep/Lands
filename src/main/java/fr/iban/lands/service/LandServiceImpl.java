@@ -1,0 +1,265 @@
+package fr.iban.lands.service;
+
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
+import fr.iban.lands.enums.LandType;
+import fr.iban.lands.events.PlayerChunkUnclaimEvent;
+import fr.iban.lands.events.PlayerLandCreateEvent;
+import fr.iban.lands.events.PlayerLandPreCreateEvent;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.*;
+import fr.iban.lands.utils.Cuboid;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+public class LandServiceImpl implements LandService {
+
+    private final LandsPlugin plugin;
+    private final LandRepository landRepository;
+
+    public LandServiceImpl(LandsPlugin plugin) {
+        this.plugin = plugin;
+        this.landRepository = plugin.getLandRepository();
+    }
+
+    @Override
+    public Land createLand(Player creator, String name, LandType type) {
+        PlayerLandPreCreateEvent event = new PlayerLandPreCreateEvent(creator, name, type);
+        if (!event.callEvent()) {
+            return null;
+        }
+
+        UUID id = UUID.randomUUID();
+
+        //TODO remplace with factory
+        Land land = switch (type) {
+            case PLAYER -> new PlayerLand(id, creator.getUniqueId(), name);
+            case GUILD -> new GuildLand(id, creator.getUniqueId(), name);
+            case SYSTEM -> new SystemLand(id, name);
+            default -> throw new IllegalStateException("Unexpected value: " + type);
+        };
+
+        landRepository.addLand(land);
+
+        PlayerLandCreateEvent createEvent = new PlayerLandCreateEvent(creator, land);
+        createEvent.callEvent();
+
+        creator.sendMessage("§aLe territoire au nom de " + name + " a été créée.");
+        return land;
+    }
+
+    @Override
+    public void renameLand(Land land, Player player, String name) {
+        if (landRepository.getLands(land.getOwner()).stream().anyMatch(l -> l.getName().equalsIgnoreCase(name))) {
+            player.sendMessage("§cVous avez déjà un territoire à ce nom.");
+            return;
+        }
+
+        if (name.length() > 16) {
+            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+            return;
+        }
+
+        land.setName(name);
+        landRepository.updateLand(land);
+        player.sendMessage("§aLe nom du territoire a bien été modifié.");
+    }
+
+    @Override
+    public void claim(SChunk chunk, Land land) {
+        chunk.setCreatedAt(new Date());
+        landRepository.addChunk(chunk, land);
+    }
+
+    @Override
+    public void claim(Player player, List<SChunk> chunks, Land land) {
+        int TTChunks = chunks.size();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!chunks.isEmpty()) {
+                    claim(chunks.get(0), land);
+                    chunks.remove(0);
+
+                    if (chunks.size() % 50 == 0) {
+                        int loadedChunks = TTChunks - chunks.size();
+                        player.sendMessage(String.format("§aProtection des chunks... (%d/%d) [%f%%]", loadedChunks, TTChunks, Math.round(loadedChunks * 100.0F / (TTChunks) * 10.0F) / 10.0F));
+                    }
+                } else {
+                    player.sendMessage("§a§lLa selection a été protégée avec succès.");
+                    cancel();
+                }
+            }
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L);
+    }
+
+    @Override
+    public void claim(Player player, SChunk chunk, Land land) {
+        if (!hasEnouphClaims(player, land)) {
+            player.sendMessage("§cVous n'avez plus de claim disponible.");
+            return;
+        }
+
+        if (landRepository.getLandAt(chunk).equals(landRepository.getWilderness())) {
+            if (landRepository.getRemainingChunkCount(land.getOwner()) <= 0) {
+                giveClaims(player, land.getOwner(), 1);
+            }
+
+            claim(chunk, land);
+            player.sendActionBar(Component.text("§a§lLe tronçon a bien été claim."));
+        } else {
+            player.sendActionBar(Component.text("§c§lCe tronçon est déjà claim."));
+        }
+    }
+
+    @Override
+    public void unclaim(Player player, SChunk chunk) {
+        Land land = landRepository.getLandAt(chunk);
+
+        if (landRepository.canManageLand(player, land) || plugin.isBypassing(player)) {
+            PlayerChunkUnclaimEvent event = new PlayerChunkUnclaimEvent(player, chunk);
+
+            if (!event.callEvent()) {
+                return;
+            }
+
+            unclaim(chunk);
+            player.sendActionBar(Component.text("§a§lLe tronçon a bien été unclaim."));
+        } else {
+            player.sendActionBar(Component.text("§c§lCe tronçon ne vous appartient pas !"));
+        }
+    }
+
+    @Override
+    public void unclaim(Chunk chunk) {
+        unclaim(new SChunk(chunk));
+    }
+
+    @Override
+    public void unclaim(SChunk chunk) {
+        landRepository.removeChunk(chunk);
+    }
+
+    private boolean hasEnouphClaims(Player player, Land land) {
+        UUID landOwner = land.getOwner();
+
+        if (landOwner == null || plugin.isBypassing(player)) {
+            return true;
+        }
+
+        int remaining = landRepository.getRemainingChunkCount(landOwner);
+
+        if (land instanceof GuildLand && remaining <= 0) {
+            remaining = landRepository.getRemainingChunkCount(player.getUniqueId());
+        }
+
+        return remaining > 0;
+    }
+
+    @Override
+    public void transferClaims(UUID from, UUID to) {
+        plugin.runAsyncQueued(() -> {
+            int maxChunkCount = landRepository.getMaxChunkCount(from);
+            landRepository.increaseChunkLimit(to, maxChunkCount);
+            landRepository.setChunkLimit(from, 0);
+        });
+    }
+
+    @Override
+    public void giveClaims(Player player, UUID target, int amount) {
+        UUID uuid = player.getUniqueId();
+
+        int remaining = landRepository.getRemainingChunkCount(uuid);
+
+        if (remaining < amount) {
+            player.sendMessage("§cVous n'avez pas assez de claims.");
+            return;
+        }
+
+        landRepository.decreaseChunkLimit(uuid, amount);
+        landRepository.increaseChunkLimit(target, amount);
+
+        Player targetPlayer = Bukkit.getPlayer(target);
+        if (targetPlayer != null) {
+            player.sendMessage("§aVous avez donné " + amount + " claims à " + targetPlayer.getName() + ".");
+            targetPlayer.sendMessage("§aVous avez reçu " + amount + " claims de " + player.getName() + ".");
+        } else {
+            player.sendMessage("§aVous avez donné " + amount + " claims.");
+        }
+    }
+
+    @Override
+    public void createSubland(Player player, Land superLand, String name) {
+        if (!superLand.getSubLands().isEmpty()) {
+            for (SubLand subland : superLand.getSubLands().values()) {
+                if (subland.getName().equals(name)) {
+                    player.sendMessage("§cIl y a déjà un territoire à ce nom.");
+                    return;
+                }
+            }
+        }
+        if (name.length() > 16) {
+            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+            return;
+        }
+        SubLand subLand = new SubLand(UUID.randomUUID(), name);
+        subLand.setSuperLand(superLand);
+        subLand.setCuboid(new Cuboid(Bukkit.getWorlds().get(1), 0, 0, 0, 0, 0, 0), "non défini");
+        superLand.getSubLands().put(subLand.getId(), subLand);
+
+        landRepository.addLand(subLand);
+
+        player.sendMessage("§aLe sous-territoire au nom de " + name + " a été créée.");
+    }
+
+    @Override
+    public void ban(Player sender, Land land, UUID uuid) {
+        if (sender.getUniqueId().equals(uuid)) {
+            sender.sendMessage("§cVous ne pouvez pas vous ban vous même !");
+            return;
+        }
+        if (land.isBanned(uuid)) {
+            sender.sendMessage("§cCe joueur est déjà banni.");
+            return;
+        }
+
+        landRepository.addBan(land, uuid);
+        sender.sendMessage("§aLe joueur a bien été banni.");
+
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            Land landAt = landRepository.getLandAt(player.getChunk());
+            if (landAt instanceof PlayerLand pland) {
+                if (Objects.equals(pland.getOwner(), sender.getUniqueId())) {
+                    player.teleportAsync(plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
+                }
+            }
+            player.sendMessage("§aVous avez été banni du territoire " + land.getName() + " par " + sender.getName() + ".");
+        }
+    }
+
+    @Override
+    public void unban(Player sender, Land land, UUID uuid) {
+        if (!land.isBanned(uuid)) {
+            sender.sendMessage("§cCe joueur n'est pas banni.");
+            return;
+        }
+
+        landRepository.removeBan(land, uuid);
+        sender.sendMessage("§aLe joueur a bien été débanni.");
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            player.sendMessage("§aVous avez été débanni du territoire " + land.getName() + " par " + sender.getName() + ".");
+        }
+    }
+}

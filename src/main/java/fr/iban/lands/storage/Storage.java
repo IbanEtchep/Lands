@@ -1,45 +1,34 @@
 package fr.iban.lands.storage;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.enums.LandType;
-import fr.iban.lands.enums.Link;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.SChunk;
-import fr.iban.lands.land.SubLand;
+import fr.iban.lands.enums.LinkType;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.Land;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public interface AbstractStorage {
+public interface Storage {
 
-    Map<SChunk, Integer> getChunks();
-
-    Map<SChunk, Integer> getChunks(UUID uuid);
-
-    Map<SChunk, Integer> getChunks(Land land);
+    Map<SChunk, UUID> getChunks();
 
     int getChunkCount(UUID uuid);
 
-    Map<Integer, Land> getLands();
+    Map<UUID, Land> getLands();
 
-    Map<String, Integer> getWorldsDefaultLands();
+    Map<String, UUID> getWorldsDefaultLands();
 
     void setWorldDefaultLand(String world, Land land);
 
-    Land getLand(int id);
+    Land getLand(UUID landId);
 
     void addLand(Land land);
 
     void deleteLand(Land land);
 
-    void renameLand(Land land, String name);
-
-    int getLandID(LandType type, UUID uuid, String name);
-
-    int getSystemLandID(String name);
+    void updateLand(Land land);
 
     void setChunk(Land land, SChunk chunk);
 
@@ -59,10 +48,6 @@ public interface AbstractStorage {
 
     void removeGuildTrust(Land land, Action action);
 
-    void addCustomTrust(Land land, Action action, String identifier);
-
-    void removeCustomTrust(Land land, Action action, String identifier);
-
     Set<Flag> getFlags(Land land);
 
     void addFlag(Land land, Flag flag);
@@ -75,21 +60,11 @@ public interface AbstractStorage {
 
     void removeBan(Land land, UUID uuid);
 
-    void loadLinks(LandManager manager);
+    Map<UUID, Map<LinkType, UUID>> getLinks();
 
-    void addLink(Land land, Link link, Land with);
+    void addLink(Land land, LinkType link, Land with);
 
-    void removeLink(Land land, Link link);
-
-    void updateLandLastPaymentDate(Land land);
-
-    Map<Integer, SubLand> getSubLands(Land land);
-
-    void setSubLandRegion(Land land, SubLand subland);
-
-    void deleteSubLandRegion(SubLand land);
-
-    int getLastId(LandType type);
+    void removeLink(Land land, LinkType link);
 
     int getChunkLimit(UUID uuid);
 
