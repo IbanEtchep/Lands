@@ -120,6 +120,7 @@ public class LandCommand {
     }
 
     @Subcommand("create")
+    @Cooldown(value = 10)
     public void create(Player player, @Optional String name) {
         if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");

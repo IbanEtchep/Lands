@@ -13,7 +13,7 @@ import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 
 public class PortalListeners implements Listener {
 
-    private LandRepository landRepository;
+    private final LandRepository landRepository;
 
     public PortalListeners(LandsPlugin plugin) {
         this.landRepository = plugin.getLandRepository();

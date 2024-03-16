@@ -40,13 +40,16 @@ public class LandServiceImpl implements LandService {
 
         UUID id = UUID.randomUUID();
 
-        //TODO remplace with factory
         Land land = switch (type) {
             case PLAYER -> new PlayerLand(id, creator.getUniqueId(), name);
             case GUILD -> new GuildLand(id, creator.getUniqueId(), name);
             case SYSTEM -> new SystemLand(id, name);
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+            case SUBLAND -> new SubLand(id, name);
         };
+
+        if (isInvalidName(creator, land)) {
+            return null;
+        }
 
         landRepository.addLand(land);
 
@@ -58,14 +61,43 @@ public class LandServiceImpl implements LandService {
     }
 
     @Override
-    public void renameLand(Land land, Player player, String name) {
-        if (landRepository.getLands(land.getOwner()).stream().anyMatch(l -> l.getName().equalsIgnoreCase(name))) {
-            player.sendMessage("§cVous avez déjà un territoire à ce nom.");
-            return;
+    public void createSubland(Player player, Land superLand, String name) {
+        Land land = createLand(player, name, LandType.SUBLAND);
+
+        if (land instanceof SubLand subLand) {
+            subLand.setSuperLand(superLand);
+            subLand.setCuboid(new Cuboid(Bukkit.getWorlds().get(1), 0, 0, 0, 0, 0, 0), "non défini");
+            superLand.getSubLands().put(subLand.getId(), subLand);
+
+            landRepository.updateLand(superLand);
+        }
+    }
+
+    private boolean isInvalidName(Player player, Land land) {
+        if (land.getName().length() > 16) {
+            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+            return true;
         }
 
-        if (name.length() > 16) {
-            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+        // Find a land with the same name, type and owner
+        Land sameExistingLand = landRepository.getLands().stream()
+                .filter(l -> l.getName().equalsIgnoreCase(land.getName()))
+                .filter(l -> !l.getId().equals(land.getId()))
+                .filter(l -> l.getType() == land.getType())
+                .filter(l -> Objects.equals(l.getOwner(), land.getOwner()))
+                .findFirst().orElse(null);
+
+        if (sameExistingLand != null) {
+            player.sendMessage("§cVous avez déjà un territoire à ce nom.");
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public void renameLand(Land land, Player player, String name) {
+        if (isInvalidName(player, land)) {
             return;
         }
 
@@ -196,30 +228,6 @@ public class LandServiceImpl implements LandService {
         } else {
             player.sendMessage("§aVous avez donné " + amount + " claims.");
         }
-    }
-
-    @Override
-    public void createSubland(Player player, Land superLand, String name) {
-        if (!superLand.getSubLands().isEmpty()) {
-            for (SubLand subland : superLand.getSubLands().values()) {
-                if (subland.getName().equals(name)) {
-                    player.sendMessage("§cIl y a déjà un territoire à ce nom.");
-                    return;
-                }
-            }
-        }
-        if (name.length() > 16) {
-            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
-            return;
-        }
-        SubLand subLand = new SubLand(UUID.randomUUID(), name);
-        subLand.setSuperLand(superLand);
-        subLand.setCuboid(new Cuboid(Bukkit.getWorlds().get(1), 0, 0, 0, 0, 0, 0), "non défini");
-        superLand.getSubLands().put(subLand.getId(), subLand);
-
-        landRepository.addLand(subLand);
-
-        player.sendMessage("§aLe sous-territoire au nom de " + name + " a été créée.");
     }
 
     @Override

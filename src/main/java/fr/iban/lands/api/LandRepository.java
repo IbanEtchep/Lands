@@ -5,7 +5,6 @@ import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
-import fr.iban.lands.model.land.PlayerLand;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -49,9 +48,9 @@ public interface LandRepository {
 
     Collection<SChunk> getChunks(Land land);
 
-    List<Land> getLands(UUID uuid);
+    List<Land> getLands();
 
-    List<PlayerLand> getPlayerLands(UUID uuid);
+    List<Land> getLands(UUID uuid);
 
     List<Land> getGuildLands(UUID uuid);
 

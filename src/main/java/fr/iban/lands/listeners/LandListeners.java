@@ -5,7 +5,6 @@ import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.events.PlayerLandEnterEvent;
 import fr.iban.lands.events.PlayerLandFlagChangeEvent;
-import fr.iban.lands.events.PlayerLandPreCreateEvent;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.GuildLand;
 import fr.iban.lands.model.land.Land;
@@ -21,7 +20,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,31 +32,6 @@ public class LandListeners implements Listener {
         this.plugin = plugin;
         this.landRepository = plugin.getLandRepository();
     }
-
-    @EventHandler
-    public void onLandPreCreate(PlayerLandPreCreateEvent event) {
-        Player player = event.getPlayer();
-        String name = event.getName();
-        List<Land> lands = landRepository.getLands(player.getUniqueId());
-
-        if (lands.size() > 50) {
-            player.sendMessage("§cVous pouvez avoir 50 territoires maximum.");
-            event.setCancelled(true);
-            return;
-        }
-
-        if (lands.stream().anyMatch(land -> land.getName().equalsIgnoreCase(name))) {
-            player.sendMessage("§cVous avez déjà un territoire à ce nom.");
-            event.setCancelled(true);
-            return;
-        }
-
-        if (name.length() > 16) {
-            player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
-            event.setCancelled(true);
-        }
-    }
-
 
     @EventHandler
     public void onEnter(PlayerLandEnterEvent event) {

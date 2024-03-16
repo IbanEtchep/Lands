@@ -89,9 +89,7 @@ public class LandRepositoryImpl implements LandRepository {
     @Override
     public void addLand(Land land) {
         lands.put(land.getId(), land);
-        plugin.runAsyncQueued(() -> {
-            storage.addLand(land);
-        });
+        plugin.runAsyncQueued(() -> storage.addLand(land));
     }
 
     @Override
@@ -193,17 +191,14 @@ public class LandRepositoryImpl implements LandRepository {
     }
 
     @Override
-    public List<Land> getLands(UUID uuid) {
-        Predicate<Land> uuidEquals = land -> land.getOwner() != null && land.getOwner().equals(uuid);
-        return lands.values().stream().filter(uuidEquals).toList();
+    public List<Land> getLands() {
+        return new ArrayList<>(lands.values());
     }
 
     @Override
-    public List<PlayerLand> getPlayerLands(UUID uuid) {
-        return getLands(uuid).stream()
-                .filter(PlayerLand.class::isInstance)
-                .map(PlayerLand.class::cast)
-                .toList();
+    public List<Land> getLands(UUID uuid) {
+        Predicate<Land> uuidEquals = land -> land.getOwner() != null && land.getOwner().equals(uuid);
+        return lands.values().stream().filter(uuidEquals).toList();
     }
 
     @Override

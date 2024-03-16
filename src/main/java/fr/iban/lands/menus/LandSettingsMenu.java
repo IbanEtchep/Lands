@@ -72,15 +72,17 @@ public class LandSettingsMenu extends PaginatedMenu {
             return;
         }
 
-        if (item.getItemMeta().getDisplayName().startsWith("§4")) {
-            Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+        String displayName = item.getItemMeta().getDisplayName();
+        
+        if (displayName.startsWith("§4")) {
+            Flag flag = Flag.getByDisplayName(displayName);
             PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, true);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 landRepository.addFlag(land, flag);
             }
         } else {
-            Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+            Flag flag = Flag.getByDisplayName(displayName);
             PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, false);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
