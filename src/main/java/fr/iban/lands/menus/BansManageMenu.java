@@ -4,14 +4,10 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
-import fr.iban.lands.LandManager;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandService;
+import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.Head;
-
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -20,23 +16,27 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
 public class BansManageMenu extends PaginatedMenu {
 
-    private Land land;
-    private Set<UUID> bans;
-    private LandManager manager;
+    private final Land land;
+    private final Set<UUID> bans;
+    private final LandService landService;
     private LandManageMenu previousMenu;
 
-    public BansManageMenu(Player player, LandManager manager, Land land) {
+    public BansManageMenu(Player player, LandsPlugin plugin, Land land) {
         super(player);
-        this.manager = manager;
+        this.landService = plugin.getLandService();
         this.land = land;
         this.bans = land.getBans();
     }
 
     public BansManageMenu(
-            Player player, LandManager manager, Land land, LandManageMenu previousMenu) {
-        this(player, manager, land);
+            Player player, LandsPlugin plugin, Land land, LandManageMenu previousMenu) {
+        this(player, plugin, land);
         this.previousMenu = previousMenu;
     }
 
@@ -55,7 +55,7 @@ public class BansManageMenu extends PaginatedMenu {
         Player player = (Player) e.getWhoClicked();
         ItemStack item = e.getCurrentItem();
 
-        if (e.getClickedInventory() != e.getView().getTopInventory()) {
+        if (e.getClickedInventory() != e.getView().getTopInventory() || item == null) {
             return;
         }
 
@@ -70,20 +70,12 @@ public class BansManageMenu extends PaginatedMenu {
                 CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
                 player.closeInventory();
                 player.sendMessage("§2§lVeuillez entrer le nom du joueur que vous voulez bannir. :");
-                core.getTextInputs()
-                        .put(
-                                player.getUniqueId(),
-                                texte -> {
-                                    @SuppressWarnings("deprecation")
-                                    OfflinePlayer target = Bukkit.getOfflinePlayer(texte);
-                                    if (target != null) {
-                                        manager.ban(player, land, target.getUniqueId());
-                                    } else {
-                                        player.sendMessage("§cCe joueur n'existe pas.");
-                                        open();
-                                    }
-                                    core.getTextInputs().remove(player.getUniqueId());
-                                });
+                core.getTextInputs().put(player.getUniqueId(), texte -> {
+                    OfflinePlayer target = Bukkit.getOfflinePlayer(texte);
+                    landService.ban(player, land, target.getUniqueId());
+                    core.getTextInputs().remove(player.getUniqueId());
+                });
+
                 return;
             }
 
@@ -93,17 +85,12 @@ public class BansManageMenu extends PaginatedMenu {
                 return;
             }
 
-            new ConfirmMenu(
-                    player,
-                    "§cConfirmation de débannissement",
-                    "§eVoulez-vous vraiment débannir " + Bukkit.getOfflinePlayer(uuid).getName() + " ?",
-                    result -> {
-                        if (result) {
-                            manager.unban(player, land, uuid);
-                        }
-                        super.open();
-                    })
-                    .open();
+            new ConfirmMenu(player, "§cConfirmation de débannissement", "§eVoulez-vous vraiment débannir " + Bukkit.getOfflinePlayer(uuid).getName() + " ?", result -> {
+                if (result) {
+                    landService.unban(player, land, uuid);
+                }
+                super.open();
+            }).open();
         }
     }
 
@@ -119,9 +106,7 @@ public class BansManageMenu extends PaginatedMenu {
 
                 if (index <= bans.size() && count < maxItemsPerPage) {
                     final int slot = inventory.firstEmpty();
-                    inventory.setItem(
-                            slot,
-                            new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
+                    inventory.setItem(slot, new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
                     getBannedItem(banned).thenAccept(item -> inventory.setItem(slot, item));
                 } else {
                     break;
@@ -131,20 +116,16 @@ public class BansManageMenu extends PaginatedMenu {
             }
         }
 
-        inventory.setItem(
-                35,
-                new ItemBuilder(Head.OAK_PLUS.get())
-                        .setName("§2Ajouter")
-                        .addLore("§aPermet de bannir un joueur.")
-                        .build());
+        inventory.setItem(35, new ItemBuilder(Head.OAK_PLUS.get())
+                .setName("§2Ajouter")
+                .addLore("§aPermet de bannir un joueur.")
+                .build());
 
         if (previousMenu != null) {
-            inventory.setItem(
-                    31,
-                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
-                            .setDisplayName("§4Retour")
-                            .addLore("§cRetourner au menu précédent")
-                            .build());
+            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                    .setDisplayName("§4Retour")
+                    .addLore("§cRetourner au menu précédent")
+                    .build());
         }
     }
 
@@ -154,18 +135,17 @@ public class BansManageMenu extends PaginatedMenu {
     }
 
     private CompletableFuture<ItemStack> getBannedItem(UUID uuid) {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                    ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-                    SkullMeta meta = (SkullMeta) head.getItemMeta();
-                    meta.setOwningPlayer(offlinePlayer);
-                    head.setItemMeta(meta);
-                    return new ItemBuilder(head)
-                            .setDisplayName("§2§l" + offlinePlayer.getName())
-                            .addLore("§aClic pour débannir.")
-                            .build();
-                });
+        return CompletableFuture.supplyAsync(() -> {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwningPlayer(offlinePlayer);
+            head.setItemMeta(meta);
+            return new ItemBuilder(head)
+                    .setDisplayName("§2§l" + offlinePlayer.getName())
+                    .addLore("§aClic pour débannir.")
+                    .build();
+        });
     }
 
     private UUID getClickedTrustUUID(String itemdisplayname) {

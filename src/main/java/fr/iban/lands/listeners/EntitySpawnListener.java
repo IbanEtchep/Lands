@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,29 +13,28 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 
 public class EntitySpawnListener implements Listener {
 
-    private LandManager landmanager;
+    private final LandRepository landRepository;
 
     public EntitySpawnListener(LandsPlugin landsPlugin) {
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
-    public void onCreatureSpawn(CreatureSpawnEvent e) {
-        if (e.getSpawnReason() != SpawnReason.SPAWNER) {
-            Land land = landmanager.getLandAt(e.getLocation());
-            if (land != null) {
-                if (land.hasFlag(Flag.NO_MOB_SPAWNING)) {
-                    e.setCancelled(true);
-                    return;
-                }
-            }
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (event.getSpawnReason() == SpawnReason.SPAWNER) return;
+
+        Land land = landRepository.getLandAt(event.getLocation());
+        if (land.hasFlag(Flag.NO_MOB_SPAWNING)) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onEntitySpawn(EntitySpawnEvent e) {
-        Land land = landmanager.getLandAt(e.getLocation());
-        if (e.getEntity() instanceof Player) return;
-        e.getEntity().setSilent(land.hasFlag(Flag.SILENT_MOBS));
+    public void onEntitySpawn(EntitySpawnEvent event) {
+        Land land = landRepository.getLandAt(event.getLocation());
+
+        if (event.getEntity() instanceof Player) return;
+
+        event.getEntity().setSilent(land.hasFlag(Flag.SILENT_MOBS));
     }
 }

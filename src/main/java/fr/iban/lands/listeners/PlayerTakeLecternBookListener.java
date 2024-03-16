@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,19 +11,19 @@ import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 
 public class PlayerTakeLecternBookListener implements Listener {
 
-    private LandManager landManager;
+    private final LandRepository landRepository;
 
     public PlayerTakeLecternBookListener(LandsPlugin plugin) {
-        // this.plugin = plugin;
-        this.landManager = plugin.getLandManager();
+        this.landRepository = plugin.getLandRepository();
     }
 
     @EventHandler
-    public void onTakeBook(PlayerTakeLecternBookEvent e) {
-        Player player = e.getPlayer();
-        Land land = landManager.getLandAt(e.getLectern().getLocation());
-        if (land != null && !land.isBypassing(player, Action.LECTERN_TAKE)) {
-            e.setCancelled(true);
+    public void onTakeBook(PlayerTakeLecternBookEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getLectern().getLocation());
+
+        if (!land.isBypassing(player, Action.LECTERN_TAKE)) {
+            event.setCancelled(true);
         }
     }
 }

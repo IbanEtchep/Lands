@@ -1,6 +1,6 @@
 package fr.iban.lands.utils;
 
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 
 public interface LandSelectCallback {
 

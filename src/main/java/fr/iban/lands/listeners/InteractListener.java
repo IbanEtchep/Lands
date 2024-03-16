@@ -1,10 +1,10 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import io.papermc.paper.event.player.PlayerChangeBeaconEffectEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,58 +32,51 @@ import java.util.List;
 
 public class InteractListener implements Listener {
 
-    private final LandManager landmanager;
+    private final LandRepository landRepository;
     private final LandsPlugin plugin;
     private final List<Location> toClose = new ArrayList<>();
 
     public InteractListener(LandsPlugin landsPlugin) {
         this.plugin = landsPlugin;
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
-    public void onPhysics(PlayerInteractEvent e) {
-        Player player = e.getPlayer();
-        Block block = e.getClickedBlock();
+    public void onPhysics(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getClickedBlock();
 
         if (block == null) return;
 
-        Land land = landmanager.getLandAt(block.getLocation());
+        Land land = landRepository.getLandAt(block.getLocation());
 
-        if (land == null) return;
-
-        if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL
+        if (event.getAction() == org.bukkit.event.block.Action.PHYSICAL
                 && block.getType() == Material.FARMLAND
                 && !land.hasFlag(Flag.FARMLAND_GRIEF)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
             return;
         }
 
         if (block.getType() == Material.ARMOR_STAND
                 && !land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
             return;
         }
 
-        if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+        if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
 
             if (land.hasFlag(Flag.DOORS_AUTOCLOSE)) {
                 if (block.getBlockData() instanceof Openable openable) {
-                    if (!land.isBypassing(e.getPlayer(), Action.ALL)
-                            && !toClose.contains(block.getLocation())) {
+                    if (!land.isBypassing(event.getPlayer(), Action.ALL) && !toClose.contains(block.getLocation())) {
                         boolean opened = openable.isOpen();
                         toClose.add(block.getLocation());
-                        Bukkit.getScheduler()
-                                .runTaskLater(
-                                        plugin,
-                                        () -> {
-                                            Openable o = (Openable) block.getBlockData();
-                                            o.setOpen(opened);
-                                            block.setBlockData(o);
-                                            block.getState().update();
-                                            toClose.remove(block.getLocation());
-                                        },
-                                        60L);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            Openable o = (Openable) block.getBlockData();
+                            o.setOpen(opened);
+                            block.setBlockData(o);
+                            block.getState().update();
+                            toClose.remove(block.getLocation());
+                        }, 60L);
                     }
                 }
                 return;
@@ -118,31 +111,31 @@ public class InteractListener implements Listener {
                     .toString()
                     .contains("SPAWN_EGG"))
                     && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
-                e.setCancelled(true);
+                event.setCancelled(true);
             }
 
-        } else if (e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
+        } else if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
             if (block.getType() == Material.DRAGON_EGG
                     && !land.isBypassing(player, Action.OTHER_INTERACTS)) {
-                e.setCancelled(true);
+                event.setCancelled(true);
             }
-        } else if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+        } else if (event.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
             if (block.getType() == Material.BIG_DRIPLEAF) {
                 return;
             }
             if (!land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
-                e.setCancelled(true);
+                event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onEntityInteract(EntityInteractEvent e) {
-        Block block = e.getBlock();
+    public void onEntityInteract(EntityInteractEvent event) {
+        Block block = event.getBlock();
         Material material = block.getType();
-        Land land = landmanager.getLandAt(block.getLocation());
+        Land land = landRepository.getLandAt(block.getLocation());
 
-        if (land != null && e.getEntityType() != EntityType.VILLAGER) {
+        if (event.getEntityType() != EntityType.VILLAGER) {
             if (land.hasFlag(Flag.PRESSURE_PLATE_BY_ENTITY)) {
                 switch (material) {
                     case ACACIA_PRESSURE_PLATE,
@@ -164,59 +157,52 @@ public class InteractListener implements Listener {
                 return;
             }
 
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onFerilize(BlockFertilizeEvent e) {
-        Player player = e.getPlayer();
+    public void onFerilize(BlockFertilizeEvent event) {
+        Player player = event.getPlayer();
 
         if (player == null) return;
 
-        Block block = e.getBlock();
+        Block block = event.getBlock();
 
-        Land land = landmanager.getLandAt(block.getLocation());
+        Land land = landRepository.getLandAt(block.getLocation());
 
         if (!land.isBypassing(player, Action.OTHER_INTERACTS)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    public void onInteractAtEntity(PlayerInteractEntityEvent e) {
-        Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
-
-        if (land == null) {
-            return;
-        }
+    public void onInteractAtEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getRightClicked().getLocation());
 
         if (!land.isBypassing(player, Action.ENTITY_INTERACT)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onLeash(PlayerLeashEntityEvent e) {
-        Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(e.getEntity().getLocation());
-
-        if (land == null) return;
+    public void onLeash(PlayerLeashEntityEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getEntity().getLocation());
 
         if (!land.isBypassing(player, Action.LEASH)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onBeaconChange(PlayerChangeBeaconEffectEvent e) {
-        if (e.getBeacon() == null) return;
-        Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(e.getBeacon().getLocation());
+    public void onBeaconChange(PlayerChangeBeaconEffectEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getBeacon().getLocation());
 
         if (!land.isBypassing(player, Action.CHANGE_BEACON_EFFECT)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
@@ -233,16 +219,12 @@ public class InteractListener implements Listener {
     }
 
     @EventHandler
-    public void onArmorStandManipulate(PlayerArmorStandManipulateEvent e) {
-        Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
-
-        if (land == null) {
-            return;
-        }
+    public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
+        Player player = event.getPlayer();
+        Land land = landRepository.getLandAt(event.getRightClicked().getLocation());
 
         if (!land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 }

@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -13,29 +13,29 @@ import org.bukkit.event.block.BlockSpreadEvent;
 
 public class FireListener implements Listener {
 
-    private LandManager landmanager;
+    private final LandRepository landRepository;
 
     public FireListener(LandsPlugin landsPlugin) {
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
-    public void onFireSpread(BlockSpreadEvent e) {
-        Block block = e.getBlock();
-        Land land = landmanager.getLandAt(block.getLocation());
+    public void onFireSpread(BlockSpreadEvent event) {
+        Block block = event.getBlock();
+        Land land = landRepository.getLandAt(block.getLocation());
 
-        if (e.getSource().getType() == Material.FIRE && !land.hasFlag(Flag.FIRE)) {
-            e.setCancelled(true);
+        if (event.getSource().getType() == Material.FIRE && !land.hasFlag(Flag.FIRE)) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onFireSpread(BlockBurnEvent e) {
-        Block block = e.getBlock();
-        Land land = landmanager.getLandAt(block.getLocation());
+    public void onFireSpread(BlockBurnEvent event) {
+        Block block = event.getBlock();
+        Land land = landRepository.getLandAt(block.getLocation());
 
         if (!land.hasFlag(Flag.FIRE)) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 }

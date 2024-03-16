@@ -2,16 +2,15 @@ package fr.iban.lands.menus;
 
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.bukkitcore.utils.ItemBuilder;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandSelectCallback;
-
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 public class LandSelectMenu extends PaginatedMenu {
 

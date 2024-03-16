@@ -1,20 +1,23 @@
-package fr.iban.lands.land;
+package fr.iban.lands.model.land;
 
 import fr.iban.lands.enums.LandType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-import org.jetbrains.annotations.Nullable;
-
 public class SystemLand extends Land {
 
-    public SystemLand(int id, String name) {
+    public SystemLand(UUID id, String name) {
         super(id, name);
-        setType(LandType.SYSTEM);
     }
 
     @Override
     public @Nullable UUID getOwner() {
         return null;
+    }
+
+    @Override
+    public LandType getType() {
+        return LandType.SYSTEM;
     }
 }

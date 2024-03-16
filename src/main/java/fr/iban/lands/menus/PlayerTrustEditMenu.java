@@ -1,28 +1,24 @@
 package fr.iban.lands.menus;
 
 import fr.iban.bukkitcore.menu.Menu;
-import fr.iban.lands.LandManager;
+import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.ActionGroup;
-import fr.iban.lands.land.Land;
-
-import java.util.UUID;
-
+import fr.iban.lands.model.land.Land;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 public class PlayerTrustEditMenu extends TrustEditMenu {
 
     private final UUID target;
+    private final LandRepository landRepository;
 
-    public PlayerTrustEditMenu(
-            Player player,
-            UUID target,
-            Land land,
-            LandManager manager,
-            Menu previousMenu,
-            ActionGroup actionGroup) {
-        super(player, land, manager, previousMenu, actionGroup);
+    public PlayerTrustEditMenu(Player player, UUID target, Land land, LandsPlugin plugin, Menu previousMenu, ActionGroup actionGroup) {
+        super(player, land, plugin, previousMenu, actionGroup);
+        this.landRepository = plugin.getLandRepository();
         this.target = target;
         this.trust = land.getTrust(target);
     }
@@ -33,12 +29,12 @@ public class PlayerTrustEditMenu extends TrustEditMenu {
     }
 
     protected void addTrust(Action action) {
-        manager.addTrust(land, target, action);
+        landRepository.addTrust(land, target, action);
         trust.getPermissions().add(action);
     }
 
     protected void removeTrust(Action action) {
-        manager.removeTrust(land, target, action);
+        landRepository.removeTrust(land, target, action);
         trust.getPermissions().remove(action);
     }
 }

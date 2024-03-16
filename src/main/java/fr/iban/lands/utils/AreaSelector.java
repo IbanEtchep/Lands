@@ -1,23 +1,30 @@
 package fr.iban.lands.utils;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.SChunk;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.Land;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import org.bukkit.*;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
-
 public class AreaSelector {
+
+    private final LandsPlugin plugin;
+    private final LandRepository landRepository;
+    private final LandService landService;
 
     private final Player player;
 
@@ -27,12 +34,13 @@ public class AreaSelector {
     private final Runnable quitCallback;
     private BukkitTask particleTask;
 
-    private final LandManager manager;
     private final Land land;
 
-    public AreaSelector(Player player, Land land, LandManager manager, Runnable quitCallback) {
+    public AreaSelector(Player player, Land land, LandsPlugin plugin, Runnable quitCallback) {
         this.land = land;
-        this.manager = manager;
+        this.plugin = plugin;
+        this.landRepository = plugin.getLandRepository();
+        this.landService = plugin.getLandService();
         this.player = player;
         this.quitCallback = quitCallback;
     }
@@ -70,31 +78,27 @@ public class AreaSelector {
 
                             } else if (texte.equalsIgnoreCase("claim")) {
                                 Cuboid cuboid = getCuboid();
-                                verif(cuboid, true)
-                                        .thenAcceptAsync(
-                                                valid -> {
-                                                    if (valid) {
-                                                        manager.claim(
-                                                                Objects.requireNonNull(cuboid).getSChunks(), land, player);
-                                                    }
-                                                });
+                                verif(cuboid, true).thenAcceptAsync(valid -> {
+                                    if (valid) {
+                                        landService.claim(player, Objects.requireNonNull(cuboid).getSChunks(), land);
+                                    }
+                                });
                             } else if (texte.equalsIgnoreCase("unclaim")) {
                                 Cuboid cuboid = getCuboid();
-                                verif(cuboid, false)
-                                        .thenAcceptAsync(
-                                                valid -> {
-                                                    if (valid) {
-                                                        for (SChunk chunk : Objects.requireNonNull(getCuboid()).getSChunks()) {
-                                                            manager.unclaim(player, chunk, land, false);
-                                                        }
-                                                        player.sendMessage("§aLa selection a été unclaim avec succès.");
-                                                    }
-                                                });
+                                verif(cuboid, false).thenAcceptAsync(valid -> {
+                                    if (valid) {
+                                        for (SChunk chunk : Objects.requireNonNull(getCuboid()).getSChunks()) {
+                                            landService.unclaim(chunk);
+                                        }
+
+                                        player.sendMessage("§aLa selection a été unclaim avec succès.");
+                                    }
+                                });
                             } else if (player.hasPermission("lands.admin")
                                     && texte.equalsIgnoreCase("forceunclaim")) {
                                 if (arePosSet()) {
                                     for (Chunk chunk : Objects.requireNonNull(getCuboid()).getChunks()) {
-                                        manager.unclaim(chunk);
+                                        landService.unclaim(chunk);
                                     }
                                     player.sendMessage("§a§lLa selection a été unclaim avec succès.");
                                 } else {
@@ -177,13 +181,11 @@ public class AreaSelector {
         Cuboid cuboid = new Cuboid(pos1, pos2);
 
         return new Cuboid(
-                cuboid
-                        .getLowerNE()
+                cuboid.getLowerNE()
                         .getChunk()
                         .getBlock(0, cuboid.getWorld().getMinHeight(), 0)
                         .getLocation(),
-                cuboid
-                        .getUpperSW()
+                cuboid.getUpperSW()
                         .getChunk()
                         .getBlock(15, cuboid.getWorld().getMaxHeight(), 15)
                         .getLocation());
@@ -191,63 +193,56 @@ public class AreaSelector {
 
     private CompletableFuture<Boolean> verif(Cuboid cuboid, boolean claim) {
         player.sendMessage("§a§lVérification de la sélection...");
-        return manager.future(
-                () -> {
-                    if (cuboid == null) {
-                        if (pos1 == null) {
-                            player.sendMessage("§c§lLa position 1 n'a pas encore été définie !");
-                        } else {
-                            player.sendMessage("§c§lLa position 2 n'a pas encore été définie !");
-                        }
+        return CompletableFuture.supplyAsync(() -> {
+            if (cuboid == null) {
+                if (pos1 == null) {
+                    player.sendMessage("§c§lLa position 1 n'a pas encore été définie !");
+                } else {
+                    player.sendMessage("§c§lLa position 2 n'a pas encore été définie !");
+                }
+                return false;
+            }
+            int unclaimCount = 0;
+            int claimCount = 0;
+            if (cuboid.getSizeX() > 3000 || cuboid.getSizeZ() > 3000) {
+                player.sendMessage("§c§lLa selection est trop grande !");
+            }
+            for (SChunk chunk : cuboid.getSChunks()) {
+                Land chunkLand = landRepository.getLandAt(chunk);
+                Land wilderness = landRepository.getWilderness();
+
+                if (!chunkLand.equals(wilderness)) {
+                    if (!landRepository.getLandAt(chunk).equals(land)) {
+                        player.sendMessage("§c§lLa selection contient des tronçons qui ne sont pas vides et n'appartiennent pas au territoire " + land.getName() + ".");
                         return false;
-                    }
-                    int unclaimCount = 0;
-                    int claimCount = 0;
-                    if (cuboid.getSizeX() > 3000 || cuboid.getSizeZ() > 3000) {
-                        player.sendMessage("§c§lLa selection est trop grande !");
-                    }
-                    for (SChunk chunk : cuboid.getSChunks()) {
-                        Land chunkLand = manager.getLandAt(chunk);
-                        if (!chunkLand.isWilderness()) {
-                            if (!manager.getLandAt(chunk).equals(land)) {
-                                player.sendMessage(
-                                        "§c§lLa selection contient des tronçons qui ne sont pas vides et n'appartiennent pas au territoire "
-                                                + land.getName()
-                                                + ".");
-                                return false;
-                            } else {
-                                unclaimCount++;
-                            }
-                        } else {
-                            claimCount++;
-                        }
-                    }
-                    if (claim) {
-                        if (claimCount == 0) {
-                            player.sendMessage("§c§lIl n'y a pas de tronçons à claim dans la selection.");
-                            return false;
-                        }
-
-                        int remaining = manager.getRemainingChunkCount(player.getUniqueId()).get();
-                        if (claimCount > remaining) {
-                            player.sendMessage(
-                                    "§c§lVous essayez de claim "
-                                            + claimCount
-                                            + " tronçons alors qu'il ne vous en reste que "
-                                            + remaining
-                                            + " de libre.");
-                            return false;
-                        }
-
                     } else {
-                        if (unclaimCount == 0) {
-                            player.sendMessage("§c§lIl n'y a pas de tronçons à unclaim dans la selection.");
-                            return false;
-                        }
+                        unclaimCount++;
                     }
+                } else {
+                    claimCount++;
+                }
+            }
+            if (claim) {
+                if (claimCount == 0) {
+                    player.sendMessage("§c§lIl n'y a pas de tronçons à claim dans la selection.");
+                    return false;
+                }
 
-                    return true;
-                });
+                int remaining = landRepository.getRemainingChunkCount(player.getUniqueId());
+                if (claimCount > remaining) {
+                    player.sendMessage("§c§lVous essayez de claim " + claimCount + " tronçons alors qu'il ne vous en reste que " + remaining + " de libre.");
+                    return false;
+                }
+
+            } else {
+                if (unclaimCount == 0) {
+                    player.sendMessage("§c§lIl n'y a pas de tronçons à unclaim dans la selection.");
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 
     private void showParticules(Cuboid cuboid) {
@@ -257,17 +252,11 @@ public class AreaSelector {
             particleTask.cancel();
         }
 
-        particleTask =
-                Bukkit.getScheduler()
-                        .runTaskTimer(
-                                LandsPlugin.getInstance(),
-                                () -> {
-                                    for (Location location : edgeLocations) {
-                                        showParticle(location);
-                                    }
-                                },
-                                1L,
-                                10L);
+        particleTask = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
+            for (Location location : edgeLocations) {
+                showParticle(location);
+            }
+        }, 1L, 10L);
     }
 
     private void showParticle(Location loc) {

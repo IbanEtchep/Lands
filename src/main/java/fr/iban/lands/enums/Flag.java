@@ -1,7 +1,7 @@
 package fr.iban.lands.enums;
 
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.SubLand;
+import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.SubLand;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 

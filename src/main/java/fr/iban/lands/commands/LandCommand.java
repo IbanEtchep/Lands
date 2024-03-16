@@ -2,12 +2,14 @@ package fr.iban.lands.commands;
 
 import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.utils.HexColor;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.PlayerLand;
-import fr.iban.lands.land.SChunk;
-import fr.iban.lands.land.SystemLand;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
+import fr.iban.lands.enums.LandType;
+import fr.iban.lands.model.SChunk;
+import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.PlayerLand;
+import fr.iban.lands.model.land.SystemLand;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
@@ -31,13 +33,15 @@ import java.util.UUID;
 @Command({"land", "l"})
 public class LandCommand {
 
-    private final LandManager landManager;
+    private final LandRepository landRepository;
     private final LandsPlugin plugin;
     private final boolean playerLandsEnabled;
+    private final LandService landService;
 
     public LandCommand(LandsPlugin plugin) {
         this.plugin = plugin;
-        this.landManager = plugin.getLandManager();
+        this.landRepository = plugin.getLandRepository();
+        this.landService = plugin.getLandService();
         this.playerLandsEnabled = plugin.getConfig().getBoolean("players-lands-enabled");
     }
 
@@ -49,15 +53,17 @@ public class LandCommand {
         }
 
         if (withLand == null) {
-            landManager
-                    .getPlayerFirstLand(player)
-                    .thenAccept(
-                            land ->
-                                    landManager.claim(
-                                            player, new SChunk(player.getLocation().getChunk()), land, true));
-        } else {
-            landManager.claim(player, new SChunk(player.getLocation().getChunk()), withLand, true);
+            Land firstLand = landRepository.getLands(player.getUniqueId()).stream().findFirst().orElse(null);
+
+            if (firstLand == null) {
+                player.sendMessage("§cVous n'avez pas de territoire. Créez en un avec /land create <NomDuTerritoire>");
+                return;
+            }
+
+            withLand = firstLand;
         }
+
+        landService.claim(player, new SChunk(player.getLocation().getChunk()), withLand);
     }
 
     @Subcommand("unclaim")
@@ -67,7 +73,7 @@ public class LandCommand {
             return;
         }
 
-        landManager.unclaim(player, new SChunk(player.getLocation().getChunk()), true);
+        landService.unclaim(player, new SChunk(player.getLocation().getChunk()));
     }
 
     @Subcommand("forceunclaim")
@@ -79,7 +85,7 @@ public class LandCommand {
             return;
         }
 
-        landManager.unclaim(player.getLocation().getChunk());
+        landService.unclaim(player.getLocation().getChunk());
         player.sendMessage("§aLe claim a été retiré.");
     }
 
@@ -91,14 +97,10 @@ public class LandCommand {
         }
 
         if (!target.getUniqueId().equals(player.getUniqueId())) {
-            Land land = landManager.getLandAt(target.getLocation());
-            if (landManager.canManageLand(player, land)) {
+            Land land = landRepository.getLandAt(target.getLocation());
+            if (landRepository.canManageLand(player, land)) {
                 target.teleportAsync(
-                        plugin
-                                .getConfig()
-                                .getLocation(
-                                        "spawn-location",
-                                        Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
+                        plugin.getConfig().getLocation("spawn-location", Objects.requireNonNull(Bukkit.getWorld("world")).getSpawnLocation()));
                 target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
                 player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
             } else {
@@ -118,9 +120,9 @@ public class LandCommand {
     }
 
     @Subcommand("create")
+    @Cooldown(value = 10)
     public void create(Player player, @Optional String name) {
         if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
-
             player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
             return;
         }
@@ -128,7 +130,7 @@ public class LandCommand {
         if (name == null) {
             player.sendMessage("/land create <NomDeLaRegion>");
         } else {
-            landManager.createLand(player, name);
+            landService.createLand(player, name, LandType.PLAYER);
         }
     }
 
@@ -143,15 +145,11 @@ public class LandCommand {
         if (land == null) {
             player.sendMessage("§cCe territoire n'existe pas.");
         } else {
-            new ConfirmMenu(
-                    player,
-                    "Supprimer le territoire " + land.getName() + " ?",
-                    confirmed -> {
-                        if (confirmed) {
-                            landManager.deleteLand(land);
-                        }
-                    })
-                    .open();
+            new ConfirmMenu(player, "Supprimer le territoire " + land.getName() + " ?", confirmed -> {
+                if (confirmed) {
+                    landRepository.deleteLand(land);
+                }
+            }).open();
         }
     }
 
@@ -164,18 +162,14 @@ public class LandCommand {
             return;
         }
 
-        LandMap map = landManager.getLandMap();
+        LandMap map = plugin.getLandMap();
         if (!map.getLandMapSelection().isEmpty()
                 && map.getLandMapSelection().containsKey(player.getUniqueId())) {
             Land land = map.getLandMapSelection().get(player.getUniqueId());
             if (land != null) {
-                landManager
-                        .claim(
-                                player,
-                                new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
-                                land,
-                                true)
-                        .thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> map.display(player, land)));
+                SChunk sChunk = new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z);
+                landService.claim(player, sChunk, land);
+                map.display(player, land);
             }
         }
     }
@@ -188,28 +182,24 @@ public class LandCommand {
             return;
         }
 
-        LandMap map = landManager.getLandMap();
-        if (!map.getLandMapSelection().isEmpty()
-                && map.getLandMapSelection().containsKey(player.getUniqueId())) {
-            Land land = map.getLandMapSelection().get(player.getUniqueId());
+        LandMap map = plugin.getLandMap();
+        UUID uuid = player.getUniqueId();
+
+        if (!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(uuid)) {
+            Land land = map.getLandMapSelection().get(uuid);
+
             if (land != null) {
+                SChunk sChunk = new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z);
+
                 if (land instanceof PlayerLand) {
-                    landManager.unclaim(
-                            player,
-                            new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
-                            land,
-                            true);
+                    landService.unclaim(player, sChunk);
                 } else if (land instanceof SystemLand && player.hasPermission("lands.admin")) {
-                    landManager.unclaim(world.getChunkAt(X, Z));
+                    landService.unclaim(world.getChunkAt(X, Z));
                 }
+
+                landService.unclaim(player, sChunk);
+                map.display(player, land);
                 player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
-                landManager
-                        .unclaim(
-                                player,
-                                new SChunk(LandsPlugin.getInstance().getServerName(), world.getName(), X, Z),
-                                land,
-                                true)
-                        .thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> map.display(player, land)));
             }
         }
     }
@@ -221,7 +211,7 @@ public class LandCommand {
             return;
         }
 
-        landManager.getLandMap().display(player, land);
+        plugin.getLandMap().display(player, land);
     }
 
     @Subcommand("seeclaims")
@@ -232,15 +222,15 @@ public class LandCommand {
         }
 
         UUID uuid = player.getUniqueId();
-        if (!landManager.getSeeChunks().containsKey(uuid)) {
-            SeeChunks sc = new SeeChunks(player, landManager);
-            landManager.getSeeChunks().put(player.getUniqueId(), sc);
+        if (!plugin.getSeeChunks().containsKey(uuid)) {
+            SeeChunks sc = new SeeChunks(player, plugin);
+            plugin.getSeeChunks().put(player.getUniqueId(), sc);
             sc.showParticles();
             player.sendMessage("§aMode vision de claims activé.");
         } else {
-            SeeChunks sc = landManager.getSeeChunks().get(uuid);
+            SeeChunks sc = plugin.getSeeChunks().get(uuid);
             sc.stop();
-            landManager.getSeeChunks().remove(uuid);
+            plugin.getSeeChunks().remove(uuid);
             player.sendMessage("§cMode vision de claims désactivé.");
         }
     }
@@ -254,28 +244,6 @@ public class LandCommand {
         }
 
         player.performCommand("lands");
-    }
-
-    @Subcommand("pay")
-    public void pay(Player player, Land land) {
-        if (!playerLandsEnabled && !player.hasPermission("lands.bypass")) {
-
-            player.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
-            return;
-        }
-
-        if (!land.isPaymentDue()) {
-            player.sendMessage("§cCe territoire n'a pas de paiement en attente.");
-            return;
-        }
-
-        if (landManager.handlePayment(land)) {
-            player.sendMessage(
-                    "§aLa transaction s'est déroulée avec succès. Le territoire est débloqué.");
-        } else {
-            player.sendMessage(
-                    "§cLe paiement n'a pas pu être effectué. Vérifiez que les fonds nécessaires sont disponibles.");
-        }
     }
 
     @Subcommand("admin setspawn")
@@ -299,11 +267,11 @@ public class LandCommand {
     public void chunkInfo(Player player) {
         Chunk chunk = player.getChunk();
         SChunk sChunk = new SChunk(chunk);
-        Map.Entry<SChunk, Land> entry =
-                landManager.getChunks().entrySet().stream()
-                        .filter(e -> e.getKey().equals(sChunk))
-                        .findFirst()
-                        .orElse(null);
+        Map.Entry<SChunk, Land> entry = landRepository.getChunks().entrySet().stream()
+                .filter(e -> e.getKey().equals(sChunk))
+                .findFirst()
+                .orElse(null);
+
         if (entry != null) {
             SChunk schunk = entry.getKey();
             Land land = entry.getValue();
@@ -318,13 +286,8 @@ public class LandCommand {
     @Subcommand("admin setDefaultWorldClaim")
     @CommandPermission("lands.admin")
     public void setDefaultWorldClaim(Player player, World world, Land land) {
-        landManager.setDefaultWorldLand(world, land);
-        player.sendMessage(
-                "§cLe claim par défaut du monde "
-                        + world.getName()
-                        + " est désormais "
-                        + land.getName()
-                        + ".");
+        landRepository.setDefaultWorldLand(world, land);
+        player.sendMessage(String.format("§cLe claim par défaut du monde %s est désormais %s.", world.getName(), land.getName()));
     }
 
     @Subcommand("help")
@@ -335,9 +298,7 @@ public class LandCommand {
             return;
         }
 
-        player.sendMessage(
-                HexColor.MARRON_CLAIR.getColor()
-                        + "La protection de vos territoires se gère avec les commandes ci-dessous.");
+        player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "La protection de vos territoires se gère avec les commandes ci-dessous.");
         player.sendMessage("");
         player.sendMessage(getCommandUsage("/lands", "Ouvre le menu de gestion de vos territoires."));
         player.sendMessage(
@@ -376,24 +337,16 @@ public class LandCommand {
     }
 
     private Component getCommandUsage(String command, String desc) {
-        Component baseComponent =
-                Component.text("- ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex()));
+        Component baseComponent = Component.text("- ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex()));
 
-        Component commandComponent =
-                Component.text(command)
-                        .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
-                        .clickEvent(ClickEvent.suggestCommand(command))
-                        .hoverEvent(
-                                HoverEvent.showText(
-                                        Component.text("Clic pour écrire la commande").color(NamedTextColor.GRAY)));
+        Component commandComponent = Component.text(command)
+                .color(TextColor.fromHexString(HexColor.MARRON.getHex()))
+                .clickEvent(ClickEvent.suggestCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text("Clic pour écrire la commande").color(NamedTextColor.GRAY)));
 
         baseComponent = baseComponent.append(commandComponent);
-        baseComponent =
-                baseComponent.append(
-                        Component.text(" - ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
-        baseComponent =
-                baseComponent.append(
-                        Component.text(desc).color(TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+        baseComponent = baseComponent.append(Component.text(" - ", TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
+        baseComponent = baseComponent.append(Component.text(desc).color(TextColor.fromHexString(HexColor.MARRON_CLAIR.getHex())));
 
         return baseComponent;
     }
@@ -405,6 +358,6 @@ public class LandCommand {
             return;
         }
 
-        landManager.giveClaims(player, target.getUniqueId(), amount);
+        landService.giveClaims(player, target.getUniqueId(), amount);
     }
 }

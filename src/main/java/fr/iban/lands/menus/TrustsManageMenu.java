@@ -2,17 +2,12 @@ package fr.iban.lands.menus;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.permissions.Trust;
+import fr.iban.lands.model.Trust;
+import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -21,24 +16,26 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 public class TrustsManageMenu extends PaginatedMenu {
 
     private final Land land;
     private final Map<UUID, Trust> trusts;
-    private final LandManager manager;
+    private final LandsPlugin plugin;
     private final Map<Integer, UUID> uuidAtSlot = new HashMap<>();
     private LandManageMenu previousMenu;
 
-    public TrustsManageMenu(Player player, LandManager manager, Land land) {
+    public TrustsManageMenu(Player player, LandsPlugin plugin, Land land) {
         super(player);
-        this.manager = manager;
+        this.plugin = plugin;
         this.land = land;
         this.trusts = land.getTrusts();
     }
 
-    public TrustsManageMenu(
-            Player player, LandManager manager, Land land, LandManageMenu previousMenu) {
-        this(player, manager, land);
+    public TrustsManageMenu(Player player, LandsPlugin plugin, Land land, LandManageMenu previousMenu) {
+        this(player, plugin, land);
         this.previousMenu = previousMenu;
     }
 
@@ -73,30 +70,28 @@ public class TrustsManageMenu extends PaginatedMenu {
                 player.sendMessage(
                         "§2§lVeuillez entrer le nom du joueur à qui vous voulez modifier les permissions. :");
                 CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
-                core.getTextInputs()
-                        .put(
-                                player.getUniqueId(),
-                                texte -> {
-                                    Player target = Bukkit.getPlayer(texte);
-                                    if (target == null) {
-                                        player.sendMessage("§cCe joueur n'est pas en ligne.");
-                                        open();
-                                    } else {
-                                        new PlayerTrustEditMenu(player, target.getUniqueId(), land, manager, this, null)
-                                                .open();
-                                    }
-                                    core.getTextInputs().remove(player.getUniqueId());
-                                });
+                core.getTextInputs().put(
+                        player.getUniqueId(),
+                        texte -> {
+                            Player target = Bukkit.getPlayer(texte);
+                            if (target == null) {
+                                player.sendMessage("§cCe joueur n'est pas en ligne.");
+                                open();
+                            } else {
+                                new PlayerTrustEditMenu(player, target.getUniqueId(), land, plugin, this, null).open();
+                            }
+                            core.getTextInputs().remove(player.getUniqueId());
+                        });
                 return;
             }
 
             if (displayNameEquals(item, "§2Permissions globales")) {
-                new GlobalTrustEditMenu(player, land, manager, this, null).open();
+                new GlobalTrustEditMenu(player, land, plugin, this, null).open();
                 return;
             }
 
             if (displayNameEquals(item, "§2Permissions de guilde")) {
-                new GuildTrustEditMenu(player, land, manager, this).open();
+                new GuildTrustEditMenu(player, land, plugin, this).open();
             }
 
             UUID uuid = uuidAtSlot.get(e.getSlot());
@@ -105,7 +100,7 @@ public class TrustsManageMenu extends PaginatedMenu {
                 return;
             }
 
-            new PlayerTrustEditMenu(player, uuid, land, manager, this, null).open();
+            new PlayerTrustEditMenu(player, uuid, land, plugin, this, null).open();
         }
     }
 
@@ -123,48 +118,36 @@ public class TrustsManageMenu extends PaginatedMenu {
                     final int slot = inventory.firstEmpty();
                     UUID warp = uuids.get(index);
                     uuidAtSlot.put(slot, warp);
-                    inventory.setItem(
-                            slot,
-                            new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
+                    inventory.setItem(slot, new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
                     getTrustItem(uuids.get(index)).thenAccept(item -> inventory.setItem(slot, item));
                 }
             }
         }
-        inventory.setItem(
-                27,
-                new ItemBuilder(Head.GLOBE.get())
-                        .setName("§2Permissions globales")
-                        .addLore("§aPermet de définir des permissions")
-                        .addLore("§aqui seront appliquées à tout le monde.")
-                        .build());
+        inventory.setItem(27, new ItemBuilder(Head.GLOBE.get())
+                .setName("§2Permissions globales")
+                .addLore("§aPermet de définir des permissions")
+                .addLore("§aqui seront appliquées à tout le monde.")
+                .build());
 
-        AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
-        if (LandsPlugin.getInstance().isGuildsHookEnabled()
-                && land.getOwner() != null
-                && guildDataAccess.hasGuild(player.getUniqueId())) {
-            inventory.setItem(
-                    28,
-                    new ItemBuilder(Head.HOUSE_ORANGE.get())
-                            .setName("§2Permissions de guilde")
-                            .addLore("§aPermet de définir les permissions")
-                            .addLore("§ades membres de votre guilde.")
-                            .build());
+        AbstractGuildDataAccess guildDataAccess = plugin.getGuildDataAccess();
+        if (plugin.isGuildsHookEnabled() && land.getOwner() != null && guildDataAccess.hasGuild(player.getUniqueId())) {
+            inventory.setItem(28, new ItemBuilder(Head.HOUSE_ORANGE.get())
+                    .setName("§2Permissions de guilde")
+                    .addLore("§aPermet de définir les permissions")
+                    .addLore("§ades membres de votre guilde.")
+                    .build());
         }
 
-        inventory.setItem(
-                35,
-                new ItemBuilder(Head.OAK_PLUS.get())
-                        .setName("§2Ajouter")
-                        .addLore("§aPermet d'ajouter un joueur pour éditer ses permissions.")
-                        .build());
+        inventory.setItem(35, new ItemBuilder(Head.OAK_PLUS.get())
+                .setName("§2Ajouter")
+                .addLore("§aPermet d'ajouter un joueur pour éditer ses permissions.")
+                .build());
 
         if (previousMenu != null) {
-            inventory.setItem(
-                    31,
-                    new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
-                            .setDisplayName("§4Retour")
-                            .addLore("§cRetourner au menu précédent")
-                            .build());
+            inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
+                    .setDisplayName("§4Retour")
+                    .addLore("§cRetourner au menu précédent")
+                    .build());
         }
     }
 
@@ -174,18 +157,17 @@ public class TrustsManageMenu extends PaginatedMenu {
     }
 
     private CompletableFuture<ItemStack> getTrustItem(UUID uuid) {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                    ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-                    SkullMeta meta = (SkullMeta) head.getItemMeta();
-                    meta.setOwningPlayer(offlinePlayer);
-                    head.setItemMeta(meta);
-                    return new ItemBuilder(head)
-                            .setDisplayName("§2§l" + offlinePlayer.getName())
-                            .addLore("§aClic gauche pour éditer")
-                            .addLore("§cClic droit pour supprimer")
-                            .build();
-                });
+        return CompletableFuture.supplyAsync(() -> {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwningPlayer(offlinePlayer);
+            head.setItemMeta(meta);
+            return new ItemBuilder(head)
+                    .setDisplayName("§2§l" + offlinePlayer.getName())
+                    .addLore("§aClic gauche pour éditer")
+                    .addLore("§cClic droit pour supprimer")
+                    .build();
+        });
     }
 }

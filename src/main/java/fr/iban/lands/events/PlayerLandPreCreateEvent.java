@@ -1,29 +1,25 @@
 package fr.iban.lands.events;
 
-import fr.iban.lands.enums.Flag;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.enums.LandType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class LandFlagChangeEvent extends Event implements Cancellable {
+public class PlayerLandPreCreateEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS_LIST = new HandlerList();
-    private final Flag flag;
-    private final boolean newState;
     private boolean isCancelled;
-    private Land land;
-    private Player player;
+    private final Player player;
+    private final LandType type;
+    private String name;
 
-    public LandFlagChangeEvent(
-            @NotNull Player player, @NotNull Land land, Flag flag, boolean newState) {
+    public PlayerLandPreCreateEvent(@NotNull Player player, String name, LandType type) {
         this.isCancelled = false;
         this.player = player;
-        this.land = land;
-        this.flag = flag;
-        this.newState = newState;
+        this.name = name;
+        this.type = type;
     }
 
     @Override
@@ -36,6 +32,7 @@ public class LandFlagChangeEvent extends Event implements Cancellable {
         this.isCancelled = cancelled;
     }
 
+    @NotNull
     @Override
     public HandlerList getHandlers() {
         return HANDLERS_LIST;
@@ -45,19 +42,19 @@ public class LandFlagChangeEvent extends Event implements Cancellable {
         return HANDLERS_LIST;
     }
 
-    public Land getLand() {
-        return land;
-    }
-
-    public Flag getFlag() {
-        return flag;
-    }
-
-    public boolean getNewState() {
-        return newState;
-    }
-
     public Player getPlayer() {
         return player;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LandType getType() {
+        return type;
     }
 }

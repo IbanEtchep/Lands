@@ -1,9 +1,9 @@
 package fr.iban.lands.listeners;
 
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -15,58 +15,58 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 
 public class HangingListeners implements Listener {
 
-    private LandManager landmanager;
+    private final LandRepository landRepository;
 
     public HangingListeners(LandsPlugin landsPlugin) {
-        this.landmanager = landsPlugin.getLandManager();
+        this.landRepository = landsPlugin.getLandRepository();
     }
 
     @EventHandler
     public void onHangingBreak(HangingBreakByEntityEvent e) {
-
         Player player = getPlayerRemover(e);
 
-        if (player != null) {
+        if (player == null) {
+            return;
+        }
 
-            Land land = landmanager.getLandAt(e.getEntity().getLocation());
+        Land land = landRepository.getLandAt(e.getEntity().getLocation());
 
-            if (land != null) {
-                if (land.isBypassing(player, Action.BLOCK_BREAK)) {
-                    return;
-                }
-                e.setCancelled(true);
-            }
+        if (!land.isBypassing(player, Action.BLOCK_BREAK)) {
+            e.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onHangingBreak(HangingPlaceEvent e) {
         Player player = e.getPlayer();
-        Land land = landmanager.getLandAt(e.getEntity().getLocation());
 
-        if (land != null && !land.isBypassing(player, Action.BLOCK_PLACE)) {
+        if (player == null) {
+            return;
+        }
+
+        Land land = landRepository.getLandAt(e.getEntity().getLocation());
+
+        if (!land.isBypassing(player, Action.BLOCK_PLACE)) {
             e.setCancelled(true);
         }
     }
 
     private Player getPlayerRemover(HangingBreakByEntityEvent event) {
         Player player = null;
-        if (event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile) {
-            Projectile projectile = (Projectile) event.getRemover();
-            if (projectile.getShooter() instanceof Player) {
-                player = (Player) projectile.getShooter();
+        if (event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile projectile) {
+            if (projectile.getShooter() instanceof Player shooter) {
+                player = shooter;
             }
         }
         if (event.getCause() == RemoveCause.EXPLOSION) {
-            if (event.getRemover() instanceof Mob) {
-                Mob mob = (Mob) event.getRemover();
-                if (mob.getTarget() instanceof Player) {
-                    player = (Player) mob.getTarget();
+            if (event.getRemover() instanceof Mob mob) {
+                if (mob.getTarget() instanceof Player mobTarget) {
+                    player = mobTarget;
                 }
             }
         }
-        if (event.getRemover() instanceof Player) {
-            player = (Player) event.getRemover();
+        if (event.getRemover() instanceof Player remover) {
+            player = remover;
         }
         return player;
     }

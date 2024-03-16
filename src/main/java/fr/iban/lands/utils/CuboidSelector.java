@@ -1,13 +1,9 @@
 package fr.iban.lands.utils;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.land.SubLand;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.model.land.SubLand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -19,6 +15,9 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 public class CuboidSelector {
 
     private final Player player;
@@ -29,20 +28,20 @@ public class CuboidSelector {
     private final Runnable quitCallback;
     private BukkitTask particleTask;
 
-    private final LandManager manager;
+    private final LandsPlugin plugin;
+    private final LandRepository landRepository;
     private final SubLand land;
 
-    public CuboidSelector(Player player, SubLand land, LandManager manager, Runnable quitCallback) {
+    public CuboidSelector(Player player, LandsPlugin plugin, SubLand land, Runnable quitCallback) {
         this.land = land;
-        this.manager = manager;
+        this.plugin = plugin;
+        this.landRepository = plugin.getLandRepository();
         this.player = player;
         this.quitCallback = quitCallback;
         Cuboid currentCuboid = land.getCuboid();
-        if (land.getCuboid() != null) {
-            this.pos1 = currentCuboid.getLowerNE();
-            this.pos2 = currentCuboid.getUpperSW();
-            showParticules(currentCuboid);
-        }
+        this.pos1 = currentCuboid.getLowerNE();
+        this.pos2 = currentCuboid.getUpperSW();
+        showParticules(currentCuboid);
     }
 
     public void startSelecting() {
@@ -83,7 +82,7 @@ public class CuboidSelector {
                                                     if (valid) {
                                                         cancelTask();
                                                         land.setCuboid(cuboid, LandsPlugin.getInstance().getServerName());
-                                                        manager.saveSubLandCuboid(land);
+                                                        landRepository.updateLand(land);
                                                         player.sendMessage("§a§lLa selection a été sauvegardée avec succès.");
                                                         Bukkit.getScheduler().runTask(plugin, quitCallback);
                                                         plugin.getTextInputs().remove(player.getUniqueId());
@@ -150,28 +149,26 @@ public class CuboidSelector {
 
     private CompletableFuture<Boolean> verif(Cuboid cuboid) {
         player.sendMessage("§a§lVérification de la sélection...");
-        return manager.future(
-                () -> {
-                    if (cuboid == null) {
-                        if (pos1 == null) {
-                            player.sendMessage("§c§lLa position 1 n'a pas encore été définie !");
-                        } else {
-                            player.sendMessage("§c§lLa position 2 n'a pas encore été définie !");
-                        }
-                        return false;
-                    }
+        return CompletableFuture.supplyAsync(() -> {
+            if (cuboid == null) {
+                if (pos1 == null) {
+                    player.sendMessage("§c§lLa position 1 n'a pas encore été définie !");
+                } else {
+                    player.sendMessage("§c§lLa position 2 n'a pas encore été définie !");
+                }
+                return false;
+            }
 
-                    if (manager.getLandAt(cuboid.getUpperSW().getChunk())
-                            != manager.getLandAt(cuboid.getLowerNE().getChunk())) {
-                        player.sendMessage(
-                                "§c§lLa selection doit se trouver dans le territoire "
-                                        + land.getSuperLand().getName()
-                                        + ".");
-                        return false;
-                    }
+            if (landRepository.getLandAt(cuboid.getUpperSW().getChunk()) != landRepository.getLandAt(cuboid.getLowerNE().getChunk())) {
+                player.sendMessage(
+                        "§c§lLa selection doit se trouver dans le territoire "
+                                + land.getSuperLand().getName()
+                                + ".");
+                return false;
+            }
 
-                    return true;
-                });
+            return true;
+        });
     }
 
     private void showParticules(Cuboid cuboid) {
@@ -181,17 +178,11 @@ public class CuboidSelector {
             particleTask.cancel();
         }
 
-        particleTask =
-                Bukkit.getScheduler()
-                        .runTaskTimer(
-                                LandsPlugin.getInstance(),
-                                () -> {
-                                    for (Location location : edgeLocations) {
-                                        showParticle(location);
-                                    }
-                                },
-                                1L,
-                                10L);
+        particleTask = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
+            for (Location location : edgeLocations) {
+                showParticle(location);
+            }
+        }, 1L, 10L);
     }
 
     private void showParticle(Location loc) {

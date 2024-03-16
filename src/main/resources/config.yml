@@ -2,11 +2,3 @@ players-lands-enabled: true
 guild-lands-enabled: true
 #Allow creeper grief on players that are trusted for breaking blocs.
 enable-creeper-grief: false
-#Enable synchronisation between servers
-sync-enabled: false
-
-#Enables multipaper support (chunk claim sync), sync-enabled above must also be true.
-multipaper-support:
-    enabled: false
-    #the name to be used to save chunks, must be the same on all multipaper servers
-    server-name: multipaper

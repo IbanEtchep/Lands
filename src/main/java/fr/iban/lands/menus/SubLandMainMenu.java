@@ -4,42 +4,42 @@ import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.land.Land;
-import fr.iban.lands.land.SubLand;
+import fr.iban.lands.api.LandRepository;
+import fr.iban.lands.api.LandService;
+import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.SubLand;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SubLandMainMenu extends PaginatedMenu {
 
-    private LandManager manager;
-    private List<SubLand> lands;
-    private LandsPlugin plugin;
+    private final LandRepository landRepository;
+    private final LandService landService;
+    private final List<SubLand> lands;
+    private final LandsPlugin plugin;
     private Menu previousMenu;
-    private Land superLand;
+    private final Land superLand;
 
-    public SubLandMainMenu(Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand) {
+    public SubLandMainMenu(Player player, LandsPlugin plugin, Land superLand) {
         super(player);
-        this.manager = plugin.getLandManager();
-        this.lands = lands;
+        this.landRepository = plugin.getLandRepository();
+        this.landService = plugin.getLandService();
+        this.lands = new ArrayList<>(superLand.getSubLands().values());
         this.plugin = plugin;
         this.superLand = superLand;
     }
 
-    public SubLandMainMenu(
-            Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand, Menu previousMenu) {
-        this(player, plugin, lands, superLand);
+    public SubLandMainMenu(Player player, LandsPlugin plugin, Land superLand, Menu previousMenu) {
+        this(player, plugin, superLand);
         this.previousMenu = previousMenu;
     }
 
@@ -63,7 +63,7 @@ public class SubLandMainMenu extends PaginatedMenu {
         Player player = (Player) e.getWhoClicked();
         ItemStack current = e.getCurrentItem();
 
-        if (e.getClickedInventory() != e.getView().getTopInventory()) {
+        if (e.getClickedInventory() != e.getView().getTopInventory() || current == null) {
             return;
         }
 
@@ -77,27 +77,11 @@ public class SubLandMainMenu extends PaginatedMenu {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
-            core.getTextInputs()
-                    .put(
-                            player.getUniqueId(),
-                            texte -> {
-                                manager
-                                        .createSublandAsync(player, superLand, texte)
-                                        .thenRun(
-                                                () ->
-                                                        Bukkit.getScheduler()
-                                                                .runTask(
-                                                                        plugin,
-                                                                        () ->
-                                                                                new SubLandMainMenu(
-                                                                                        player,
-                                                                                        plugin,
-                                                                                        new ArrayList<>(superLand.getSubLands().values()),
-                                                                                        superLand,
-                                                                                        previousMenu)
-                                                                                        .open()));
-                                core.getTextInputs().remove(player.getUniqueId());
-                            });
+            core.getTextInputs().put(player.getUniqueId(), texte -> {
+                landService.createSubland(player, superLand, texte);
+                new SubLandMainMenu(player, plugin, superLand, previousMenu).open();
+                core.getTextInputs().remove(player.getUniqueId());
+            });
         }
 
         if (current.getType() == Material.PLAYER_HEAD) {
@@ -116,19 +100,13 @@ public class SubLandMainMenu extends PaginatedMenu {
                         result -> {
                             if (result) {
                                 lands.remove((SubLand) land);
-                                manager
-                                        .deleteLand(land)
-                                        .thenRun(
-                                                () -> {
-                                                    player.sendMessage(
-                                                            "§cLe territoire " + land.getName() + " a bien été supprimé.");
-                                                });
+                                landRepository.deleteLand(land);
+                                player.sendMessage("§cLe territoire " + land.getName() + " a bien été supprimé.");
                             }
                             super.open();
-                        })
-                        .open();
+                        }).open();
             } else if (click == ClickType.LEFT) {
-                new LandManageMenu(player, plugin, manager, land, this).open();
+                new LandManageMenu(player, plugin, land, this).open();
             }
         }
     }
@@ -171,7 +149,7 @@ public class SubLandMainMenu extends PaginatedMenu {
                 .addLore("§aClic gauche pour gérer ce territoire.")
                 .addLore("§cClic droit pour supprimer ce territoire.")
                 .addLore("")
-                .addLore("§fTronçons : " + manager.getChunks(land).size())
+                .addLore("§fTronçons : " + landRepository.getChunks(land).size())
                 .addLore("§fJoueurs trust : " + land.getTrusts().size())
                 .addLore("§fBannissements : " + land.getBans().size())
                 .build();

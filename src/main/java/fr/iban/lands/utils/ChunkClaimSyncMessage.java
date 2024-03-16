@@ -1,6 +1,6 @@
 package fr.iban.lands.utils;
 
-import fr.iban.lands.land.SChunk;
+import fr.iban.lands.model.SChunk;
 
 public class ChunkClaimSyncMessage {
 

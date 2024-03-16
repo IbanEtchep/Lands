@@ -1,12 +1,12 @@
 package fr.iban.lands.listeners;
 
 import fr.iban.bukkitcore.event.PlayerPreTeleportEvent;
-import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.events.LandEnterEvent;
-import fr.iban.lands.land.Land;
+import fr.iban.lands.events.PlayerLandEnterEvent;
+import fr.iban.lands.model.land.Land;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,51 +16,52 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class TeleportListener implements Listener {
 
-    private LandManager manager;
-    private LandsPlugin plugin;
+    private final LandRepository landRepository;
 
     public TeleportListener(LandsPlugin plugin) {
-        this.manager = plugin.getLandManager();
-        this.plugin = plugin;
+        this.landRepository = plugin.getLandRepository();
     }
 
     @EventHandler
-    public void onTeleport(PlayerTeleportEvent e) {
-        Location from = e.getFrom();
-        Location to = e.getTo();
-        Land lto = manager.getLandAt(to);
-        Land lfrom = manager.getLandAt(from);
-        Player player = e.getPlayer();
+    public void onTeleport(PlayerTeleportEvent event) {
+        Location from = event.getFrom();
+        Location to = event.getTo();
 
-        if (e.getCause() == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
-                && !lto.isBypassing(player, Action.CHORUS_TELEPORT)) {
-            e.setCancelled(true);
+        Land landTo = landRepository.getLandAt(to);
+        Land landFrom = landRepository.getLandAt(from);
+
+        Player player = event.getPlayer();
+        PlayerTeleportEvent.TeleportCause cause = event.getCause();
+
+        if (cause == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
+                && !landTo.isBypassing(player, Action.CHORUS_TELEPORT)) {
+            event.setCancelled(true);
             return;
         }
 
-        if (e.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
-                && !lto.isBypassing(player, Action.ENDER_PEARL_TELEPORT)) {
-            e.setCancelled(true);
+        if (cause == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+                && !landTo.isBypassing(player, Action.ENDER_PEARL_TELEPORT)) {
+            event.setCancelled(true);
             return;
         }
 
-        LandEnterEvent enter = new LandEnterEvent(player, lfrom, lto);
+        PlayerLandEnterEvent enter = new PlayerLandEnterEvent(player, landFrom, landTo);
         Bukkit.getPluginManager().callEvent(enter);
         if (enter.isCancelled()) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onCoreTeleport(PlayerPreTeleportEvent e) {
-        Player player = e.getPlayer();
+    public void onCoreTeleport(PlayerPreTeleportEvent event) {
+        Player player = event.getPlayer();
 
-        if (player != null) {
-            Land land = manager.getLandAt(player.getLocation());
+        if (player == null) return;
 
-            if (land.hasFlag(Flag.INSTANT_TELEPORT)) {
-                e.setDelay(0);
-            }
+        Land land = landRepository.getLandAt(player.getLocation());
+
+        if (land.hasFlag(Flag.INSTANT_TELEPORT)) {
+            event.setDelay(0);
         }
     }
 }

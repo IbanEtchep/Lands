@@ -1,4 +1,4 @@
-package fr.iban.lands.permissions;
+package fr.iban.lands.model;
 
 import fr.iban.lands.enums.Action;
 
@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class Trust {
 
-    private Set<Action> permissions = new HashSet<>();
+    private final Set<Action> permissions = new HashSet<>();
 
     public Set<Action> getPermissions() {
         return permissions;
