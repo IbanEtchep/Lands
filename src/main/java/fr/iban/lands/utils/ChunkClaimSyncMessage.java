@@ -5,8 +5,8 @@ import fr.iban.lands.model.SChunk;
 public class ChunkClaimSyncMessage {
 
     private int id;
-    private SChunk sChunk;
-    private boolean unclaim;
+    private final SChunk sChunk;
+    private final boolean unclaim;
 
     public ChunkClaimSyncMessage(int id, SChunk sChunk, boolean unclaim) {
         this.id = id;

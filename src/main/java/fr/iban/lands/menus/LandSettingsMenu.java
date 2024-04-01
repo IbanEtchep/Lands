@@ -73,7 +73,7 @@ public class LandSettingsMenu extends PaginatedMenu {
         }
 
         String displayName = item.getItemMeta().getDisplayName();
-        
+
         if (displayName.startsWith("§4")) {
             Flag flag = Flag.getByDisplayName(displayName);
             PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, true);
@@ -81,7 +81,7 @@ public class LandSettingsMenu extends PaginatedMenu {
             if (!event.isCancelled()) {
                 landRepository.addFlag(land, flag);
             }
-        } else {
+        } else if (displayName.startsWith("§2")) {
             Flag flag = Flag.getByDisplayName(displayName);
             PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, false);
             Bukkit.getPluginManager().callEvent(event);
