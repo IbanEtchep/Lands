@@ -77,6 +77,28 @@ public class SqlStorage implements Storage {
     }
 
     @Override
+    public Map<UUID, UUID> getSubLands() {
+        Map<UUID, UUID> sublands = new HashMap<>();
+        String sql = "SELECT id, land_id FROM land_sublands;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        UUID id = UUID.fromString(rs.getString("id"));
+                        UUID landId = UUID.fromString(rs.getString("land_id"));
+                        sublands.put(id, landId);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sublands;
+    }
+
+    @Override
     public Land getLand(UUID id) {
         String sql = "SELECT * FROM land_lands WHERE type NOT LIKE ? AND id=?;";
 

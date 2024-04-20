@@ -1,5 +1,12 @@
 package fr.iban.lands.listeners;
 
+import com.ghostchu.quickshop.api.QuickShopAPI;
+import com.ghostchu.quickshop.api.event.ShopPreCreateEvent;
+import com.ghostchu.quickshop.api.event.ShopSuccessPurchaseEvent;
+import com.ghostchu.quickshop.api.shop.Shop;
+import com.ghostchu.quickshop.api.shop.ShopType;
+import com.ghostchu.quickshop.api.shop.permission.BuiltInShopPermissionGroup;
+import com.ghostchu.quickshop.util.Util;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
@@ -17,15 +24,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.maxgamer.quickshop.QuickShop;
-import org.maxgamer.quickshop.api.event.ShopPreCreateEvent;
-import org.maxgamer.quickshop.api.event.ShopSuccessPurchaseEvent;
-import org.maxgamer.quickshop.api.shop.Shop;
-import org.maxgamer.quickshop.api.shop.ShopType;
-import org.maxgamer.quickshop.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ShopListeners implements Listener {
@@ -42,9 +44,14 @@ public class ShopListeners implements Listener {
     @EventHandler
     public void onShopCreate(ShopPreCreateEvent e) {
         Land land = landRepository.getLandAt(e.getLocation());
+        Optional<Player> bukkitPlayer = e.getCreator().getBukkitPlayer();
 
-        if (!land.isBypassing(e.getPlayer(), Action.SHOP_CREATE)) {
-            e.setCancelled(true);
+        if (bukkitPlayer.isEmpty()) {
+            return;
+        }
+
+        if (!land.isBypassing(bukkitPlayer.get(), Action.SHOP_CREATE)) {
+            e.setCancelled(true, "Vous ne pouvez pas créer de shop ici.");
         }
     }
 
@@ -78,8 +85,10 @@ public class ShopListeners implements Listener {
             return;
         }
 
-        if (!shop.getModerator().isModerator(uuid)) {
-            shop.getModerator().addStaff(uuid);
+        BuiltInShopPermissionGroup staffGroup = BuiltInShopPermissionGroup.STAFF;
+
+        if (shop.playersCanAuthorize(staffGroup).contains(uuid)) {
+            shop.setPlayerGroup(uuid, staffGroup);
             tempStaffs.add(uuid);
         }
     }
@@ -109,7 +118,7 @@ public class ShopListeners implements Listener {
         UUID uuid = event.getPlayer().getUniqueId();
 
         if (tempStaffs.contains(uuid)) {
-            shop.getModerator().delStaff(uuid);
+            shop.setPlayerGroup(uuid, BuiltInShopPermissionGroup.EVERYONE);
             tempStaffs.remove(uuid);
         }
     }
@@ -117,8 +126,8 @@ public class ShopListeners implements Listener {
     @Nullable
     public Shop getShopPlayer(@NotNull Location location, boolean includeAttached) {
         return includeAttached
-                ? QuickShop.getInstance().getShopManager().getShopIncludeAttached(location, false)
-                : QuickShop.getInstance().getShopManager().getShop(location);
+                ? QuickShopAPI.getInstance().getShopManager().getShopIncludeAttached(location)
+                : QuickShopAPI.getInstance().getShopManager().getShop(location);
     }
 
     @EventHandler
@@ -132,13 +141,14 @@ public class ShopListeners implements Listener {
         if (!plugin.isGuildsHookEnabled()) return;
 
         if (landRepository.getLandAt(e.getShop().getLocation()) instanceof GuildLand guildLand) {
-            if (!guildLand.hasFlag(Flag.SHOP_MONEY_TO_GUILD_BANK)) return;
-            UUID seller = shop.getOwner();
+            UUID seller = shop.getOwner().getUniqueId();
+
+            if (!guildLand.hasFlag(Flag.SHOP_MONEY_TO_GUILD_BANK) || seller == null) return;
+            
             double price = e.getBalance();
             boolean success = plugin.getGuildDataAccess().deposit(guildLand.getGuildId(), price);
             if (success) {
-                EconomyResponse response =
-                        plugin.getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(seller), price);
+                EconomyResponse response = plugin.getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(seller), price);
                 if (!response.transactionSuccess()) {
                     plugin.getGuildDataAccess().withdraw(guildLand.getGuildId(), price);
                 }

@@ -32,7 +32,7 @@ public interface LandRepository {
      * @return the land at the given chunk
      */
     Land getLandAt(Chunk chunk);
-
+    
     Land getLandAt(SChunk chunk);
 
     @NotNull

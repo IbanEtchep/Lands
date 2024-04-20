@@ -37,7 +37,8 @@ SELECT `server`,
        z,
        (SELECT id FROM land_lands WHERE idL = sc_chunks.idL),
        createdAt
-FROM sc_chunks;
+FROM sc_chunks
+ON DUPLICATE KEY UPDATE land_id = land_id;
 
 INSERT INTO land_world_default_land_lands (`server`, `world`, land_id, created_at)
 SELECT `server`,
