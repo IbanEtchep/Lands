@@ -575,7 +575,7 @@ public class SqlStorage implements Storage {
     }
 
     public void loadSublandArea(SubLand land) {
-        String sql = "SELECT * FROM land_sublands WHERE land_id=?;";
+        String sql = "SELECT * FROM land_sublands WHERE id=?;";
 
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {

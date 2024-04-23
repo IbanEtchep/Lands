@@ -128,8 +128,13 @@ public class LandRepositoryImpl implements LandRepository {
             }
         }
 
-        worldsDefaultLands.entrySet().removeIf(entry -> entry.getValue().equals(land));
+        if (land instanceof SubLand subLand) {
+            Land superLand = subLand.getSuperLand();
+            superLand.getSubLands().remove(subLand.getId());
+        }
 
+        worldsDefaultLands.entrySet().removeIf(entry -> entry.getValue().equals(land));
+        
         lands.remove(land.getId());
         plugin.runAsyncQueued(() -> storage.deleteLand(land));
     }
