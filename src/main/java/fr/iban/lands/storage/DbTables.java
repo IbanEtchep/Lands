@@ -96,7 +96,7 @@ public class DbTables {
                               x2 INT,
                               y2 INT,
                               z2 INT,
-                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE
+                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE,
                               FOREIGN KEY (id) REFERENCES land_lands(id) ON DELETE CASCADE
                           );
                         """);
