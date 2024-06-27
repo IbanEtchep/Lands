@@ -2,6 +2,7 @@ package fr.iban.lands.api;
 
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
+import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
@@ -32,7 +33,7 @@ public interface LandRepository {
      * @return the land at the given chunk
      */
     Land getLandAt(Chunk chunk);
-    
+
     Land getLandAt(SChunk chunk);
 
     @NotNull
@@ -51,6 +52,8 @@ public interface LandRepository {
     List<Land> getLands();
 
     List<Land> getLands(UUID uuid);
+
+    List<Land> getLands(UUID uuid, LandType type);
 
     List<Land> getGuildLands(UUID uuid);
 

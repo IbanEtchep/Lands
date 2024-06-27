@@ -1,4 +1,4 @@
-name: Lands
+name: MSLands
 version: ${project.version}
 main: fr.iban.lands.LandsPlugin
 api-version: 1.16

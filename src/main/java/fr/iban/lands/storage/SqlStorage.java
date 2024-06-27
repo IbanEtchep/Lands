@@ -487,7 +487,7 @@ public class SqlStorage implements Storage {
     @Override
     public void removeBan(Land land, UUID uuid) {
         try (Connection connection = ds.getConnection()) {
-            String sql = "DELETE FROM land_bans WHERE idL=? AND uuid=?;";
+            String sql = "DELETE FROM land_bans WHERE land_id=? AND uuid=?;";
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, land.getId().toString());

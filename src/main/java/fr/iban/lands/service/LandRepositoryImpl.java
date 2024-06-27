@@ -4,6 +4,7 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
+import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.model.SChunk;
@@ -134,7 +135,7 @@ public class LandRepositoryImpl implements LandRepository {
         }
 
         worldsDefaultLands.entrySet().removeIf(entry -> entry.getValue().equals(land));
-        
+
         lands.remove(land.getId());
         plugin.runAsyncQueued(() -> storage.deleteLand(land));
     }
@@ -217,15 +218,20 @@ public class LandRepositoryImpl implements LandRepository {
 
     @Override
     public List<Land> getLands(UUID uuid) {
-        Predicate<Land> uuidEquals = land -> land.getOwner() != null && land.getOwner().equals(uuid) && land instanceof PlayerLand;
+        Predicate<Land> uuidEquals = land -> land.getOwner() != null && land.getOwner().equals(uuid);
         return lands.values().stream().filter(uuidEquals).toList();
     }
 
     @Override
-    public List<Land> getGuildLands(UUID uuid) {
+    public List<Land> getLands(UUID uuid, LandType type) {
         return getLands(uuid).stream()
-                .filter(GuildLand.class::isInstance)
+                .filter(land -> land.getType() == type)
                 .toList();
+    }
+
+    @Override
+    public List<Land> getGuildLands(UUID uuid) {
+        return getLands(uuid, LandType.GUILD).stream().toList();
     }
 
     @Override
@@ -247,7 +253,7 @@ public class LandRepositoryImpl implements LandRepository {
         List<String> landNames = new ArrayList<>();
         UUID playerId = player.getUniqueId();
 
-        for (Land land : getLands(playerId)) {
+        for (Land land : getLands(playerId, LandType.PLAYER)) {
             landNames.add(land.getName());
         }
 
@@ -287,7 +293,7 @@ public class LandRepositoryImpl implements LandRepository {
             }
         }
 
-        return getLands(playerId).stream()
+        return getLands(playerId, LandType.PLAYER).stream()
                 .filter(land -> land.getName().equals(name))
                 .findFirst().orElse(null);
     }

@@ -104,7 +104,7 @@ public class DbTables {
                 """
                           CREATE TABLE IF NOT EXISTS land_limits(
                               uuid UUID NOT NULL,
-                              chunk_limit INT NOT NULL,
+                              chunk_limit INT UNSIGNED NOT NULL,
                               PRIMARY KEY (uuid)
                           );
                         """);

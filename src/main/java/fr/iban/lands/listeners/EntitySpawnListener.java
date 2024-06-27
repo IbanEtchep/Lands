@@ -21,7 +21,7 @@ public class EntitySpawnListener implements Listener {
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (event.getSpawnReason() == SpawnReason.SPAWNER) return;
+        if (event.getSpawnReason() == SpawnReason.SPAWNER || event.getSpawnReason() == SpawnReason.CUSTOM) return;
 
         Land land = landRepository.getLandAt(event.getLocation());
         if (land.hasFlag(Flag.NO_MOB_SPAWNING)) {
