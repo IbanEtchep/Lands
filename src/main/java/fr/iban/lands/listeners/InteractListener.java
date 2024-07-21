@@ -153,6 +153,7 @@ public class InteractListener implements Listener {
                     }
                 }
             }
+
             if (land.hasFlag(Flag.TRIPWIRE_BY_ENTITY) && material == Material.TRIPWIRE) {
                 return;
             }

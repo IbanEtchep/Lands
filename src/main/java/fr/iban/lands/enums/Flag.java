@@ -75,6 +75,7 @@ public enum Flag {
         for (Flag action : values()) {
             if (displayName.contains(action.getDisplayName())) return action;
         }
+
         return null;
     }
 
@@ -82,11 +83,13 @@ public enum Flag {
         if (land instanceof SubLand subLand) {
             return isEnabled(subLand.getSuperLand());
         }
+        
         for (LandType value : enabledLandTypes) {
             if (value == land.getType()) {
                 return true;
             }
         }
+
         return false;
     }
 }
