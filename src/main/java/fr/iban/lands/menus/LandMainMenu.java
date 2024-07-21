@@ -79,7 +79,7 @@ public class LandMainMenu extends PaginatedMenu {
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
             core.getTextInputs().put(player.getUniqueId(), texte -> {
-                Land newLand = landService.createLand(player, texte, landType);
+                Land newLand = landService.createLand(player, texte, landType, landOwner);
 
                 if (newLand != null) {
                     lands.add(newLand);

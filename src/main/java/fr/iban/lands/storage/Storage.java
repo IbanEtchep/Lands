@@ -22,6 +22,8 @@ public interface Storage {
 
     void setWorldDefaultLand(String world, Land land);
 
+    Map<UUID, UUID> getSubLands();
+
     Land getLand(UUID landId);
 
     void addLand(Land land);

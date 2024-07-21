@@ -2,3 +2,5 @@ players-lands-enabled: true
 guild-lands-enabled: true
 #Allow creeper grief on players that are trusted for breaking blocs.
 enable-creeper-grief: false
+
+default-claim-limit: 5

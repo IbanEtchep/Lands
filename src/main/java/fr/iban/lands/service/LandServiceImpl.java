@@ -32,7 +32,7 @@ public class LandServiceImpl implements LandService {
     }
 
     @Override
-    public Land createLand(Player creator, String name, LandType type) {
+    public Land createLand(Player creator, String name, LandType type, UUID landOwner) {
         PlayerLandPreCreateEvent event = new PlayerLandPreCreateEvent(creator, name, type);
         if (!event.callEvent()) {
             return null;
@@ -41,8 +41,8 @@ public class LandServiceImpl implements LandService {
         UUID id = UUID.randomUUID();
 
         Land land = switch (type) {
-            case PLAYER -> new PlayerLand(id, creator.getUniqueId(), name);
-            case GUILD -> new GuildLand(id, creator.getUniqueId(), name);
+            case PLAYER -> new PlayerLand(id, landOwner, name);
+            case GUILD -> new GuildLand(id, landOwner, name);
             case SYSTEM -> new SystemLand(id, name);
             case SUBLAND -> new SubLand(id, name);
         };
@@ -62,7 +62,7 @@ public class LandServiceImpl implements LandService {
 
     @Override
     public void createSubland(Player player, Land superLand, String name) {
-        Land land = createLand(player, name, LandType.SUBLAND);
+        Land land = createLand(player, name, LandType.SUBLAND, superLand.getOwner());
 
         if (land instanceof SubLand subLand) {
             subLand.setSuperLand(superLand);

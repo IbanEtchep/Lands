@@ -1,11 +1,10 @@
 package fr.iban.lands.service;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
+import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.model.SChunk;
@@ -20,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -35,9 +33,6 @@ public class LandRepositoryImpl implements LandRepository {
     private final Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
     private final Map<String, Land> worldsDefaultLands = new ConcurrentHashMap<>();
     private SystemLand wilderness = new SystemLand(WILDERNESS_ID, "Zone sauvage");
-    private final Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .maximumSize(1000).build();
 
     public LandRepositoryImpl(LandsPlugin plugin) {
         this.plugin = plugin;
@@ -52,6 +47,19 @@ public class LandRepositoryImpl implements LandRepository {
             logger.info("Loading lands...");
             lands.putAll(storage.getLands());
 
+            storage.getSubLands().forEach((subLandID, superLandID) -> {
+                SubLand subLand = (SubLand) lands.get(subLandID);
+                Land superLand = lands.get(superLandID);
+
+                if (subLand == null || superLand == null) {
+                    plugin.getLogger().severe("Subland or superland not found " + subLandID + " " + superLandID);
+                    return;
+                }
+
+                subLand.setSuperLand(superLand);
+                superLand.getSubLands().put(subLandID, subLand);
+            });
+
             Map<UUID, Map<LinkType, UUID>> links = storage.getLinks();
 
             links.forEach((landID, map) -> {
@@ -59,6 +67,11 @@ public class LandRepositoryImpl implements LandRepository {
 
                 map.forEach((linkType, linkedLandID) -> {
                     Land linkedLand = lands.get(linkedLandID);
+
+                    if (land == null || linkedLand == null) {
+                        return;
+                    }
+
                     land.setLink(linkType, linkedLand);
                 });
             });
@@ -68,7 +81,16 @@ public class LandRepositoryImpl implements LandRepository {
             storage.getChunks().forEach((chunk, landId) -> chunks.put(chunk, lands.get(landId)));
 
             logger.info("Loading worlds default lands...");
-            storage.getWorldsDefaultLands().forEach((world, landId) -> worldsDefaultLands.put(world, lands.get(landId)));
+            storage.getWorldsDefaultLands().forEach((world, landId) -> {
+                Land land = lands.get(landId);
+
+                if (land == null) {
+                    plugin.getLogger().severe("Land not found for world default land " + landId);
+                    return;
+                }
+
+                worldsDefaultLands.put(world, land);
+            });
 
             logger.info(String.format("Loaded %d lands and %d chunks in %dms", lands.size(), chunks.size(), System.currentTimeMillis() - start));
 
@@ -99,15 +121,17 @@ public class LandRepositoryImpl implements LandRepository {
 
     @Override
     public void deleteLand(Land land) {
-        getChunks(land).forEach(schunk -> {
-            chunks.remove(schunk);
-            chunksCache.invalidate(schunk);
-        });
+        getChunks(land).forEach(chunks::remove);
 
         if (land.hasSubLand()) {
             for (SubLand subland : land.getSubLands().values()) {
                 deleteLand(subland);
             }
+        }
+
+        if (land instanceof SubLand subLand) {
+            Land superLand = subLand.getSuperLand();
+            superLand.getSubLands().remove(subLand.getId());
         }
 
         worldsDefaultLands.entrySet().removeIf(entry -> entry.getValue().equals(land));
@@ -123,8 +147,6 @@ public class LandRepositoryImpl implements LandRepository {
 
         // Invalidate the cache for the old land
         if (cachedLand != null) {
-            getChunks(cachedLand).forEach(chunksCache::invalidate);
-
             if (updatedLand == null) { // Land has been deleted
                 getChunks(cachedLand).forEach(chunks::remove);
                 lands.remove(cachedLand.getId());
@@ -147,7 +169,7 @@ public class LandRepositoryImpl implements LandRepository {
     @Override
     public Land getLandAt(SChunk schunk) {
         Land defaultLand = worldsDefaultLands.getOrDefault(schunk.getWorld(), wilderness);
-        return chunksCache.get(schunk, land -> chunks.getOrDefault(schunk, defaultLand));
+        return chunks.getOrDefault(schunk, defaultLand);
     }
 
     @NotNull
@@ -172,7 +194,6 @@ public class LandRepositoryImpl implements LandRepository {
 
     @Override
     public void removeChunk(SChunk chunk) {
-        chunksCache.invalidate(chunk);
         chunks.remove(chunk);
         plugin.runAsyncQueued(() -> storage.removeChunk(chunk));
     }
@@ -202,10 +223,15 @@ public class LandRepositoryImpl implements LandRepository {
     }
 
     @Override
-    public List<Land> getGuildLands(UUID uuid) {
+    public List<Land> getLands(UUID uuid, LandType type) {
         return getLands(uuid).stream()
-                .filter(GuildLand.class::isInstance)
+                .filter(land -> land.getType() == type)
                 .toList();
+    }
+
+    @Override
+    public List<Land> getGuildLands(UUID uuid) {
+        return getLands(uuid, LandType.GUILD).stream().toList();
     }
 
     @Override
@@ -227,7 +253,7 @@ public class LandRepositoryImpl implements LandRepository {
         List<String> landNames = new ArrayList<>();
         UUID playerId = player.getUniqueId();
 
-        for (Land land : getLands(playerId)) {
+        for (Land land : getLands(playerId, LandType.PLAYER)) {
             landNames.add(land.getName());
         }
 
@@ -267,7 +293,7 @@ public class LandRepositoryImpl implements LandRepository {
             }
         }
 
-        return getLands(playerId).stream()
+        return getLands(playerId, LandType.PLAYER).stream()
                 .filter(land -> land.getName().equals(name))
                 .findFirst().orElse(null);
     }

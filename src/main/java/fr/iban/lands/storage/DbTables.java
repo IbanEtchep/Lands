@@ -96,14 +96,15 @@ public class DbTables {
                               x2 INT,
                               y2 INT,
                               z2 INT,
-                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE
+                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE,
+                              FOREIGN KEY (id) REFERENCES land_lands(id) ON DELETE CASCADE
                           );
                         """);
         createTable(
                 """
                           CREATE TABLE IF NOT EXISTS land_limits(
                               uuid UUID NOT NULL,
-                              chunk_limit INT NOT NULL,
+                              chunk_limit INT UNSIGNED NOT NULL,
                               PRIMARY KEY (uuid)
                           );
                         """);

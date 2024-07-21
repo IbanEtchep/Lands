@@ -73,20 +73,21 @@ public class LandSettingsMenu extends PaginatedMenu {
         }
 
         String displayName = item.getItemMeta().getDisplayName();
-        
-        if (displayName.startsWith("§4")) {
-            Flag flag = Flag.getByDisplayName(displayName);
-            PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, true);
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                landRepository.addFlag(land, flag);
-            }
-        } else {
-            Flag flag = Flag.getByDisplayName(displayName);
-            PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, false);
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                landRepository.removeFlag(land, flag);
+        Flag flag = Flag.getByDisplayName(displayName);
+
+        if (flag != null) {
+            if (displayName.startsWith("§4")) {
+                PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, true);
+                Bukkit.getPluginManager().callEvent(event);
+                if (!event.isCancelled()) {
+                    landRepository.addFlag(land, flag);
+                }
+            } else if (displayName.startsWith("§2")) {
+                PlayerLandFlagChangeEvent event = new PlayerLandFlagChangeEvent(player, land, flag, false);
+                Bukkit.getPluginManager().callEvent(event);
+                if (!event.isCancelled()) {
+                    landRepository.removeFlag(land, flag);
+                }
             }
         }
 

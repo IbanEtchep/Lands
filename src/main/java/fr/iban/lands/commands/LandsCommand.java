@@ -45,7 +45,7 @@ public class LandsCommand {
 
         UUID targetId = target == null ? player.getUniqueId() : target.getUniqueId();
 
-        List<Land> lands = new ArrayList<>(landRepository.getLands(targetId));
+        List<Land> lands = new ArrayList<>(landRepository.getLands(targetId, LandType.PLAYER));
         LandMainMenu landMainMenu = new LandMainMenu(player, plugin, lands, LandType.PLAYER, targetId);
         landMainMenu.open();
     }

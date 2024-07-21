@@ -53,7 +53,8 @@ public class LandCommand {
         }
 
         if (withLand == null) {
-            Land firstLand = landRepository.getLands(player.getUniqueId()).stream().findFirst().orElse(null);
+            Land firstLand = landRepository.getLands(player.getUniqueId(), LandType.PLAYER)
+                    .stream().findFirst().orElse(null);
 
             if (firstLand == null) {
                 player.sendMessage("§cVous n'avez pas de territoire. Créez en un avec /land create <NomDuTerritoire>");
@@ -130,7 +131,7 @@ public class LandCommand {
         if (name == null) {
             player.sendMessage("/land create <NomDeLaRegion>");
         } else {
-            landService.createLand(player, name, LandType.PLAYER);
+            landService.createLand(player, name, LandType.PLAYER, player.getUniqueId());
         }
     }
 

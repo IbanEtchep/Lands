@@ -77,6 +77,28 @@ public class SqlStorage implements Storage {
     }
 
     @Override
+    public Map<UUID, UUID> getSubLands() {
+        Map<UUID, UUID> sublands = new HashMap<>();
+        String sql = "SELECT id, land_id FROM land_sublands;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        UUID id = UUID.fromString(rs.getString("id"));
+                        UUID landId = UUID.fromString(rs.getString("land_id"));
+                        sublands.put(id, landId);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sublands;
+    }
+
+    @Override
     public Land getLand(UUID id) {
         String sql = "SELECT * FROM land_lands WHERE type NOT LIKE ? AND id=?;";
 
@@ -465,7 +487,7 @@ public class SqlStorage implements Storage {
     @Override
     public void removeBan(Land land, UUID uuid) {
         try (Connection connection = ds.getConnection()) {
-            String sql = "DELETE FROM land_bans WHERE idL=? AND uuid=?;";
+            String sql = "DELETE FROM land_bans WHERE land_id=? AND uuid=?;";
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, land.getId().toString());
@@ -553,7 +575,7 @@ public class SqlStorage implements Storage {
     }
 
     public void loadSublandArea(SubLand land) {
-        String sql = "SELECT * FROM land_sublands WHERE land_id=?;";
+        String sql = "SELECT * FROM land_sublands WHERE id=?;";
 
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
