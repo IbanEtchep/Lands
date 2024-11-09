@@ -13,22 +13,28 @@ import fr.iban.lands.model.land.SystemLand;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+import io.papermc.paper.registry.TypedKey;
+import io.papermc.paper.registry.keys.MobEffectKeys;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+
+import static java.lang.Math.max;
 
 @Command({"land", "l"})
 public class LandCommand {
@@ -360,5 +366,45 @@ public class LandCommand {
         }
 
         landService.giveClaims(player, target.getUniqueId(), amount);
+    }
+
+    //land admin effect add/remove effecttype aplifier=1
+    @Subcommand("admin effect add")
+    @CommandPermission("lands.admin")
+    public void addEffect(Player player, Land land, String effectType, @Default("0") int amplifier) {
+        NamespacedKey potionKey = NamespacedKey.fromString(effectType.toLowerCase(Locale.ROOT));
+
+        if(potionKey == null || Registry.EFFECT.get(potionKey) == null) {
+            player.sendMessage("§cCet effet n'existe pas.");
+            return;
+        }
+
+        PotionEffectType potionEffectType = Registry.EFFECT.get(potionKey);
+        landRepository.addEffect(land, potionEffectType, amplifier);
+        player.sendMessage("§aEffet ajouté.");
+    }
+
+    @Subcommand("admin effect remove")
+    @CommandPermission("lands.admin")
+    public void removeEffect(Player player, Land land, String effectType) {
+        NamespacedKey potionKey = NamespacedKey.fromString(effectType.toLowerCase(Locale.ROOT));
+
+        if(potionKey == null || Registry.EFFECT.get(potionKey) == null) {
+            player.sendMessage("§cCet effet n'existe pas.");
+            return;
+        }
+
+        PotionEffectType potionEffectType = Registry.EFFECT.get(potionKey);
+        landRepository.removeEffect(land, potionEffectType);
+        player.sendMessage("§aEffet retiré.");
+    }
+
+    @Subcommand("admin effect list")
+    @CommandPermission("lands.admin")
+    public void listEffects(Player player, Land land) {
+        player.sendMessage("§6Effets actifs sur le territoire " + land.getName() + " :");
+        land.getEffects().forEach((potionEffect) -> {
+            player.sendMessage("§8- §f" + potionEffect.getType().getKey() + " " + potionEffect.getAmplifier());
+        });
     }
 }

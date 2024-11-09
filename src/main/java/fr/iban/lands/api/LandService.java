@@ -5,6 +5,8 @@ import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 import java.util.UUID;

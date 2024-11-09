@@ -10,7 +10,10 @@ import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.*;
 import fr.iban.lands.utils.Cuboid;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.World;
+import org.bukkit.potion.PotionEffectType;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -149,6 +152,7 @@ public class SqlStorage implements Storage {
             loadTrusts(land);
             land.setFlags(getFlags(land));
             land.setBans(getBans(land));
+            loadEffects(land);
         }
 
         return land;
@@ -697,6 +701,65 @@ public class SqlStorage implements Storage {
                 ps.setString(1, uuid.toString());
                 ps.setInt(2, amount);
                 ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addEffect(Land land, String effect, int amplifier) {
+        String sql = "INSERT INTO land_effects (land_id, effect, amplifier) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amplifier=VALUES(amplifier);";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, land.getId().toString());
+                ps.setString(2, effect);
+                ps.setInt(3, amplifier);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void removeEffect(Land land, String effect) {
+        String sql = "DELETE FROM land_effects WHERE land_id=? AND effect LIKE ?;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, land.getId().toString());
+                ps.setString(2, effect);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void loadEffects(Land land) {
+        String sql = "SELECT * FROM land_effects WHERE land_id=?;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, land.getId().toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String effect = rs.getString("effect");
+                        NamespacedKey potionKey = NamespacedKey.fromString(effect.toLowerCase(Locale.ROOT));
+
+                        if(potionKey == null) {
+                            logger.warning("Potion effect " + effect + " not found in Registry.");
+                            return;
+                        }
+
+                        PotionEffectType potionEffectType = Registry.EFFECT.get(potionKey);
+                        int amplifier = rs.getInt("amplifier");
+                        land.addEffect(potionEffectType, amplifier);
+                    }
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

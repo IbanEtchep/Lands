@@ -15,6 +15,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -435,5 +437,17 @@ public class LandRepositoryImpl implements LandRepository {
     public void removeBan(Land land, UUID uuid) {
         land.getBans().remove(uuid);
         plugin.runAsyncQueued(() -> storage.removeBan(land, uuid));
+    }
+
+    @Override
+    public void addEffect(Land land, PotionEffectType effectType, int amplifier) {
+        land.addEffect(effectType, amplifier);
+        plugin.runAsyncQueued(() -> storage.addEffect(land, effectType.getKey().toString(), amplifier));
+    }
+
+    @Override
+    public void removeEffect(Land land, PotionEffectType effectType) {
+        land.removeEffect(effectType);
+        plugin.runAsyncQueued(() -> storage.removeEffect(land, effectType.getKey().toString()));
     }
 }

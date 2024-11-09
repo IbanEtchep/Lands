@@ -9,6 +9,8 @@ import fr.iban.lands.model.Trust;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -21,6 +23,7 @@ public abstract class Land {
     protected Trust globalTrust = new Trust();
     private final Trust guildTrust = new Trust();
     protected Map<UUID, Trust> trusts = new HashMap<>();
+    protected Set<PotionEffect> effects = new HashSet<>();
     protected Set<Flag> flags = new HashSet<>();
     protected Set<UUID> bans = new HashSet<>();
     protected Map<LinkType, Land> links;
@@ -249,5 +252,19 @@ public abstract class Land {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Set<PotionEffect> getEffects() {
+        return effects;
+    }
+
+    public void addEffect(PotionEffectType effectType, int amplifier) {
+        var effect = new PotionEffect(effectType, 150, amplifier);
+        effects.removeIf(e -> e.getType().equals(effectType));
+        effects.add(effect);
+    }
+
+    public void removeEffect(PotionEffectType effectType) {
+        effects.removeIf(effect -> effect.getType().equals(effectType));
     }
 }

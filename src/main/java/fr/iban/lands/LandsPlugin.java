@@ -13,6 +13,7 @@ import fr.iban.lands.listeners.*;
 import fr.iban.lands.model.land.Land;
 import fr.iban.lands.service.LandRepositoryImpl;
 import fr.iban.lands.service.LandServiceImpl;
+import fr.iban.lands.task.PotionEffectTask;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
@@ -101,6 +102,9 @@ public final class LandsPlugin extends JavaPlugin {
         }
 
         Head.loadAPI();
+
+        PotionEffectTask potionEffectTask = new PotionEffectTask(this);
+        getServer().getScheduler().runTaskTimer(this, potionEffectTask , 100, 100);
     }
 
     @Override

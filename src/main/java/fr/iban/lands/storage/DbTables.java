@@ -108,6 +108,16 @@ public class DbTables {
                               PRIMARY KEY (uuid)
                           );
                         """);
+        createTable(
+                """
+                          CREATE TABLE IF NOT EXISTS land_effects(
+                              land_id UUID NOT NULL,
+                              effect VARCHAR(255) NOT NULL,
+                              amplifier INT NOT NULL,
+                              PRIMARY KEY (land_id, effect),
+                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE
+                          );
+                        """);
     }
 
     private static void createTable(String statement) {

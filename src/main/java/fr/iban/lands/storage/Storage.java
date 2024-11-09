@@ -75,4 +75,10 @@ public interface Storage {
     void increaseChunkLimit(UUID uuid, int amount);
 
     void decreaseChunkLimit(UUID uuid, int amount);
+
+    void addEffect(Land land, String effect, int amplifier);
+
+    void removeEffect(Land land, String effect);
+
+    void loadEffects(Land land);
 }

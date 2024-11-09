@@ -10,6 +10,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -106,4 +108,8 @@ public interface LandRepository {
     void addBan(Land land, UUID uuid);
 
     void removeBan(Land land, UUID uuid);
+
+    void addEffect(Land land, PotionEffectType effectType, int amplifier);
+
+    void removeEffect(Land land, PotionEffectType effectType);
 }
