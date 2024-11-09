@@ -14,8 +14,8 @@ import java.util.List;
 
 public class LandSelectMenu extends PaginatedMenu {
 
-    private List<Land> lands;
-    private LandSelectCallback callback;
+    private final List<Land> lands;
+    private final LandSelectCallback callback;
 
     public LandSelectMenu(Player player, List<Land> lands, LandSelectCallback callback) {
         super(player);

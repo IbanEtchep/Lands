@@ -37,7 +37,7 @@ public class LandRepositoryImpl implements LandRepository {
     public LandRepositoryImpl(LandsPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
-        this.storage = new SqlStorage();
+        this.storage = new SqlStorage(logger);
         loadLands();
     }
 

@@ -26,6 +26,7 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,16 +49,17 @@ public class InteractListener implements Listener {
 
         if (block == null) return;
 
+        Material material = block.getType();
         Land land = landRepository.getLandAt(block.getLocation());
 
         if (event.getAction() == org.bukkit.event.block.Action.PHYSICAL
-                && block.getType() == Material.FARMLAND
+                && material == Material.FARMLAND
                 && !land.hasFlag(Flag.FARMLAND_GRIEF)) {
             event.setCancelled(true);
             return;
         }
 
-        if (block.getType() == Material.ARMOR_STAND
+        if (material == Material.ARMOR_STAND
                 && !land.isBypassing(player, Action.ARMOR_STAND_INTERACT)) {
             event.setCancelled(true);
             return;
@@ -79,48 +81,36 @@ public class InteractListener implements Listener {
                         }, 60L);
                     }
                 }
-                return;
             }
 
-            if ((block.getType() == Material.ANVIL && !land.isBypassing(player, Action.USE_ANVIL))
-                    || (block.getType() == Material.BREWING_STAND
-                    && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
-                    || ((block.getBlockData() instanceof Powerable && block.getType() != Material.LECTERN)
-                    && !land.isBypassing(player, Action.USE))
+            ItemStack itemInMainHand = player.getInventory().getItemInMainHand();
+            ItemStack itemInOffHand = player.getInventory().getItemInOffHand();
+
+            boolean hasSpawnEggInHand = itemInMainHand.getType().toString().contains("SPAWN_EGG")
+                    || itemInOffHand.getType().toString().contains("SPAWN_EGG");
+
+            if ((material == Material.ANVIL && !land.isBypassing(player, Action.USE_ANVIL))
+                    || (material == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
+                    || ((block.getBlockData() instanceof Powerable && material != Material.LECTERN) && !land.isBypassing(player, Action.USE))
                     || (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
-                    || (block.getBlockData() instanceof RespawnAnchor
-                    && !land.isBypassing(player, Action.USE_RESPAWN_ANCHOR))
-                    || ((block.getType() == Material.FLOWER_POT
-                    || block.getType().name().startsWith("POTTED_"))
-                    && !land.isBypassing(player, Action.FLOWER_POT_INTERACT))
-                    || (block.getType() == Material.DRAGON_EGG
-                    && !land.isBypassing(player, Action.OTHER_INTERACTS))
-                    || (((block.getState() instanceof InventoryHolder
-                    && block.getType() != Material.LECTERN
-                    && block.getType() != Material.BREWING_STAND)
-                    || block.getType() == Material.JUKEBOX)
-                    && !land.isBypassing(player, Action.OPEN_CONTAINER))
-                    || (block.getType() == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
+                    || (block.getBlockData() instanceof RespawnAnchor && !land.isBypassing(player, Action.USE_RESPAWN_ANCHOR))
+                    || ((material == Material.FLOWER_POT
+                    || material.name().startsWith("POTTED_")) && !land.isBypassing(player, Action.FLOWER_POT_INTERACT))
+                    || (material == Material.DRAGON_EGG && !land.isBypassing(player, Action.DRAGON_EGG_INTERACT))
+                    || (((block.getState() instanceof InventoryHolder && material != Material.LECTERN && material != Material.BREWING_STAND) || material == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
+                    || (material == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
                     || hasVehiculeInHand(player) && !land.isBypassing(player, Action.VEHICLE_PLACE_BREAK)
                     || hasArmorStandInHand(player) && !land.isBypassing(player, Action.BLOCK_PLACE)
-                    || ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG")
-                    || player
-                    .getInventory()
-                    .getItemInOffHand()
-                    .getType()
-                    .toString()
-                    .contains("SPAWN_EGG"))
-                    && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
+                    || hasSpawnEggInHand && !land.isBypassing(player, Action.USE_SPAWN_EGG)) {
                 event.setCancelled(true);
             }
 
         } else if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
-            if (block.getType() == Material.DRAGON_EGG
-                    && !land.isBypassing(player, Action.OTHER_INTERACTS)) {
+            if (material == Material.DRAGON_EGG && !land.isBypassing(player, Action.DRAGON_EGG_INTERACT)) {
                 event.setCancelled(true);
             }
         } else if (event.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
-            if (block.getType() == Material.BIG_DRIPLEAF) {
+            if (material == Material.BIG_DRIPLEAF) {
                 return;
             }
             if (!land.isBypassing(player, Action.PHYSICAL_INTERACT)) {
@@ -139,16 +129,16 @@ public class InteractListener implements Listener {
             if (land.hasFlag(Flag.PRESSURE_PLATE_BY_ENTITY)) {
                 switch (material) {
                     case ACACIA_PRESSURE_PLATE,
-                            OAK_PRESSURE_PLATE,
-                            DARK_OAK_PRESSURE_PLATE,
-                            JUNGLE_PRESSURE_PLATE,
-                            BIRCH_PRESSURE_PLATE,
-                            CRIMSON_PRESSURE_PLATE,
-                            WARPED_PRESSURE_PLATE,
-                            STONE_PRESSURE_PLATE,
-                            SPRUCE_PRESSURE_PLATE,
-                            LIGHT_WEIGHTED_PRESSURE_PLATE,
-                            POLISHED_BLACKSTONE_PRESSURE_PLATE -> {
+                         OAK_PRESSURE_PLATE,
+                         DARK_OAK_PRESSURE_PLATE,
+                         JUNGLE_PRESSURE_PLATE,
+                         BIRCH_PRESSURE_PLATE,
+                         CRIMSON_PRESSURE_PLATE,
+                         WARPED_PRESSURE_PLATE,
+                         STONE_PRESSURE_PLATE,
+                         SPRUCE_PRESSURE_PLATE,
+                         LIGHT_WEIGHTED_PRESSURE_PLATE,
+                         POLISHED_BLACKSTONE_PRESSURE_PLATE -> {
                         return;
                     }
                 }
@@ -172,7 +162,7 @@ public class InteractListener implements Listener {
 
         Land land = landRepository.getLandAt(block.getLocation());
 
-        if (!land.isBypassing(player, Action.OTHER_INTERACTS)) {
+        if (!land.isBypassing(player, Action.FERTILIZE)) {
             event.setCancelled(true);
         }
     }

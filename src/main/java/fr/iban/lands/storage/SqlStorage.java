@@ -16,13 +16,16 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class SqlStorage implements Storage {
 
     private final DataSource ds = DbAccess.getDataSource();
+    private final Logger logger;
 
-    public SqlStorage() {
+    public SqlStorage(Logger logger) {
         DbTables.createTables();
+        this.logger = logger;
     }
 
     @Override
@@ -274,16 +277,20 @@ public class SqlStorage implements Storage {
                 ps.setString(1, land.getId().toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Action action = Action.valueOf(rs.getString("permission"));
-                        String id = rs.getString("uuid");
+                        try {
+                            Action action = Action.valueOf(rs.getString("permission"));
+                            String id = rs.getString("uuid");
 
-                        if (id.equals("GLOBAL")) {
-                            land.trust(action);
-                        } else if (id.equals("GUILD_MEMBER")) {
-                            land.trustGuild(action);
-                        } else {
-                            UUID uuid = UUID.fromString(id);
-                            land.trust(uuid, action);
+                            if (id.equals("GLOBAL")) {
+                                land.trust(action);
+                            } else if (id.equals("GUILD_MEMBER")) {
+                                land.trustGuild(action);
+                            } else {
+                                UUID uuid = UUID.fromString(id);
+                                land.trust(uuid, action);
+                            }
+                        } catch (IllegalArgumentException e) {
+                            logger.warning("Permission " + rs.getString("permission") + " not found.");
                         }
                     }
                 }

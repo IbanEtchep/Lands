@@ -260,6 +260,6 @@ public class AreaSelector {
     }
 
     private void showParticle(Location loc) {
-        player.spawnParticle(Particle.VILLAGER_HAPPY, loc, 1);
+        player.spawnParticle(Particle.HAPPY_VILLAGER, loc, 1);
     }
 }
