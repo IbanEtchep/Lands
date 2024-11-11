@@ -1,5 +1,7 @@
 package fr.iban.lands;
 
+import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.PlatformScheduler;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
@@ -16,7 +18,7 @@ import fr.iban.lands.service.LandServiceImpl;
 import fr.iban.lands.task.PotionEffectTask;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandMap;
-import fr.iban.lands.utils.SeeChunks;
+import fr.iban.lands.utils.SeeClaims;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -43,13 +45,13 @@ public final class LandsPlugin extends JavaPlugin {
     private Economy econ = null;
     private ExecutorService singleThreadExecutor;
     private ExecutorService executorService;
+    private FoliaLib foliaLib;
 
     private LandRepository landRepository;
 
     private LandService landService;
 
-    //TODO rename above
-    private final Map<UUID, SeeChunks> seeChunks = new HashMap<>();
+    private final Map<UUID, SeeClaims> seeClaims = new HashMap<>();
     private LandMap landMap;
 
 
@@ -57,6 +59,7 @@ public final class LandsPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         instance = this;
+        foliaLib = new FoliaLib(this);
         this.bypass = new ArrayList<>();
         this.debugPlayers = new ArrayList<>();
         this.singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -110,6 +113,7 @@ public final class LandsPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         singleThreadExecutor.shutdown();
+        seeClaims.values().forEach(SeeClaims::stop);
     }
 
     private void registerCommands() {
@@ -257,7 +261,11 @@ public final class LandsPlugin extends JavaPlugin {
         return landMap;
     }
 
-    public Map<UUID, SeeChunks> getSeeChunks() {
-        return seeChunks;
+    public Map<UUID, SeeClaims> getSeeClaims() {
+        return seeClaims;
+    }
+
+    public PlatformScheduler getScheduler() {
+        return foliaLib.getScheduler();
     }
 }

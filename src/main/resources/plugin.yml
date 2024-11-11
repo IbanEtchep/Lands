@@ -1,8 +1,8 @@
 name: MSLands
-version: ${project.version}
+version: ${project_version}
 main: fr.iban.lands.LandsPlugin
 api-version: 1.16
 authors: [ Iban ]
 description: Plugin de protections
-depend: [ Core ]
+depend: [ Core, packetevents ]
 softdepend: [ QuickShop , HeadDatabase, Guilds, Vault ]

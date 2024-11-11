@@ -4,7 +4,7 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.model.land.Land;
-import fr.iban.lands.utils.SeeChunks;
+import fr.iban.lands.utils.SeeClaims;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,11 +32,11 @@ public class JoinQuitListeners implements Listener {
             player.removePotionEffect(PotionEffectType.INVISIBILITY);
         }
 
-        SeeChunks seeChunks = plugin.getSeeChunks().get(player.getUniqueId());
+        SeeClaims seeChunks = plugin.getSeeClaims().get(player.getUniqueId());
 
         if (seeChunks != null) {
             seeChunks.stop();
-            plugin.getSeeChunks().remove(player.getUniqueId());
+            plugin.getSeeClaims().remove(player.getUniqueId());
         }
 
         if (player.isSilent()) {

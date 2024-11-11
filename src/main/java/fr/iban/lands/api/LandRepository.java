@@ -43,6 +43,8 @@ public interface LandRepository {
 
     Land getWilderness();
 
+    boolean isWilderness(Land land);
+
     void addChunk(SChunk chunk, Land land);
 
     void removeChunk(SChunk chunk);
