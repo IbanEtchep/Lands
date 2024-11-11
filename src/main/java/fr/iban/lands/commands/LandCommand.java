@@ -12,11 +12,7 @@ import fr.iban.lands.model.land.PlayerLand;
 import fr.iban.lands.model.land.SystemLand;
 import fr.iban.lands.utils.DateUtils;
 import fr.iban.lands.utils.LandMap;
-import fr.iban.lands.utils.SeeChunks;
-import io.papermc.paper.registry.RegistryAccess;
-import io.papermc.paper.registry.RegistryKey;
-import io.papermc.paper.registry.TypedKey;
-import io.papermc.paper.registry.keys.MobEffectKeys;
+import fr.iban.lands.utils.SeeClaims;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -25,7 +21,6 @@ import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
 
@@ -229,15 +224,15 @@ public class LandCommand {
         }
 
         UUID uuid = player.getUniqueId();
-        if (!plugin.getSeeChunks().containsKey(uuid)) {
-            SeeChunks sc = new SeeChunks(player, plugin);
-            plugin.getSeeChunks().put(player.getUniqueId(), sc);
-            sc.showParticles();
+        if (!plugin.getSeeClaims().containsKey(uuid)) {
+            SeeClaims sc = new SeeClaims(player, plugin);
+            plugin.getSeeClaims().put(player.getUniqueId(), sc);
+            sc.showWalls();
             player.sendMessage("§aMode vision de claims activé.");
         } else {
-            SeeChunks sc = plugin.getSeeChunks().get(uuid);
+            SeeClaims sc = plugin.getSeeClaims().get(uuid);
             sc.stop();
-            plugin.getSeeChunks().remove(uuid);
+            plugin.getSeeClaims().remove(uuid);
             player.sendMessage("§cMode vision de claims désactivé.");
         }
     }

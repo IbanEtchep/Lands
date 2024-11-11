@@ -15,7 +15,6 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
@@ -185,6 +184,11 @@ public class LandRepositoryImpl implements LandRepository {
     @Override
     public Land getWilderness() {
         return wilderness;
+    }
+
+    @Override
+    public boolean isWilderness(Land land) {
+        return land.equals(wilderness);
     }
 
     @Override
