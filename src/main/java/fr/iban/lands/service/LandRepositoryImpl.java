@@ -371,6 +371,10 @@ public class LandRepositoryImpl implements LandRepository {
 
     @Override
     public int getRemainingChunkCount(UUID uuid) {
+        if(uuid == null) {
+            return 9999999;
+        }
+
         int max = getMaxChunkCount(uuid);
         int count = getChunkCount(uuid);
 

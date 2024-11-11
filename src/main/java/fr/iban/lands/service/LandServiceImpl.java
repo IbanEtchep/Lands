@@ -120,8 +120,8 @@ public class LandServiceImpl implements LandService {
             @Override
             public void run() {
                 if (!chunks.isEmpty()) {
-                    claim(chunks.get(0), land);
-                    chunks.remove(0);
+                    claim(chunks.getFirst(), land);
+                    chunks.removeFirst();
 
                     if (chunks.size() % 50 == 0) {
                         int loadedChunks = TTChunks - chunks.size();
