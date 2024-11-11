@@ -1,5 +1,6 @@
 package fr.iban.lands.events;
 
+import fr.iban.lands.model.SChunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -11,10 +12,12 @@ public class PlayerChunkClaimEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS_LIST = new HandlerList();
     private boolean isCancelled;
     private final Player player;
+    private final SChunk chunk;
 
-    public PlayerChunkClaimEvent(@NotNull Player player) {
+    public PlayerChunkClaimEvent(@NotNull Player player, SChunk chunk) {
         this.isCancelled = false;
         this.player = player;
+        this.chunk = chunk;
     }
 
     @Override
@@ -39,5 +42,9 @@ public class PlayerChunkClaimEvent extends Event implements Cancellable {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public SChunk getChunk() {
+        return chunk;
     }
 }

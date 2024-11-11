@@ -4,6 +4,7 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
 import fr.iban.lands.enums.LandType;
+import fr.iban.lands.events.PlayerChunkClaimEvent;
 import fr.iban.lands.events.PlayerChunkUnclaimEvent;
 import fr.iban.lands.events.PlayerLandCreateEvent;
 import fr.iban.lands.events.PlayerLandPreCreateEvent;
@@ -145,6 +146,11 @@ public class LandServiceImpl implements LandService {
         if (landRepository.getLandAt(chunk).equals(landRepository.getWilderness())) {
             if (landRepository.getRemainingChunkCount(land.getOwner()) <= 0) {
                 giveClaims(player, land.getOwner(), 1);
+            }
+
+            PlayerChunkClaimEvent event = new PlayerChunkClaimEvent(player, chunk);
+            if(!event.callEvent()) {
+                return;
             }
 
             claim(chunk, land);
