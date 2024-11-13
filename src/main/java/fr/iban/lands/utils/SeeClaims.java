@@ -20,85 +20,137 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SeeClaims {
 
     private final LandsPlugin plugin;
     private final LandRepository landRepository;
     private final Player player;
+    private final Set<Location> visibleBlocks = new HashSet<>();
+    private final Map<Location, StateType> wallBlocks = new HashMap<>();
+    private WrappedTask proximityTask;
+    private static final double HIDE_DISTANCE_SQUARED = 16.0; // 4 blocks
+    private static final int VIEW_DISTANCE = 5;
+    private static final int VERTICAL_VIEW_RANGE = 90;
     private Location lastPlayerLocation;
-    private WrappedTask task;
-    private final Set<Location> lastBlockLocations = new HashSet<>();
+    private long lastUpdate = System.currentTimeMillis();
 
     public SeeClaims(Player player, LandsPlugin plugin) {
         this.player = player;
         this.plugin = plugin;
         this.landRepository = plugin.getLandRepository();
+        this.lastPlayerLocation = player.getLocation();
     }
 
     public void showWalls() {
-        task = plugin.getScheduler().runTimerAsync(() -> {
+        updateWalls();
+        startProximityCheck();
+    }
+
+    /**
+     * Démarre la tâche de vérification de proximité
+     */
+    public void startProximityCheck() {
+        proximityTask = plugin.getScheduler().runTimer(() -> {
             if (!player.isOnline()) {
                 stop();
                 return;
             }
 
-            if (lastPlayerLocation != null && lastPlayerLocation.distanceSquared(player.getLocation()) < 1) {
-                return;
+            updateVisibleBlocks();
+
+            if (lastPlayerLocation.distanceSquared(player.getLocation()) > 100
+                    && System.currentTimeMillis() - lastUpdate > 1000) {
+                updateWalls();
+                player.sendMessage("§aLes murs ont été mis à jour.");
+
+                lastPlayerLocation = player.getLocation();
+                lastUpdate = System.currentTimeMillis();
             }
-
-            lastPlayerLocation = player.getLocation();
-
-            Set<Location> newLocations = new HashSet<>();
-            var wallBlocks = getWallBlocks();
-            int py = (int) player.getLocation().getY();
-
-            // Afficher les nouveaux blocs
-            for (Map.Entry<Location, StateType> wallBlockEntry : wallBlocks.entrySet()) {
-                for (int y = Math.max(0, py - 30); y < Math.min(255, py + 30); y++) {
-                    Location blockLoc = wallBlockEntry.getKey().clone();
-                    blockLoc.setY(y);
-
-                    // Ne pas afficher si trop proche du joueur
-                    if (player.getLocation().distanceSquared(blockLoc) < 9
-                            || blockLoc.getBlock().getType() != Material.AIR) {
-                        continue;
-                    }
-
-                    newLocations.add(blockLoc);
-                    WrapperPlayServerBlockChange packet = new WrapperPlayServerBlockChange(
-                            new Vector3i(blockLoc.getBlockX(), blockLoc.getBlockY(), blockLoc.getBlockZ()),
-                            WrappedBlockState.getDefaultState(wallBlockEntry.getValue()).getGlobalId()
-                    );
-                    PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
-                }
-            }
-
-            // Retirer les anciens blocs
-            lastBlockLocations.stream()
-                    .filter(loc -> !newLocations.contains(loc))
-                    .forEach(loc -> {
-                        WrapperPlayServerBlockChange packet = new WrapperPlayServerBlockChange(
-                                new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()),
-                                SpigotConversionUtil.fromBukkitBlockData(loc.getBlock().getBlockData()).getGlobalId()
-                        );
-                        PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
-                    });
-
-            lastBlockLocations.clear();
-            lastBlockLocations.addAll(newLocations);
-
-        },  10L, 5L);
+        }, 5L, 5L);
     }
 
+    /**
+     * Met à jour les blocs visibles en fonction de la position du joueur
+     */
+    private void updateVisibleBlocks() {
+        Location playerLoc = player.getLocation();
+        Set<Location> newVisibleBlocks = new HashSet<>();
 
-    private Map<Location, StateType> getWallBlocks() {
+        int py = playerLoc.getBlockY();
+
+        for (Map.Entry<Location, StateType> entry : wallBlocks.entrySet()) {
+            Location baseLoc = entry.getKey();
+
+            for (int y = Math.max(0, py - VERTICAL_VIEW_RANGE); y < Math.min(255, py + VERTICAL_VIEW_RANGE); y++) {
+                Location blockLoc = baseLoc.clone();
+                blockLoc.setY(y);
+
+                if (playerLoc.distanceSquared(blockLoc) < HIDE_DISTANCE_SQUARED
+                        || blockLoc.getBlock().getType() != Material.AIR) {
+                    // Si le bloc était visible avant, le cacher
+                    if (visibleBlocks.contains(blockLoc)) {
+                        sendBlockUpdate(blockLoc);
+                    }
+                    continue;
+                }
+
+                newVisibleBlocks.add(blockLoc);
+                if (!visibleBlocks.contains(blockLoc)) {
+                    // Montrer le nouveau bloc
+                    sendBlockUpdate(blockLoc, false, entry.getValue());
+                }
+            }
+        }
+
+        // Cacher les blocs qui ne sont plus visibles
+        visibleBlocks.stream()
+                .filter(loc -> !newVisibleBlocks.contains(loc))
+                .forEach(this::sendBlockUpdate);
+
+        visibleBlocks.clear();
+        visibleBlocks.addAll(newVisibleBlocks);
+    }
+
+    /**
+     * Envoie une mise à jour de bloc au joueur
+     */
+    private void sendBlockUpdate(Location loc) {
+        sendBlockUpdate(loc, true, null);
+    }
+
+    /**
+     * Envoie une mise à jour de bloc au joueur avec un type spécifique
+     */
+    private void sendBlockUpdate(Location loc, boolean restore, StateType stateType) {
+        WrapperPlayServerBlockChange packet = new WrapperPlayServerBlockChange(
+                new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()),
+                restore ? SpigotConversionUtil.fromBukkitBlockData(loc.getBlock().getBlockData()).getGlobalId()
+                        : WrappedBlockState.getDefaultState(stateType).getGlobalId()
+        );
+        PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
+    }
+
+    /**
+     * Efface tous les murs actuellement visibles
+     */
+    private void clearCurrentWalls() {
+        for (Location loc : visibleBlocks) {
+            sendBlockUpdate(loc);
+        }
+        visibleBlocks.clear();
+    }
+
+    /**
+     * Calcule les positions des murs et leurs types
+     */
+    private Map<Location, StateType> calculateWallBlocks() {
         Map<Location, StateType> locations = new HashMap<>();
         SChunk playerChunk = new SChunk(player.getLocation());
-        int viewDistance = 5;
 
-        for (int x = -viewDistance; x <= viewDistance; x++) {
-            for (int z = -viewDistance; z <= viewDistance; z++) {
+        for (int x = -VIEW_DISTANCE; x <= VIEW_DISTANCE; x++) {
+            for (int z = -VIEW_DISTANCE; z <= VIEW_DISTANCE; z++) {
                 SChunk chunk = playerChunk.getRelativeChunk(x, z);
 
                 Land land = landRepository.getLandAt(chunk);
@@ -133,6 +185,9 @@ public class SeeClaims {
         return locations;
     }
 
+    /**
+     * Détermine le type de bloc à utiliser pour un terrain
+     */
     public StateType getLandStateType(Player player, Land land) {
         if(land instanceof PlayerLand pland && pland.getOwner().equals(player.getUniqueId())) {
             return StateTypes.LIME_STAINED_GLASS;
@@ -149,29 +204,82 @@ public class SeeClaims {
         return StateTypes.WHITE_STAINED_GLASS;
     }
 
+    /**
+     * Détermine si un mur doit être affiché entre deux chunks
+     */
     private boolean shouldShowWall(Land currentLand, SChunk adjacent) {
         Land adjacentLand = landRepository.getLandAt(adjacent);
         return currentLand != adjacentLand;
     }
 
+    /**
+     * Arrête l'affichage des murs et nettoie les ressources
+     */
     public void stop() {
-        if (task != null) {
-            task.cancel();
-            task = null;
+        if (proximityTask != null) {
+            proximityTask.cancel();
+            proximityTask = null;
+        }
+        clearCurrentWalls();
+        wallBlocks.clear();
+    }
+
+    private void updateWalls() {
+        // Calculer les nouveaux murs sans effacer les anciens
+        Map<Location, StateType> newWallBlocks = calculateWallBlocks();
+
+        // Comparer et mettre à jour uniquement les différences
+        updateWallDifferences(newWallBlocks);
+
+        // Mettre à jour la map des murs
+        wallBlocks.clear();
+        wallBlocks.putAll(newWallBlocks);
+
+        // Mettre à jour les blocs visibles
+        updateVisibleBlocks();
+    }
+
+    private void updateWallDifferences(Map<Location, StateType> newWallBlocks) {
+        // Trouver les blocs à supprimer (présents dans wallBlocks mais pas dans newWallBlocks)
+        Set<Location> blocksToRemove = new HashSet<>(wallBlocks.keySet());
+        blocksToRemove.removeAll(newWallBlocks.keySet());
+
+        // Trouver les blocs à ajouter ou modifier
+        Set<Map.Entry<Location, StateType>> blocksToUpdate = newWallBlocks.entrySet().stream()
+                .filter(entry -> !wallBlocks.containsKey(entry.getKey()) ||
+                        !wallBlocks.get(entry.getKey()).equals(entry.getValue()))
+                .collect(Collectors.toSet());
+
+        // Supprimer les blocs qui ne sont plus nécessaires
+        for (Location loc : blocksToRemove) {
+            if (visibleBlocks.contains(loc)) {
+                sendBlockUpdate(loc);
+                visibleBlocks.remove(loc);
+            }
         }
 
-        // Restaurer tous les blocs
-        for (Location loc : lastBlockLocations) {
-            WrapperPlayServerBlockChange packet = new WrapperPlayServerBlockChange(
-                    new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()),
-                    SpigotConversionUtil.fromBukkitBlockData(loc.getBlock().getBlockData()).getGlobalId()
-            );
-            PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
+        // Mettre à jour les nouveaux blocs ou ceux qui ont changé
+        for (Map.Entry<Location, StateType> entry : blocksToUpdate) {
+            Location baseLoc = entry.getKey();
+            Location playerLoc = player.getLocation();
+            int py = playerLoc.getBlockY();
+
+            for (int y = Math.max(0, py - VERTICAL_VIEW_RANGE); y < Math.min(255, py + VERTICAL_VIEW_RANGE); y++) {
+                Location blockLoc = baseLoc.clone();
+                blockLoc.setY(y);
+
+                if (playerLoc.distanceSquared(blockLoc) < HIDE_DISTANCE_SQUARED
+                        || blockLoc.getBlock().getType() != Material.AIR) {
+                    continue;
+                }
+
+                visibleBlocks.add(blockLoc);
+                sendBlockUpdate(blockLoc, false, entry.getValue());
+            }
         }
-        lastBlockLocations.clear();
     }
 
     public void forceUpdate() {
-        lastPlayerLocation = null;
+        updateWalls();
     }
 }

@@ -122,11 +122,11 @@ public class LandListeners implements Listener {
 
     @EventHandler
     public void onClaim(PlayerChunkClaimEvent event) {
-        plugin.getSeeClaims().values().forEach(SeeClaims::forceUpdate);
+        plugin.getScheduler().runLater(() -> plugin.getSeeClaims().values().forEach(SeeClaims::forceUpdate), 1);
     }
 
     @EventHandler
     public void onUnclaim(PlayerChunkUnclaimEvent event) {
-        plugin.getSeeClaims().values().forEach(SeeClaims::forceUpdate);
+        plugin.getScheduler().runLater(() -> plugin.getSeeClaims().values().forEach(SeeClaims::forceUpdate), 1);
     }
 }
