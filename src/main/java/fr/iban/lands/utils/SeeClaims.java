@@ -63,7 +63,6 @@ public class SeeClaims {
             if (lastPlayerLocation.distanceSquared(player.getLocation()) > 100
                     && System.currentTimeMillis() - lastUpdate > 1000) {
                 updateWalls();
-                player.sendMessage("§aLes murs ont été mis à jour.");
 
                 lastPlayerLocation = player.getLocation();
                 lastUpdate = System.currentTimeMillis();

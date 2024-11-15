@@ -143,7 +143,6 @@ public final class LandsPlugin extends JavaPlugin {
         commandHandler.register(new LandsCommand(this));
         commandHandler.register(new MaxClaimsCommand(this));
         commandHandler.register(new MiscellaneousCommands());
-        commandHandler.registerBrigadier();
     }
 
     public void setupEconomy() {
