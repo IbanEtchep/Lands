@@ -6,6 +6,7 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.model.land.Land;
 import fr.iban.lands.utils.MobUtils;
+import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -42,12 +43,9 @@ public class DamageListeners implements Listener {
         if (event instanceof EntityDamageByEntityEvent damageByEntityEvent) {
             Player player = getPlayerDamager(damageByEntityEvent);
             if (player != null) {
-                if ((MobUtils.blockEntityList.contains(event.getEntityType())
-                        && !land.isBypassing(player, Action.BLOCK_BREAK))
-                        || (!MobUtils.mobsList.contains(event.getEntityType())
-                        && !land.isBypassing(player, Action.PASSIVE_KILL))
-                        || (event.getEntity().getCustomName() != null
-                        && !land.isBypassing(player, Action.TAGGED_KILL))) {
+                if ((MobUtils.blockEntityList.contains(event.getEntityType()) && !land.isBypassing(player, Action.BLOCK_BREAK))
+                        || (!(event.getEntity() instanceof Enemy) && !land.isBypassing(player, Action.PASSIVE_KILL))
+                        || (event.getEntity().getCustomName() != null && !land.isBypassing(player, Action.TAGGED_KILL))) {
                     event.setCancelled(true);
                 }
             }

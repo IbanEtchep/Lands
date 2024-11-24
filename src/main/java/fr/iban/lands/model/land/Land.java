@@ -24,6 +24,7 @@ public abstract class Land {
     private final Trust guildTrust = new Trust();
     protected Map<UUID, Trust> trusts = new HashMap<>();
     protected Set<PotionEffect> effects = new HashSet<>();
+    protected Set<LandEnterCommand> enterCommands = new HashSet<>();
     protected Set<Flag> flags = new HashSet<>();
     protected Set<UUID> bans = new HashSet<>();
     protected Map<LinkType, Land> links;
@@ -48,9 +49,6 @@ public abstract class Land {
     }
 
     public String getName() {
-        if (name == null) {
-            return "default";
-        }
         return name;
     }
 
@@ -259,12 +257,28 @@ public abstract class Land {
     }
 
     public void addEffect(PotionEffectType effectType, int amplifier) {
-        var effect = new PotionEffect(effectType, 150, amplifier);
+        var effect = new PotionEffect(effectType, 160, amplifier); // 160 ticks = 8 seconds
         effects.removeIf(e -> e.getType().equals(effectType));
         effects.add(effect);
     }
 
     public void removeEffect(PotionEffectType effectType) {
         effects.removeIf(effect -> effect.getType().equals(effectType));
+    }
+
+    public void addCommand(LandEnterCommand command) {
+        enterCommands.add(command);
+    }
+
+    public void removeCommand(LandEnterCommand command) {
+        enterCommands.remove(command);
+    }
+
+    public Set<LandEnterCommand> getEnterCommands() {
+        return enterCommands;
+    }
+
+    public void setEnterCommands(Set<LandEnterCommand> enterCommands) {
+        this.enterCommands = enterCommands;
     }
 }

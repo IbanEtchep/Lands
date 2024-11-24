@@ -59,21 +59,27 @@ public class CuboidSelector {
                                 pos1 = player.getLocation();
                                 player.sendMessage("§a§lPosition 1 définie.");
 
+                                if(pos2 != null && pos2.getWorld() != pos1.getWorld()){
+                                    pos2 = null;
+                                }
+
                                 Cuboid cuboid = getCuboid();
                                 if (cuboid != null) {
                                     showParticules(cuboid);
                                 }
-
                             } else if (texte.equalsIgnoreCase("pos2")) {
                                 cancelTask();
                                 pos2 = player.getLocation();
                                 player.sendMessage("§a§lPosition 2 définie.");
 
+                                if(pos1 != null && pos2.getWorld() != pos1.getWorld()){
+                                    pos1 = null;
+                                }
+
                                 Cuboid cuboid = getCuboid();
                                 if (cuboid != null) {
                                     showParticules(cuboid);
                                 }
-
                             } else if (texte.equalsIgnoreCase("sauvegarder")) {
                                 Cuboid cuboid = getCuboid();
                                 verif(cuboid)
@@ -144,6 +150,7 @@ public class CuboidSelector {
         if (!arePosSet()) {
             return null;
         }
+
         return new Cuboid(pos1, pos2);
     }
 

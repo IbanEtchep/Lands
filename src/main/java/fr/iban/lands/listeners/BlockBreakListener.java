@@ -43,8 +43,6 @@ public class BlockBreakListener implements Listener {
         Block block = event.getBlock();
         Land land = landRepository.getLandAt(block.getLocation());
 
-        if (land == null) return;
-
         if (land.hasFlag(Flag.AUTO_REPLANT)) {
             Material material = block.getType();
 

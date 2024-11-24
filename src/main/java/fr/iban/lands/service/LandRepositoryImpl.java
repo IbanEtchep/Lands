@@ -276,17 +276,28 @@ public class LandRepositoryImpl implements LandRepository {
         if (plugin.isBypassing(player)) {
             for (Land land : getSystemLands()) {
                 landNames.add("system:" + land.getName());
+
+                for (Land subLand : land.getSubLands().values()) {
+                    landNames.add("system:subland:" + subLand.getName());
+                }
             }
         }
         return landNames;
     }
-
 
     @Override
     public Land getManageableLandFromName(Player player, String name) {
         UUID playerId = player.getUniqueId();
 
         if (name.startsWith("system:") && player.hasPermission("lands.bypass")) {
+            if(name.startsWith("system:subland:")) {
+                return getSystemLands().stream()
+                        .map(land -> land.getSubLands().values())
+                        .flatMap(Collection::stream)
+                        .filter(land -> land.getName().equals(name.split(":")[2]))
+                        .findFirst().orElse(null);
+            }
+
             return getSystemLands().stream()
                     .filter(land -> land.getName().equals(name.split(":")[1]))
                     .findFirst().orElse(null);
@@ -457,5 +468,17 @@ public class LandRepositoryImpl implements LandRepository {
     public void removeEffect(Land land, PotionEffectType effectType) {
         land.removeEffect(effectType);
         plugin.runAsyncQueued(() -> storage.removeEffect(land, effectType.getKey().toString()));
+    }
+
+    @Override
+    public void addCommand(Land land, LandEnterCommand command) {
+        land.addCommand(command);
+        plugin.runAsyncQueued(() -> storage.addCommand(land, command));
+    }
+
+    @Override
+    public void removeCommand(Land land, LandEnterCommand command) {
+        land.removeCommand(command);
+        plugin.runAsyncQueued(() -> storage.removeCommand(command));
     }
 }

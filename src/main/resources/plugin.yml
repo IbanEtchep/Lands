@@ -1,7 +1,7 @@
 name: MSLands
 version: ${project_version}
 main: fr.iban.lands.LandsPlugin
-api-version: 1.16
+api-version: 1.21
 authors: [ Iban ]
 description: Plugin de protections
 depend: [ Core, packetevents ]

@@ -1,5 +1,6 @@
 package fr.iban.lands.utils;
 
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
@@ -32,7 +33,7 @@ public class AreaSelector {
     private Location pos2;
 
     private final Runnable quitCallback;
-    private BukkitTask particleTask;
+    private WrappedTask particleTask;
 
     private final Land land;
 
@@ -252,7 +253,7 @@ public class AreaSelector {
             particleTask.cancel();
         }
 
-        particleTask = Bukkit.getScheduler().runTaskTimer(LandsPlugin.getInstance(), () -> {
+        particleTask = plugin.getScheduler().runTimer(() -> {
             for (Location location : edgeLocations) {
                 showParticle(location);
             }

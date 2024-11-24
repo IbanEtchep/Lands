@@ -6,6 +6,7 @@ import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.LandEnterCommand;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -114,4 +115,8 @@ public interface LandRepository {
     void addEffect(Land land, PotionEffectType effectType, int amplifier);
 
     void removeEffect(Land land, PotionEffectType effectType);
+
+    void addCommand(Land land, LandEnterCommand command);
+
+    void removeCommand(Land land, LandEnterCommand command);
 }

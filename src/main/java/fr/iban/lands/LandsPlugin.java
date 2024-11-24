@@ -13,6 +13,7 @@ import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.listeners.*;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.LandEnterCommand;
 import fr.iban.lands.service.LandRepositoryImpl;
 import fr.iban.lands.service.LandServiceImpl;
 import fr.iban.lands.task.PotionEffectTask;
@@ -107,7 +108,7 @@ public final class LandsPlugin extends JavaPlugin {
         Head.loadAPI();
 
         PotionEffectTask potionEffectTask = new PotionEffectTask(this);
-        getServer().getScheduler().runTaskTimer(this, potionEffectTask , 100, 100);
+        getScheduler().runTimer(potionEffectTask, 100, 100);
     }
 
     @Override

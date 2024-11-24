@@ -152,6 +152,7 @@ public class SqlStorage implements Storage {
             loadTrusts(land);
             land.setFlags(getFlags(land));
             land.setBans(getBans(land));
+            land.setEnterCommands(getCommands(land));
             loadEffects(land);
         }
 
@@ -764,5 +765,61 @@ public class SqlStorage implements Storage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void addCommand(Land land, LandEnterCommand command) {
+        String sql = "INSERT INTO land_commands (id, land_id, command, as_console) VALUES(?, ?, ?, ?);";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, command.getUniqueId().toString());
+                ps.setString(2, land.getId().toString());
+                ps.setString(3, command.getCommand());
+                ps.setBoolean(4, command.isAsConsole());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void removeCommand(LandEnterCommand command) {
+        String sql = "DELETE FROM land_commands WHERE id=?;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, command.getUniqueId().toString());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Set<LandEnterCommand> getCommands(Land land) {
+        Set<LandEnterCommand> commands = new HashSet<>();
+        String sql = "SELECT * FROM land_commands WHERE land_id=?;";
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, land.getId().toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        UUID uniqueId = UUID.fromString(rs.getString("id"));
+                        String command = rs.getString("command");
+                        boolean asConsole = rs.getBoolean("as_console");
+
+                        commands.add(new LandEnterCommand(uniqueId, command, asConsole));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return commands;
     }
 }

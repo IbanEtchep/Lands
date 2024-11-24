@@ -117,23 +117,19 @@ public class LandServiceImpl implements LandService {
     public void claim(Player player, List<SChunk> chunks, Land land) {
         int TTChunks = chunks.size();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!chunks.isEmpty()) {
-                    claim(chunks.getFirst(), land);
-                    chunks.removeFirst();
+        plugin.getScheduler().runTimerAsync(() -> {
+            if (!chunks.isEmpty()) {
+                claim(chunks.getFirst(), land);
+                chunks.removeFirst();
 
-                    if (chunks.size() % 50 == 0) {
-                        int loadedChunks = TTChunks - chunks.size();
-                        player.sendMessage(String.format("§aProtection des chunks... (%d/%d) [%f%%]", loadedChunks, TTChunks, Math.round(loadedChunks * 100.0F / (TTChunks) * 10.0F) / 10.0F));
-                    }
-                } else {
-                    player.sendMessage("§a§lLa selection a été protégée avec succès.");
-                    cancel();
+                if (chunks.size() % 50 == 0) {
+                    int loadedChunks = TTChunks - chunks.size();
+                    player.sendMessage(String.format("§aProtection des chunks... (%d/%d) [%f%%]", loadedChunks, TTChunks, Math.round(loadedChunks * 100.0F / (TTChunks) * 10.0F) / 10.0F));
                 }
+            } else {
+                player.sendMessage("§a§lLa selection a été protégée avec succès.");
             }
-        }.runTaskTimerAsynchronously(plugin, 0L, 1L);
+        }, 0L, 1L);
     }
 
     @Override

@@ -5,6 +5,7 @@ import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LinkType;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.LandEnterCommand;
 
 import java.util.Map;
 import java.util.Set;
@@ -81,4 +82,10 @@ public interface Storage {
     void removeEffect(Land land, String effect);
 
     void loadEffects(Land land);
+
+    void addCommand(Land land, LandEnterCommand command);
+
+    void removeCommand(LandEnterCommand command);
+
+    Set<LandEnterCommand> getCommands(Land land);
 }

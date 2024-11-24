@@ -118,6 +118,16 @@ public class DbTables {
                               FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE
                           );
                         """);
+        createTable(
+                """
+                          CREATE TABLE IF NOT EXISTS land_commands(
+                              id UUID PRIMARY KEY NOT NULL DEFAULT (UUID()),
+                              land_id UUID NOT NULL,
+                              command VARCHAR(255) NOT NULL,
+                              as_console BOOLEAN NOT NULL,
+                              FOREIGN KEY (land_id) REFERENCES land_lands(id) ON DELETE CASCADE
+                          );
+                        """);
     }
 
     private static void createTable(String statement) {

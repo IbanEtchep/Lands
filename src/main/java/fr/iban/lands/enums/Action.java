@@ -29,6 +29,7 @@ public enum Action {
     BREWING_STAND_INTERACT("Utiliser les alambics", new ItemStack(Material.BREWING_STAND), ActionGroup.USE),
     PHYSICAL_INTERACT("Interactions physiques (plaques de pression, crochets...)", new ItemStack(Material.OAK_PRESSURE_PLATE), ActionGroup.INTERACT),
     FLOWER_POT_INTERACT("Interactions avec les pots de fleurs", new ItemStack(Material.FLOWER_POT), ActionGroup.INTERACT),
+    CHISELED_BOOKSHELF_INTERACT("Interactions avec les bibliothèques sculptées", new ItemStack(Material.CHISELED_BOOKSHELF), ActionGroup.INTERACT),
     USE_SPAWN_EGG("Utiliser les oeufs de spawn", new ItemStack(Material.HORSE_SPAWN_EGG), ActionGroup.INTERACT),
     FERTILIZE("Fertiliser les terres", new ItemStack(Material.BONE_MEAL), ActionGroup.INTERACT),
     DRAGON_EGG_INTERACT("Interagir avec les oeufs de dragon", new ItemStack(Material.DRAGON_EGG), ActionGroup.INTERACT),

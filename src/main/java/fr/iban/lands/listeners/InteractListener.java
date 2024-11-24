@@ -99,6 +99,7 @@ public class InteractListener implements Listener {
                     || (material == Material.DRAGON_EGG && !land.isBypassing(player, Action.DRAGON_EGG_INTERACT))
                     || (((block.getState() instanceof InventoryHolder && material != Material.LECTERN && material != Material.BREWING_STAND) || material == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
                     || (material == Material.LECTERN && !land.isBypassing(player, Action.LECTERN_READ))
+                    || (material == Material.CHISELED_BOOKSHELF && !land.isBypassing(player, Action.CHISELED_BOOKSHELF_INTERACT))
                     || hasVehiculeInHand(player) && !land.isBypassing(player, Action.VEHICLE_PLACE_BREAK)
                     || hasArmorStandInHand(player) && !land.isBypassing(player, Action.BLOCK_PLACE)
                     || hasSpawnEggInHand && !land.isBypassing(player, Action.USE_SPAWN_EGG)) {

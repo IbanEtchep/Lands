@@ -8,6 +8,7 @@ import fr.iban.lands.api.LandService;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.model.SChunk;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.model.land.LandEnterCommand;
 import fr.iban.lands.model.land.PlayerLand;
 import fr.iban.lands.model.land.SystemLand;
 import fr.iban.lands.utils.DateUtils;
@@ -18,6 +19,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
@@ -400,6 +402,73 @@ public class LandCommand {
         player.sendMessage("§6Effets actifs sur le territoire " + land.getName() + " :");
         land.getEffects().forEach((potionEffect) -> {
             player.sendMessage("§8- §f" + potionEffect.getType().getKey() + " " + potionEffect.getAmplifier());
+        });
+    }
+
+    @Subcommand("admin command add")
+    @CommandPermission("lands.admin")
+    @Usage("/land admin command add <land> <asConsole> <command>")
+    public void addCommand(Player player, Land land, @Default("false") boolean asConsole, String command) {
+        landRepository.addCommand(land, new LandEnterCommand(command, asConsole));
+        player.sendMessage("§aCommande ajoutée.");
+    }
+
+    @Subcommand("admin command remove")
+    @CommandPermission("lands.admin")
+    @Usage("/land admin command remove <land_id> <command_id>")
+    public void removeCommand(Player player, String landIdString, String commandIdString) {
+        UUID landId;
+        UUID commandId;
+        try {
+            landId = UUID.fromString(landIdString);
+            commandId = UUID.fromString(commandIdString);
+        }catch (IllegalArgumentException e) {
+            player.sendMessage("§cL'ID du territoire ou de la commande est invalide.");
+            return;
+        }
+
+        Land land = landRepository.getLandById(landId).orElse(null);
+
+        if(land == null) {
+            player.sendMessage("§cCe territoire n'existe pas.");
+            return;
+        }
+
+        LandEnterCommand command = land.getEnterCommands().stream()
+                .filter(c -> c.getUniqueId().equals(commandId))
+                .findFirst().orElse(null);
+
+        if(command == null) {
+            player.sendMessage("§cCette commande n'existe pas.");
+            return;
+        }
+
+        landRepository.removeCommand(land, command);
+
+        player.sendMessage("§aCommande retirée.");
+    }
+
+    @Subcommand("admin command list")
+    @CommandPermission("lands.admin")
+    @Usage("/land admin command list <land>")
+    public void listCommands(Player player, Land land) {
+        player.sendMessage("§6Commandes d'entrée du territoire " + land.getName() + " :");
+
+        land.getEnterCommands().forEach(landEnterCommand -> {
+            Component commandComponent = Component.text("§8- §f" + landEnterCommand.getCommand() + " ")
+                    .append(Component.text(landEnterCommand.isAsConsole() ? "§8[Console]" : ""))
+                    .append(Component.space())
+                    .append(
+                            Component.text("[Supprimer]")
+                                    .color(NamedTextColor.RED)
+                                    .decorate(TextDecoration.BOLD)
+                                    .hoverEvent(Component.text("Clique pour supprimer cette commande").color(NamedTextColor.GRAY))
+                                    .clickEvent(ClickEvent.runCommand(
+                                            "/land admin command remove " + land.getId() + " " + landEnterCommand.getUniqueId()
+                                    ))
+                    );
+
+            player.sendMessage(commandComponent);
         });
     }
 }
