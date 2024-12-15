@@ -1,5 +1,5 @@
 group = "fr.iban"
-version = "1.0.0"
+version = "1.0.1"
 description = "Lands"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
-    compileOnly(libs.com.github.ibanetchep.servercore.core.paper)
+    compileOnly(libs.corePaper)
     compileOnly(libs.msguilds)
     compileOnly(libs.com.ghostchu.quickshop.api)
     compileOnly(libs.com.ghostchu.quickshop.bukkit)

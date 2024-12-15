@@ -7,6 +7,7 @@ import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandService;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.Head;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -69,9 +70,16 @@ public class BansManageMenu extends PaginatedMenu {
             if (displayNameEquals(item, "§2Ajouter")) {
                 CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
                 player.closeInventory();
-                player.sendMessage("§2§lVeuillez entrer le nom du joueur que vous voulez bannir. :");
-                core.getTextInputs().put(player.getUniqueId(), texte -> {
-                    OfflinePlayer target = Bukkit.getOfflinePlayer(texte);
+                player.sendMessage("§2§lVeuillez entrer le nom du joueur que vous voulez bannir, ou tapez annuler :");
+                core.getTextInputs().put(player.getUniqueId(), component -> {
+                    String text = ChatUtils.toPlainText(component);
+                    if (text.equalsIgnoreCase("annuler")) {
+                        core.getTextInputs().remove(player.getUniqueId());
+                        open();
+                        return;
+                    }
+
+                    OfflinePlayer target = Bukkit.getOfflinePlayer(text);
                     landService.ban(player, land, target.getUniqueId());
                     core.getTextInputs().remove(player.getUniqueId());
                 });

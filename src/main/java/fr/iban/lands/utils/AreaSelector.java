@@ -10,12 +10,10 @@ import fr.iban.lands.model.land.Land;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.Objects;
@@ -52,8 +50,10 @@ public class AreaSelector {
         core.getTextInputs()
                 .put(
                         player.getUniqueId(),
-                        texte -> {
-                            if (texte.equalsIgnoreCase("pos1")) {
+                        component -> {
+                            String text = ChatUtils.toPlainText(component);
+
+                            if (text.equalsIgnoreCase("pos1")) {
                                 cancelTask();
                                 pos1 = player.getLocation();
                                 player.sendMessage("§a§lPosition 1 définie.");
@@ -65,7 +65,7 @@ public class AreaSelector {
                                     showParticules(cuboid);
                                 }
 
-                            } else if (texte.equalsIgnoreCase("pos2")) {
+                            } else if (text.equalsIgnoreCase("pos2")) {
                                 cancelTask();
                                 pos2 = player.getLocation();
                                 player.sendMessage("§a§lPosition 2 définie.");
@@ -77,14 +77,14 @@ public class AreaSelector {
                                     showParticules(cuboid);
                                 }
 
-                            } else if (texte.equalsIgnoreCase("claim")) {
+                            } else if (text.equalsIgnoreCase("claim")) {
                                 Cuboid cuboid = getCuboid();
                                 verif(cuboid, true).thenAcceptAsync(valid -> {
                                     if (valid) {
                                         landService.claim(player, Objects.requireNonNull(cuboid).getSChunks(), land);
                                     }
                                 });
-                            } else if (texte.equalsIgnoreCase("unclaim")) {
+                            } else if (text.equalsIgnoreCase("unclaim")) {
                                 Cuboid cuboid = getCuboid();
                                 verif(cuboid, false).thenAcceptAsync(valid -> {
                                     if (valid) {
@@ -96,7 +96,7 @@ public class AreaSelector {
                                     }
                                 });
                             } else if (player.hasPermission("lands.admin")
-                                    && texte.equalsIgnoreCase("forceunclaim")) {
+                                    && text.equalsIgnoreCase("forceunclaim")) {
                                 if (arePosSet()) {
                                     for (Chunk chunk : Objects.requireNonNull(getCuboid()).getChunks()) {
                                         landService.unclaim(chunk);
@@ -105,7 +105,7 @@ public class AreaSelector {
                                 } else {
                                     player.sendMessage("§c§lIl faut définir les deux positions !");
                                 }
-                            } else if (texte.startsWith("quit")) {
+                            } else if (text.startsWith("quit")) {
                                 quitCallback.run();
                                 core.getTextInputs().remove(player.getUniqueId());
                                 cancelTask();

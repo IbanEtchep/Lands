@@ -8,6 +8,7 @@ import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.ChatColor;
@@ -78,8 +79,10 @@ public class LandMainMenu extends PaginatedMenu {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             player.closeInventory();
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
-            core.getTextInputs().put(player.getUniqueId(), texte -> {
-                Land newLand = landService.createLand(player, texte, landType, landOwner);
+            core.getTextInputs().put(player.getUniqueId(), component -> {
+                String text = ChatUtils.toPlainText(component);
+
+                Land newLand = landService.createLand(player, text, landType, landOwner);
 
                 if (newLand != null) {
                     lands.add(newLand);

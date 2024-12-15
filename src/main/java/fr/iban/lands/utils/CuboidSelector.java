@@ -53,8 +53,10 @@ public class CuboidSelector {
                 .getTextInputs()
                 .put(
                         player.getUniqueId(),
-                        texte -> {
-                            if (texte.equalsIgnoreCase("pos1")) {
+                        component -> {
+                            String text = ChatUtils.toPlainText(component);
+
+                            if (text.equalsIgnoreCase("pos1")) {
                                 cancelTask();
                                 pos1 = player.getLocation();
                                 player.sendMessage("§a§lPosition 1 définie.");
@@ -67,7 +69,7 @@ public class CuboidSelector {
                                 if (cuboid != null) {
                                     showParticules(cuboid);
                                 }
-                            } else if (texte.equalsIgnoreCase("pos2")) {
+                            } else if (text.equalsIgnoreCase("pos2")) {
                                 cancelTask();
                                 pos2 = player.getLocation();
                                 player.sendMessage("§a§lPosition 2 définie.");
@@ -80,7 +82,7 @@ public class CuboidSelector {
                                 if (cuboid != null) {
                                     showParticules(cuboid);
                                 }
-                            } else if (texte.equalsIgnoreCase("sauvegarder")) {
+                            } else if (text.equalsIgnoreCase("sauvegarder")) {
                                 Cuboid cuboid = getCuboid();
                                 verif(cuboid)
                                         .thenAcceptAsync(
@@ -94,7 +96,7 @@ public class CuboidSelector {
                                                         plugin.getTextInputs().remove(player.getUniqueId());
                                                     }
                                                 });
-                            } else if (texte.startsWith("quit")) {
+                            } else if (text.startsWith("quit")) {
                                 cancelTask();
                                 quitCallback.run();
                                 plugin.getTextInputs().remove(player.getUniqueId());

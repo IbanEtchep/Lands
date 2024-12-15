@@ -1,10 +1,5 @@
 package fr.iban.lands.utils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import net.md_5.bungee.api.ChatColor;
-
 public enum HexColor {
     OLIVE("#708d23"),
     MARRON("#B95608"),
@@ -19,44 +14,13 @@ public enum HexColor {
     FLAT_GREEN("#00b894"),
     FLAT_LIGHT_GREEN("#55efc4");
 
-    private String hex;
-    public static final char COLOR_CHAR = '\u00A7';
+    private final String hex;
 
-    private HexColor(String hex) {
+    HexColor(String hex) {
         this.hex = hex;
     }
 
     public String getHex() {
         return hex;
-    }
-
-    public ChatColor getColor() {
-        return ChatColor.of(hex);
-    }
-
-    public static String translateHexColorCodes(String startTag, String endTag, String message) {
-        final Pattern hexPattern = Pattern.compile(startTag + "([A-Fa-f0-9]{6})" + endTag);
-        Matcher matcher = hexPattern.matcher(message);
-        StringBuffer buffer = new StringBuffer(message.length() + 4 * 8);
-        while (matcher.find()) {
-            String group = matcher.group(1);
-            matcher.appendReplacement(
-                    buffer,
-                    COLOR_CHAR
-                            + "x"
-                            + COLOR_CHAR
-                            + group.charAt(0)
-                            + COLOR_CHAR
-                            + group.charAt(1)
-                            + COLOR_CHAR
-                            + group.charAt(2)
-                            + COLOR_CHAR
-                            + group.charAt(3)
-                            + COLOR_CHAR
-                            + group.charAt(4)
-                            + COLOR_CHAR
-                            + group.charAt(5));
-        }
-        return matcher.appendTail(buffer).toString();
     }
 }

@@ -9,6 +9,7 @@ import fr.iban.lands.api.LandService;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.events.PlayerLandFlagChangeEvent;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.Head;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -100,11 +101,13 @@ public class LandSettingsMenu extends PaginatedMenu {
             player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité (ou \"annuler\" pour annuler):");
             player.closeInventory();
 
-            core.getTextInputs().put(player.getUniqueId(), texte -> {
-                if (texte.equalsIgnoreCase("annuler")) {
+            core.getTextInputs().put(player.getUniqueId(), component -> {
+                String text = ChatUtils.toPlainText(component);
+
+                if (text.equalsIgnoreCase("annuler")) {
                     open();
                 } else {
-                    landService.renameLand(land, player, texte);
+                    landService.renameLand(land, player, text);
                     open();
                     core.getTextInputs().remove(player.getUniqueId());
                 }

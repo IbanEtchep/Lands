@@ -9,6 +9,7 @@ import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
 import fr.iban.lands.model.land.Land;
 import fr.iban.lands.model.land.SubLand;
+import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.Material;
@@ -76,9 +77,17 @@ public class SubLandMainMenu extends PaginatedMenu {
         if (displayNameEquals(current, "§2Créer")) {
             CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
             player.closeInventory();
-            player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
-            core.getTextInputs().put(player.getUniqueId(), texte -> {
-                landService.createSubland(player, superLand, texte);
+            player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité, ou \"annuler\" :");
+            core.getTextInputs().put(player.getUniqueId(), component -> {
+                String text = ChatUtils.toPlainText(component);
+
+                if (text.equalsIgnoreCase("annuler")) {
+                    core.getTextInputs().remove(player.getUniqueId());
+                    open();
+                    return;
+                }
+
+                landService.createSubland(player, superLand, text);
                 new SubLandMainMenu(player, plugin, superLand, previousMenu).open();
                 core.getTextInputs().remove(player.getUniqueId());
             });

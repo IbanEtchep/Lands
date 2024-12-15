@@ -6,6 +6,7 @@ import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.model.Trust;
 import fr.iban.lands.model.land.Land;
+import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -68,20 +69,28 @@ public class TrustsManageMenu extends PaginatedMenu {
             if (displayNameEquals(item, "§2Ajouter")) {
                 player.closeInventory();
                 player.sendMessage(
-                        "§2§lVeuillez entrer le nom du joueur à qui vous voulez modifier les permissions. :");
+                        "§2§lVeuillez entrer le nom du joueur à qui vous voulez modifier les permissions, ou tapez annuler :");
                 CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
-                core.getTextInputs().put(
-                        player.getUniqueId(),
-                        texte -> {
-                            Player target = Bukkit.getPlayer(texte);
-                            if (target == null) {
-                                player.sendMessage("§cCe joueur n'est pas en ligne.");
-                                open();
-                            } else {
-                                new PlayerTrustEditMenu(player, target.getUniqueId(), land, plugin, this, null).open();
-                            }
-                            core.getTextInputs().remove(player.getUniqueId());
-                        });
+                core.getTextInputs().put(player.getUniqueId(), component -> {
+                    String text = ChatUtils.toPlainText(component);
+
+                    if (text.equalsIgnoreCase("annuler")) {
+                        core.getTextInputs().remove(player.getUniqueId());
+                        open();
+                        return;
+                    }
+
+                    Player target = Bukkit.getPlayer(text);
+
+                    if (target == null) {
+                        player.sendMessage("§cCe joueur n'est pas en ligne.");
+                        open();
+                    } else {
+                        new PlayerTrustEditMenu(player, target.getUniqueId(), land, plugin, this, null).open();
+                    }
+
+                    core.getTextInputs().remove(player.getUniqueId());
+                });
                 return;
             }
 
