@@ -1,10 +1,11 @@
 package fr.iban.lands.guild;
 
-import fr.iban.guilds.Guild;
-import fr.iban.guilds.GuildPlayer;
-import fr.iban.guilds.GuildsManager;
-import fr.iban.guilds.enums.Rank;
+import fr.iban.guilds.api.GuildManager;
+import fr.iban.guilds.api.service.GuildBankService;
+import fr.iban.guilds.enums.GuildPermission;
 import fr.iban.guilds.event.GuildDisbandEvent;
+import fr.iban.guilds.model.Guild;
+import fr.iban.guilds.model.GuildPlayer;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
@@ -19,8 +20,9 @@ import java.util.UUID;
 
 public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
-    private GuildsManager guildsManager;
     private final LandsPlugin landsPlugin;
+    private GuildManager guildsManager;
+    private GuildBankService guildBankService;
 
     public GuildsDataAccess(LandsPlugin landsPlugin) {
         this.landsPlugin = landsPlugin;
@@ -29,10 +31,13 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public void load() {
         ServicesManager servicesManager = landsPlugin.getServer().getServicesManager();
-        RegisteredServiceProvider<GuildsManager> rsp = servicesManager.getRegistration(GuildsManager.class);
+        RegisteredServiceProvider<GuildManager> guildManagerRsp = servicesManager.getRegistration(GuildManager.class);
+        RegisteredServiceProvider<GuildBankService> guildBankServiceRsp = servicesManager.getRegistration(GuildBankService.class);
 
-        if (rsp != null) {
-            guildsManager = rsp.getProvider();
+        if (guildManagerRsp != null && guildBankServiceRsp != null) {
+            guildsManager = guildManagerRsp.getProvider();
+            guildBankService = guildBankServiceRsp.getProvider();
+
             landsPlugin.getServer().getPluginManager().registerEvents(this, landsPlugin);
             landsPlugin.getLogger().info("Intégration avec le plugin Guilds effectué.");
         }
@@ -60,13 +65,13 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public UUID getGuildId(UUID uuid) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
-        return guildPlayer == null ? null : guildPlayer.getGuildId();
+        return guildPlayer == null ? null : guildPlayer.getGuild().getId();
     }
 
     @Override
     public boolean canManageGuildLand(UUID uuid) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
-        return guildPlayer != null && guildPlayer.isGranted(Rank.ADMIN);
+        return guildPlayer != null && guildPlayer.isGranted(GuildPermission.MANAGE_LANDS);
     }
 
     @Override
@@ -75,7 +80,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         GuildPlayer guildPlayer2 = guildsManager.getGuildPlayer(uuid2);
         return guildPlayer != null
                 && guildPlayer2 != null
-                && guildPlayer.getGuildId().equals(guildPlayer2.getGuildId());
+                && guildPlayer.getGuild().equals(guildPlayer2.getGuild());
     }
 
     @Override
@@ -87,8 +92,8 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     public boolean isGuildLeader(UUID uuid, UUID guildId) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
         return guildPlayer != null
-                && guildPlayer.getGuildId().equals(guildId)
-                && guildPlayer.isGranted(Rank.OWNER);
+                && guildPlayer.getGuild().getId().equals(guildId)
+                && guildPlayer.isOwner();
     }
 
     @Override
@@ -100,7 +105,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public boolean isGuildMember(UUID uuid, UUID guildId) {
         GuildPlayer guildPlayer = guildsManager.getGuildPlayer(uuid);
-        return guildPlayer != null && guildPlayer.getGuildId().equals(guildId);
+        return guildPlayer != null && guildPlayer.getGuild().getId().equals(guildId);
     }
 
     @Override
@@ -109,7 +114,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         if (guild == null) {
             return false;
         }
-        return guildsManager.guildWithdraw(guild, amount, reason);
+        return guildBankService.withdraw(guild, amount, reason);
     }
 
     @Override
@@ -118,7 +123,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         if (guild == null) {
             return false;
         }
-        return guildsManager.guildWithdraw(guild, amount);
+        return guildBankService.withdraw(guild, amount);
     }
 
     @Override
@@ -127,7 +132,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         if (guild == null) {
             return false;
         }
-        return guildsManager.guildDeposit(guild, amount);
+        return guildBankService.deposit(guild, amount);
     }
 
     @EventHandler
@@ -143,15 +148,16 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
 
     @EventHandler
     public void onServiceRegister(ServiceRegisterEvent event) {
-        if (event.getProvider().getService().getName().equals("fr.iban.guilds.GuildsManager")) {
+        if (event.getProvider().getService().getName().equals("fr.iban.guilds.api.GuildManager")) {
             load();
         }
     }
 
     @EventHandler
     public void onServiceUnregister(ServiceUnregisterEvent event) {
-        if (event.getProvider().getService().getName().equals("fr.iban.guilds.GuildsManager")) {
+        if (event.getProvider().getService().getName().equals("fr.iban.guilds.api.GuildManager")) {
             this.guildsManager = null;
+            this.guildBankService = null;
             landsPlugin.getLogger().info("Intégration avec le plugin Guilds désactivée.");
             load();
         }

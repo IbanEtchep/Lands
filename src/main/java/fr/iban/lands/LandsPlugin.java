@@ -13,7 +13,6 @@ import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.listeners.*;
 import fr.iban.lands.model.land.Land;
-import fr.iban.lands.model.land.LandEnterCommand;
 import fr.iban.lands.service.LandRepositoryImpl;
 import fr.iban.lands.service.LandServiceImpl;
 import fr.iban.lands.task.PotionEffectTask;
@@ -45,7 +44,6 @@ public final class LandsPlugin extends JavaPlugin {
     private AbstractGuildDataAccess guildDataAccess;
     private Economy econ = null;
     private ExecutorService singleThreadExecutor;
-    private ExecutorService executorService;
     private FoliaLib foliaLib;
 
     private LandRepository landRepository;
@@ -64,7 +62,6 @@ public final class LandsPlugin extends JavaPlugin {
         this.bypass = new ArrayList<>();
         this.debugPlayers = new ArrayList<>();
         this.singleThreadExecutor = Executors.newSingleThreadExecutor();
-        this.executorService = Executors.newCachedThreadPool();
 
         landRepository = new LandRepositoryImpl(this);
         landService = new LandServiceImpl(this);

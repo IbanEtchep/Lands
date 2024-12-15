@@ -33,8 +33,7 @@ public class GuildLand extends Land {
         UUID uuid = player.getUniqueId();
         AbstractGuildDataAccess guildDataAccess = LandsPlugin.getInstance().getGuildDataAccess();
         if (guildDataAccess.isGuildLeader(uuid, guildId)
-                || (guildDataAccess.isGuildMember(uuid, guildId)
-                && getGuildTrust().hasPermission(action))) {
+                || (guildDataAccess.isGuildMember(uuid, guildId) && getGuildTrust().hasPermission(action))) {
             return true;
         }
 

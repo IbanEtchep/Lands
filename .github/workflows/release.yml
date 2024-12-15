@@ -35,5 +35,5 @@ jobs:
                   tag_name: ${{ steps.get_version.outputs.VERSION }}
                   name: Release ${{ steps.get_version.outputs.VERSION }}
                   files: |
-                      libs/*.jar
+                      build/libs/*.jar
                   generate_release_notes: true

@@ -24,7 +24,7 @@ repositories {
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
     compileOnly(libs.com.github.ibanetchep.servercore.core.paper)
-    compileOnly(libs.fr.iban.guilds.guilds)
+    compileOnly(libs.msguilds)
     compileOnly(libs.com.ghostchu.quickshop.api)
     compileOnly(libs.com.ghostchu.quickshop.bukkit)
     compileOnly(libs.com.arcaniax.headdatabase.api)
