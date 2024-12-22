@@ -97,7 +97,7 @@ public final class LandsPlugin extends JavaPlugin {
                 new TeleportListener(this)
         );
 
-        if (getServer().getPluginManager().getPlugin("QuickShop") != null) {
+        if (getServer().getPluginManager().getPlugin("QuickShop-Hikari") != null) {
             getServer().getPluginManager().registerEvents(new ShopListeners(this), this);
             getLogger().info("Intégration QuickShop effectuée.");
         }
@@ -164,7 +164,7 @@ public final class LandsPlugin extends JavaPlugin {
             return;
         }
 
-        Plugin guildsPlugin = getServer().getPluginManager().getPlugin("Guilds");
+        Plugin guildsPlugin = getServer().getPluginManager().getPlugin("MSGuilds");
 
         if (guildsPlugin == null || !guildsPlugin.isEnabled()) {
             return;

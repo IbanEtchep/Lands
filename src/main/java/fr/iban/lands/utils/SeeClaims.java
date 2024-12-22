@@ -60,7 +60,9 @@ public class SeeClaims {
 
             updateVisibleBlocks();
 
-            if (lastPlayerLocation.distanceSquared(player.getLocation()) > 100
+            boolean isSameWorld = player.getWorld().equals(lastPlayerLocation.getWorld());
+
+            if ((!isSameWorld || lastPlayerLocation.distanceSquared(player.getLocation()) > 100)
                     && System.currentTimeMillis() - lastUpdate > 1000) {
                 updateWalls();
 
