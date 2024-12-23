@@ -1,4 +1,4 @@
-group = "fr.iban"
+group = "com.github.IbanEtchep"
 version = "1.1.0"
 description = "Lands"
 java.sourceCompatibility = JavaVersion.VERSION_21

@@ -33,8 +33,6 @@ import revxrsal.commands.Lamp;
 import revxrsal.commands.bukkit.BukkitLamp;
 import revxrsal.commands.bukkit.BukkitLampConfig;
 import revxrsal.commands.bukkit.actor.BukkitCommandActor;
-import revxrsal.commands.command.CommandActor;
-import revxrsal.commands.exception.CommandErrorException;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -121,6 +119,7 @@ public final class LandsPlugin extends JavaPlugin {
     private void registerCommands() {
         Lamp<BukkitCommandActor> lamp =  BukkitLamp.builder(this)
                 .parameterTypes(builder -> builder.addParameterType(Land.class, new LandParameterType(this)))
+                .accept(new CoreCommandHandlerVisitor(CoreBukkitPlugin.getInstance()).visitor())
                 .build();
 
         BukkitLampConfig.builder(this).disableBrigadier().build();
