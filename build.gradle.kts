@@ -1,5 +1,5 @@
 group = "fr.iban"
-version = "1.0.1"
+version = "1.1.0"
 description = "Lands"
 java.sourceCompatibility = JavaVersion.VERSION_21
 

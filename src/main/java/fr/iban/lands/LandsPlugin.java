@@ -3,12 +3,14 @@ package fr.iban.lands;
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.bukkitcore.commands.CoreCommandHandlerVisitor;
 import fr.iban.lands.api.LandRepository;
 import fr.iban.lands.api.LandService;
 import fr.iban.lands.commands.LandCommand;
 import fr.iban.lands.commands.LandsCommand;
 import fr.iban.lands.commands.MaxClaimsCommand;
 import fr.iban.lands.commands.MiscellaneousCommands;
+import fr.iban.lands.commands.parametertypes.LandParameterType;
 import fr.iban.lands.guild.AbstractGuildDataAccess;
 import fr.iban.lands.guild.GuildsDataAccess;
 import fr.iban.lands.listeners.*;
@@ -27,8 +29,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import revxrsal.commands.bukkit.BukkitCommandActor;
-import revxrsal.commands.bukkit.BukkitCommandHandler;
+import revxrsal.commands.Lamp;
+import revxrsal.commands.bukkit.BukkitLamp;
+import revxrsal.commands.bukkit.BukkitLampConfig;
+import revxrsal.commands.bukkit.actor.BukkitCommandActor;
 import revxrsal.commands.command.CommandActor;
 import revxrsal.commands.exception.CommandErrorException;
 
@@ -115,32 +119,16 @@ public final class LandsPlugin extends JavaPlugin {
     }
 
     private void registerCommands() {
-        BukkitCommandHandler commandHandler = BukkitCommandHandler.create(this);
-        commandHandler.accept(CoreBukkitPlugin.getInstance().getCommandHandlerVisitor());
+        Lamp<BukkitCommandActor> lamp =  BukkitLamp.builder(this)
+                .parameterTypes(builder -> builder.addParameterType(Land.class, new LandParameterType(this)))
+                .build();
 
-        commandHandler.getAutoCompleter().registerParameterSuggestions(Land.class, (args, sender, command) -> {
-            Player player = ((BukkitCommandActor) sender).getAsPlayer();
+        BukkitLampConfig.builder(this).disableBrigadier().build();
 
-            if (player == null) return new ArrayList<>();
-
-            return landRepository.getManageableLandsNames(player);
-        });
-
-        commandHandler.registerValueResolver(Land.class, context -> {
-            String value = context.arguments().pop();
-            CommandActor actor = context.actor();
-            Player sender = ((BukkitCommandActor) actor).getAsPlayer();
-            Land land = landRepository.getManageableLandFromName(sender, value);
-            if (land == null) {
-                throw new CommandErrorException("Le territoire " + value + " n''existe pas.");
-            }
-            return land;
-        });
-
-        commandHandler.register(new LandCommand(this));
-        commandHandler.register(new LandsCommand(this));
-        commandHandler.register(new MaxClaimsCommand(this));
-        commandHandler.register(new MiscellaneousCommands());
+        lamp.register(new LandCommand(this));
+        lamp.register(new LandsCommand(this));
+        lamp.register(new MaxClaimsCommand(this));
+        lamp.register(new MiscellaneousCommands());
     }
 
     public void setupEconomy() {

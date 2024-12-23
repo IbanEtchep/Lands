@@ -5,7 +5,7 @@ import fr.iban.lands.api.LandRepository;
 import org.bukkit.OfflinePlayer;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.Range;
-import revxrsal.commands.bukkit.BukkitCommandActor;
+import revxrsal.commands.bukkit.actor.BukkitCommandActor;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
 
 import java.util.concurrent.CompletableFuture;

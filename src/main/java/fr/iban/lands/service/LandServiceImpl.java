@@ -80,6 +80,11 @@ public class LandServiceImpl implements LandService {
             return true;
         }
 
+        if (land.getName().contains(" ")) {
+            player.sendMessage("§cLe nom du territoire ne doit pas contenir d'espaces.");
+            return true;
+        }
+
         // Find a land with the same name, type and owner
         Land sameExistingLand = landRepository.getLands().stream()
                 .filter(l -> l.getName().equalsIgnoreCase(land.getName()))

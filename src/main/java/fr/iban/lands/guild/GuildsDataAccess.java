@@ -99,7 +99,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
     @Override
     public UUID getGuildLeader(UUID guildId) {
         Guild guild = guildsManager.getGuildById(guildId);
-        return guild != null ? guild.getOwner().getUuid() : null;
+        return guild != null ? guild.getOwner().getUniqueId() : null;
     }
 
     @Override
@@ -141,7 +141,7 @@ public class GuildsDataAccess implements AbstractGuildDataAccess, Listener {
         LandRepository landRepository = landsPlugin.getLandRepository();
         UUID guildId = e.getGuild().getId();
 
-        landService.transferClaims(guildId, e.getGuild().getOwner().getUuid());
+        landService.transferClaims(guildId, e.getGuild().getOwner().getUniqueId());
 
         landRepository.getGuildLands(guildId).forEach(landRepository::deleteLand);
     }
